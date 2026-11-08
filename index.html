@@ -28,6 +28,7 @@
         }
         .btn-primary { background: #2c7a4b; color: white; border: none; box-shadow: 0 4px 12px rgba(44,122,75,0.25); }
         .btn-primary:hover { background: #1f5e3a; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-secondary { background: white; border: 1px solid #cbd5e1; color: #1e293b; }
         .btn-secondary:hover { background: #f1f5f9; }
         .btn-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
@@ -64,6 +65,21 @@
         }
         .vendor-card .vendor-name { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
         .vendor-card .vendor-meta { font-size: 0.8rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px; }
+
+        /* Vendor type pill */
+        .vendor-type-pill {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        .type-selling  { background: #dbeafe; color: #1e40af; }
+        .type-category { background: #ede9fe; color: #6d28d9; }
+        .type-fnb      { background: #fee2e2; color: #991b1b; }
+
         .vendor-card .payment-status-badge {
             margin-top: 12px; font-size: 0.8rem; font-weight: 700;
             padding: 6px 14px; border-radius: 20px; align-self: flex-start;
@@ -148,12 +164,10 @@
             border-left: 3px solid #3b82f6;
         }
 
-        /* Month summary in payment history */
         .month-summary-row td {
             background: #f8fafc; font-weight: 600; border-top: 2px solid #e2e8f0;
         }
 
-        /* Invoice preview */
         .invoice-preview {
             background: #fff; border: 1px solid #e2e8f0; border-radius: 20px;
             padding: 32px; font-family: 'Courier New', monospace; font-size: 0.9rem;
@@ -200,7 +214,7 @@
 
 <!-- ============ VENDOR MODAL ============ -->
 <div class="modal-overlay" id="vendorModal">
-    <div class="modal-container">
+    <div class="modal-container" id="vendorModalContainer">
         <button class="modal-close" id="closeVendorModal">&times;</button>
         <div class="modal-title" id="vendorModalTitle">Vendor Details</div>
         <div class="modal-subtitle" id="vendorModalSubtitle"></div>
@@ -211,24 +225,28 @@
                 <input type="text" id="editVendorName">
             </div>
             <div class="form-group">
-                <label>Contact Person</label>
-                <input type="text" id="editContactPerson">
+                <label>Vendor Type</label>
+                <select id="editVendorType">
+                    <option value="Selling">Selling</option>
+                    <option value="Category Products">Category Products</option>
+                    <option value="F&B">F&B</option>
+                </select>
             </div>
         </div>
         <div class="form-row">
+            <div class="form-group">
+                <label>Contact Person</label>
+                <input type="text" id="editContactPerson">
+            </div>
             <div class="form-group">
                 <label>Phone</label>
                 <input type="text" id="editPhone">
             </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="editEmail">
-            </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>Floor</label>
-                <input type="text" id="editFloor">
+                <label>Email</label>
+                <input type="email" id="editEmail">
             </div>
             <div class="form-group">
                 <label>Unit Number</label>
@@ -237,13 +255,17 @@
         </div>
         <div class="form-row">
             <div class="form-group">
+                <label>Floor</label>
+                <input type="text" id="editFloor">
+            </div>
+            <div class="form-group">
                 <label>Monthly Rental (RM)</label>
                 <input type="number" id="editRental" step="0.01" min="0">
             </div>
-            <div class="form-group">
-                <label>Deposit (RM)</label>
-                <input type="number" id="editDeposit" step="0.01" min="0">
-            </div>
+        </div>
+        <div class="form-group">
+            <label>Deposit (RM)</label>
+            <input type="number" id="editDeposit" step="0.01" min="0">
         </div>
         <div class="form-group">
             <label>Notes</label>
@@ -297,7 +319,7 @@
             </div>
             <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Instalment</button>
             <div class="auto-status-hint">
-                Multiple instalments per month are allowed. The month's <strong>total</strong> is what determines the status:
+                Multiple instalments per month are allowed. The month's <strong>total</strong> determines the status:
                 <strong>Total ≥ Rental → Paid (green)</strong> · <strong>0 &lt; Total &lt; Rental → Partial (orange)</strong> · <strong>Total = 0 → Unpaid (red)</strong>
             </div>
         </div>
@@ -315,37 +337,47 @@
         </div>
         <div class="form-row">
             <div class="form-group">
+                <label>Vendor Type *</label>
+                <select id="addVendorType">
+                    <option value="Selling">Selling</option>
+                    <option value="Category Products">Category Products</option>
+                    <option value="F&B">F&B</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Floor *</label>
                 <input type="text" id="addFloor" placeholder="e.g. Ground">
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>Unit Number *</label>
                 <input type="text" id="addUnit" placeholder="e.g. G-12">
             </div>
-        </div>
-        <div class="form-row">
             <div class="form-group">
                 <label>Contact Person</label>
                 <input type="text" id="addContactPerson">
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>Phone</label>
                 <input type="text" id="addPhone">
             </div>
-        </div>
-        <div class="form-row">
             <div class="form-group">
                 <label>Email</label>
                 <input type="email" id="addEmail">
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>Monthly Rental (RM)</label>
                 <input type="number" id="addRental" step="0.01" min="0">
             </div>
-        </div>
-        <div class="form-group">
-            <label>Deposit (RM)</label>
-            <input type="number" id="addDeposit" step="0.01" min="0">
+            <div class="form-group">
+                <label>Deposit (RM)</label>
+                <input type="number" id="addDeposit" step="0.01" min="0">
+            </div>
         </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" id="cancelAddVendorBtn">Cancel</button>
@@ -423,8 +455,13 @@
     // ==================== STATE ====================
     let vendors = [];
     let selectedVendor = null;
-    let currentVendorPayments = [];   // ALL instalments for selected vendor (across all months)
+    let currentVendorPayments = [];
     let companySettings = null;
+
+    // Locks — prevent double-fire / mid-edit interference
+    let savingVendor = false;
+    let savingPayment = false;
+    let savingCompany = false;
 
     // ==================== DOM ====================
     const dashboardContainer = document.getElementById('dashboardContainer');
@@ -469,10 +506,19 @@
         if (status === 'partial') return '⚠️ Partially Paid';
         return '❌ Unpaid';
     }
+    function getVendorTypePillClass(type) {
+        if (type === 'Selling') return 'type-selling';
+        if (type === 'Category Products') return 'type-category';
+        if (type === 'F&B') return 'type-fnb';
+        return 'type-selling';
+    }
+    function getVendorTypeEmoji(type) {
+        if (type === 'Selling') return '🛍️';
+        if (type === 'Category Products') return '📦';
+        if (type === 'F&B') return '🍔';
+        return '🛍️';
+    }
 
-    /**
-     * Auto-compute status from the SUM of instalments vs monthly rental.
-     */
     function computeStatus(totalPaid, monthlyRental) {
         const a = parseFloat(totalPaid) || 0;
         const r = parseFloat(monthlyRental) || 0;
@@ -482,10 +528,6 @@
         return 'paid';
     }
 
-    /**
-     * Group an array of payment rows by month and sum their amounts.
-     * Returns: { '2026-11': { total: 8000, entries: [...] }, ... }
-     */
     function groupPaymentsByMonth(payments) {
         const map = {};
         (payments || []).forEach(p => {
@@ -494,6 +536,20 @@
             map[p.month].entries.push(p);
         });
         return map;
+    }
+
+    /**
+     * Prevent Enter from doing anything inside a modal (except clicking buttons).
+     * This is the main fix for "modal closes while editing".
+     */
+    function preventEnterSubmitInModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
+                e.preventDefault();
+            }
+        });
     }
 
     // ==================== COMPANY SETTINGS ====================
@@ -528,6 +584,12 @@
     }
 
     async function saveCompanySettings() {
+        if (savingCompany) return;
+        savingCompany = true;
+        const btn = document.getElementById('saveCompanySettingsBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Saving...';
+
         const payload = {
             id: 1,
             company_name: document.getElementById('csCompanyName').value.trim(),
@@ -539,7 +601,15 @@
             bank_details: document.getElementById('csBankDetails').value.trim(),
             updated_at: new Date().toISOString()
         };
-        if (!payload.company_name) { showToast('Company name is required', true); return; }
+
+        if (!payload.company_name) {
+            showToast('Company name is required', true);
+            savingCompany = false;
+            btn.disabled = false;
+            btn.textContent = '💾 Save Company Details';
+            return;
+        }
+
         try {
             const { error } = await supabase
                 .from('company_settings')
@@ -550,6 +620,10 @@
             companySettingsModal.classList.remove('active');
         } catch (err) {
             showToast('Error: ' + err.message, true);
+        } finally {
+            savingCompany = false;
+            btn.disabled = false;
+            btn.textContent = '💾 Save Company Details';
         }
     }
 
@@ -571,10 +645,6 @@
         }
     }
 
-    /**
-     * One query: fetch ALL payments for the current month for ALL vendors,
-     * sum them by vendor_id, and store on each vendor as `_currentTotal`.
-     */
     async function loadCurrentMonthTotalsForAll() {
         const month = getCurrentMonthString();
         try {
@@ -623,6 +693,9 @@
                 const totalPaid = vendor._currentTotal || 0;
                 const status = computeStatus(totalPaid, rental);
                 const cardClass = 'status-' + status;
+                const vType = vendor.vendor_type || 'Selling';
+                const typeClass = getVendorTypePillClass(vType);
+                const typeEmoji = getVendorTypeEmoji(vType);
 
                 let badgeText;
                 if (status === 'paid')    badgeText = `✅ Paid · RM ${totalPaid.toFixed(2)}`;
@@ -632,6 +705,7 @@
                 html += `
                     <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
                         <span class="unit-badge">📌 ${escapeHtml(vendor.unit || 'No unit')}</span>
+                        <span class="vendor-type-pill ${typeClass}">${typeEmoji} ${escapeHtml(vType)}</span>
                         <div class="vendor-name">${escapeHtml(vendor.name)}</div>
                         <div class="vendor-meta">
                             <span>👤 ${escapeHtml(vendor.contact_person || '—')}</span>
@@ -661,6 +735,7 @@
         document.getElementById('vendorModalSubtitle').textContent = `${vendor.floor} · Unit ${vendor.unit}`;
 
         document.getElementById('editVendorName').value = vendor.name || '';
+        document.getElementById('editVendorType').value = vendor.vendor_type || 'Selling';
         document.getElementById('editContactPerson').value = vendor.contact_person || '';
         document.getElementById('editPhone').value = vendor.phone || '';
         document.getElementById('editEmail').value = vendor.email || '';
@@ -694,10 +769,6 @@
     }
 
     // ==================== RENDER PAYMENT HISTORY ====================
-    /**
-     * Groups ALL instalments by month and shows a summary row per month,
-     * with individual instalments underneath.
-     */
     function renderPaymentHistory(vendor) {
         const tbody = document.getElementById('paymentHistoryBody');
         const noPaymentsMsg = document.getElementById('noPaymentsMsg');
@@ -710,11 +781,7 @@
             noPaymentsMsg.style.display = 'block';
         } else {
             noPaymentsMsg.style.display = 'none';
-
-            // Group by month
             const grouped = groupPaymentsByMonth(currentVendorPayments);
-
-            // Sort months newest first
             const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
             let html = '';
@@ -723,7 +790,6 @@
                 const status = computeStatus(total, rental);
                 const monthLabel = getMonthLabel(month);
 
-                // Month summary row
                 html += `
                     <tr class="month-summary-row">
                         <td colspan="2"><strong>📅 ${monthLabel}</strong></td>
@@ -733,7 +799,6 @@
                     </tr>
                 `;
 
-                // Individual instalment rows
                 for (const pay of entries) {
                     const datePaid = pay.date_paid ? new Date(pay.date_paid).toLocaleDateString() : '—';
                     const amt = parseFloat(pay.amount) || 0;
@@ -751,7 +816,6 @@
             tbody.innerHTML = html;
         }
 
-        // Current month status badge in header
         const currentMonth = getCurrentMonthString();
         const grouped = groupPaymentsByMonth(currentVendorPayments);
         const currentTotal = grouped[currentMonth] ? grouped[currentMonth].total : 0;
@@ -759,10 +823,8 @@
         statusBadge.className = `status-pill ${getStatusPillClass(currentStatus)}`;
         statusBadge.textContent = `${getStatusText(currentStatus)} · RM ${currentTotal.toFixed(2)}`;
 
-        // Pre-fill payment form
         document.getElementById('paymentMonth').value = currentMonth;
         document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-        // Suggest the remaining balance as default amount (nice UX)
         const remaining = Math.max(0, rental - currentTotal);
         document.getElementById('paymentAmount').value = remaining > 0 ? remaining.toFixed(2) : rental;
         document.getElementById('paymentNote').value = '';
@@ -789,8 +851,16 @@
     // ==================== SAVE VENDOR ====================
     async function saveVendor() {
         if (!selectedVendor) return;
+        if (savingVendor) return;
+
+        savingVendor = true;
+        const btn = document.getElementById('saveVendorBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Saving...';
+
         const updates = {
             name: document.getElementById('editVendorName').value.trim(),
+            vendor_type: document.getElementById('editVendorType').value,
             contact_person: document.getElementById('editContactPerson').value.trim(),
             phone: document.getElementById('editPhone').value.trim(),
             email: document.getElementById('editEmail').value.trim(),
@@ -800,25 +870,44 @@
             deposit: parseFloat(document.getElementById('editDeposit').value) || 0,
             notes: document.getElementById('editNotes').value.trim()
         };
+
         if (!updates.name || !updates.floor || !updates.unit) {
             showToast('Name, Floor, and Unit are required', true);
+            savingVendor = false;
+            btn.disabled = false;
+            btn.textContent = '💾 Save Changes';
             return;
         }
+
         try {
             const { error } = await supabase.from('vendors').update(updates).eq('id', selectedVendor.id);
             if (error) throw error;
             showToast('Vendor updated');
-            await fetchVendors();
-            const refreshed = vendors.find(v => v.id == selectedVendor.id);
-            if (refreshed) {
-                selectedVendor = refreshed;
-                document.getElementById('vendorModalTitle').textContent = `🏪 ${refreshed.name}`;
-                document.getElementById('vendorModalSubtitle').textContent = `${refreshed.floor} · Unit ${refreshed.unit}`;
+
+            // Update local state without touching the modal DOM
+            const idx = vendors.findIndex(v => v.id == selectedVendor.id);
+            if (idx !== -1) {
+                vendors[idx] = { ...vendors[idx], ...updates };
+                selectedVendor = vendors[idx];
             }
-            await fetchVendorPayments(selectedVendor.id);
+            document.getElementById('vendorModalTitle').textContent = `🏪 ${updates.name}`;
+            document.getElementById('vendorModalSubtitle').textContent = `${updates.floor} · Unit ${updates.unit}`;
+
+            // Recompute payment history (rental may have changed)
             renderPaymentHistory(selectedVendor);
+
+            // Refresh dashboard
+            await loadCurrentMonthTotalsForAll();
+            renderDashboard();
+
+            // ⚠️ DO NOT close the modal here — the user might still be editing.
+            // They can close it explicitly with × or by closing the modal.
         } catch (err) {
             showToast('Error: ' + err.message, true);
+        } finally {
+            savingVendor = false;
+            btn.disabled = false;
+            btn.textContent = '💾 Save Changes';
         }
     }
 
@@ -832,6 +921,8 @@
             if (error) throw error;
             showToast('Vendor deleted');
             vendorModal.classList.remove('active');
+            selectedVendor = null;
+            currentVendorPayments = [];
             await fetchVendors();
         } catch (err) {
             showToast('Error: ' + err.message, true);
@@ -839,11 +930,10 @@
     }
 
     // ==================== ADD PAYMENT (INSTALMENT) ====================
-    /**
-     * Always INSERT a new row. Never overwrites. Each "Add" = new instalment.
-     */
     async function addPayment() {
         if (!selectedVendor) return;
+        if (savingPayment) return;
+
         const month = document.getElementById('paymentMonth').value;
         const amount = parseFloat(document.getElementById('paymentAmount').value);
         const datePaid = document.getElementById('paymentDate').value;
@@ -852,6 +942,11 @@
         if (!month) { showToast('Please select a month', true); return; }
         if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid amount (> 0)', true); return; }
 
+        savingPayment = true;
+        const btn = document.getElementById('addPaymentBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Adding...';
+
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
         const grouped = groupPaymentsByMonth(currentVendorPayments);
         const alreadyPaid = grouped[month] ? grouped[month].total : 0;
@@ -859,14 +954,13 @@
         const newStatus = computeStatus(newTotal, rental);
 
         try {
-            // Insert new instalment — DO NOT update existing rows
             const { error } = await supabase
                 .from('vendor_payments')
                 .insert([{
                     vendor_id: selectedVendor.id,
                     month: month,
                     amount: amount,
-                    status: newStatus,   // informational; UI recomputes from sum
+                    status: newStatus,
                     date_paid: datePaid || null,
                     note: note || null
                 }]);
@@ -876,21 +970,24 @@
             msg += ` Month total: RM ${newTotal.toFixed(2)} / ${rental.toFixed(2)} → ${newStatus.toUpperCase()}`;
             showToast(msg);
 
-            // Refresh everything
             await fetchVendorPayments(selectedVendor.id);
             renderPaymentHistory(selectedVendor);
             await loadCurrentMonthTotalsForAll();
             renderDashboard();
-
         } catch (err) {
             console.error('Add payment error:', err);
             showToast('Error: ' + err.message, true);
+        } finally {
+            savingPayment = false;
+            btn.disabled = false;
+            btn.textContent = '💵 Add Instalment';
         }
     }
 
     // ==================== ADD VENDOR ====================
     async function createVendor() {
         const name = document.getElementById('addVendorName').value.trim();
+        const vendorType = document.getElementById('addVendorType').value;
         const floor = document.getElementById('addFloor').value.trim();
         const unit = document.getElementById('addUnit').value.trim();
         const contact = document.getElementById('addContactPerson').value.trim();
@@ -904,12 +1001,23 @@
         try {
             const { error } = await supabase
                 .from('vendors')
-                .insert([{ name, floor, unit, contact_person: contact, phone, email, monthly_rental: rental, deposit }]);
+                .insert([{
+                    name,
+                    vendor_type: vendorType,
+                    floor,
+                    unit,
+                    contact_person: contact,
+                    phone,
+                    email,
+                    monthly_rental: rental,
+                    deposit
+                }]);
             if (error) throw error;
             showToast('Vendor created');
             addVendorModal.classList.remove('active');
             ['addVendorName','addFloor','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit']
                 .forEach(id => document.getElementById(id).value = '');
+            document.getElementById('addVendorType').value = 'Selling';
             await fetchVendors();
         } catch (err) {
             showToast('Error: ' + err.message, true);
@@ -924,7 +1032,6 @@
         const month = document.getElementById('paymentMonth').value || getCurrentMonthString();
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
 
-        // Sum instalments for that month
         const grouped = groupPaymentsByMonth(currentVendorPayments);
         const monthData = grouped[month] || { total: 0, entries: [] };
         const amountPaid = monthData.total;
@@ -937,7 +1044,6 @@
         const [y, m] = month.split('-').map(Number);
         const dueDate = `${y}-${String(m + 1).padStart(2,'0')}-07`;
 
-        // Upsert invoice record
         try {
             const { data: existing } = await supabase
                 .from('vendor_invoices')
@@ -971,8 +1077,9 @@
         }
 
         const cs = companySettings || {};
+        const vType = selectedVendor.vendor_type || 'Selling';
+        const typeEmoji = getVendorTypeEmoji(vType);
 
-        // Instalment breakdown for the invoice
         let instalmentRows = '';
         if (monthData.entries.length > 0) {
             instalmentRows = monthData.entries.map(p => `
@@ -1007,7 +1114,8 @@
 
             <div class="invoice-section-title">Billed To</div>
             <div style="line-height:1.6;">
-                <strong>${escapeHtml(selectedVendor.name)}</strong><br>
+                <strong>${escapeHtml(selectedVendor.name)}</strong>
+                <span class="vendor-type-pill ${getVendorTypePillClass(vType)}" style="margin-left:8px;">${typeEmoji} ${escapeHtml(vType)}</span><br>
                 ${escapeHtml(selectedVendor.floor)} · Unit ${escapeHtml(selectedVendor.unit)}<br>
                 ${selectedVendor.contact_person ? `Attn: ${escapeHtml(selectedVendor.contact_person)}<br>` : ''}
                 ${selectedVendor.phone ? `📞 ${escapeHtml(selectedVendor.phone)}<br>` : ''}
@@ -1059,6 +1167,12 @@
         await fetchCompanySettings();
         await fetchVendors();
 
+        // ✅ Prevent Enter from doing weird things inside modals
+        preventEnterSubmitInModal('vendorModal');
+        preventEnterSubmitInModal('addVendorModal');
+        preventEnterSubmitInModal('companySettingsModal');
+        preventEnterSubmitInModal('invoiceModal');
+
         document.getElementById('refreshBtn').addEventListener('click', async () => {
             await fetchVendors();
             showToast('Refreshed');
@@ -1091,17 +1205,20 @@
         document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('printInvoiceBtn').addEventListener('click', () => window.print());
 
-        [vendorModal, addVendorModal, companySettingsModal, invoiceModal].forEach(modal => {
+        // ============================================================
+        // ⚠️ IMPORTANT: Overlay click-to-close — ONLY for modals other
+        // than the main vendor modal (which we never want to close by
+        // clicking outside, to avoid losing in-progress edits).
+        // ============================================================
+        [addVendorModal, companySettingsModal, invoiceModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.classList.remove('active');
-                    if (modal === vendorModal) {
-                        selectedVendor = null;
-                        currentVendorPayments = [];
-                    }
                 }
             });
         });
+        // vendorModal deliberately does NOT close on background click.
+        // Use the × button or Save/Close to exit.
     });
 </script>
 </body>
