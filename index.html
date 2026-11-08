@@ -537,9 +537,11 @@
 
 <script>
     // ==================== SUPABASE CONFIG ====================
+    // ⚠️ Use `var` here (not `const`) — the CDN already declares a global `supabase`.
+    //    This matches how your POS file does it.
     const SUPABASE_URL = "https://icvthtbhnxaoykzbadqh.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_RiKDSx7sDD9J9JkZ3U8JLw_8RDz3XOA";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    var supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // ==================== STATE ====================
     let vendors = [];
@@ -571,18 +573,6 @@
         const [year, month] = monthStr.split('-');
         const date = new Date(year, month - 1);
         return date.toLocaleString('default', { month: 'long', year: 'numeric' });
-    }
-
-    function getPaymentStatusForMonth(vendorId, monthStr) {
-        // Find payment record for this vendor and month
-        const record = currentVendorPayments.find(p => p.month === monthStr && p.vendor_id === vendorId);
-        if (!record) return { status: 'unpaid', amount: 0, date_paid: null, id: null };
-        return {
-            status: record.status,
-            amount: record.amount,
-            date_paid: record.date_paid,
-            id: record.id
-        };
     }
 
     function getStatusPillClass(status) {
@@ -654,8 +644,6 @@
             html += `<div class="floor-title"><span class="badge-floor">${floor}</span> <span style="font-size: 0.95rem; color: #64748b; font-weight: 400;">${floors[floor].length} vendor(s)</span></div>`;
             html += `<div class="vendor-grid">`;
             for (const vendor of floors[floor]) {
-                // Determine current month payment status (we'll just show a generic indicator)
-                // For simplicity, we show "Click to view" status; real status is loaded in modal
                 html += `
                     <div class="vendor-card" data-vendor-id="${vendor.id}">
                         <span class="unit-badge">📌 ${vendor.unit || 'No unit'}</span>
