@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Management · Floor & Unit</title>
+    <!-- Supabase client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f4f6fb;
+            color: #1e293b;
+            line-height: 1.4;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 32px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+        }
+        .app-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+        .btn {
+            border: none;
+            border-radius: 40px;
+            padding: 10px 22px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+        }
+        .btn-primary {
+            background: #2c7a4b;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(44,122,75,0.25);
+        }
+        .btn-primary:hover {
+            background: #1f5e3a;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+        }
+        .btn-secondary:hover {
+            background: #f1f5f9;
+        }
+        .btn-small {
+            padding: 6px 16px;
+            font-size: 0.85rem;
+        }
+        .floor-section {
+            margin-bottom: 32px;
+        }
+        .floor-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 5px solid #2c7a4b;
+            padding-left: 16px;
+        }
+        .vendor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .vendor-card {
+            background: white;
+            border-radius: 24px;
+            padding: 18px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border-top: 6px solid #cbd5e1;
+        }
+        .vendor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+            border-color: #94a3b8;
+        }
+        .vendor-card .unit-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 40px;
+            display: inline-block;
+            align-self: flex-start;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+        }
+        .vendor-card .vendor-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        .vendor-card .vendor-meta {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .vendor-card .payment-status-badge {
+            margin-top: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-align: center;
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-partial {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+        .status-unpaid {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-no-data {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+            padding: 16px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-container {
+            background: white;
+            border-radius: 32px;
+            max-width: 880px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px 28px 32px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            font-size: 2rem;
+            line-height: 1;
+            color: #94a3b8;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: #0f172a;
+        }
+        .modal-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .modal-subtitle {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-top: -12px;
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+        .form-group {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #334155;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: 0.2s;
+            background: white;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #2c7a4b;
+            box-shadow: 0 0 0 4px rgba(44,122,75,0.12);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 24px 0;
+        }
+        .payment-history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+        .payment-history-table th {
+            text-align: left;
+            padding: 12px 8px;
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            border-radius: 12px 12px 0 0;
+        }
+        .payment-history-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .payment-history-table tr:last-child td {
+            border-bottom: none;
+        }
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .pill-paid { background: #dcfce7; color: #166534; }
+        .pill-partial { background: #fef9c3; color: #854d0e; }
+        .pill-unpaid { background: #fee2e2; color: #991b1b; }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .payment-form {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 20px;
+            margin: 20px 0 10px;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            background: white;
+            border-radius: 32px;
+            border: 2px dashed #e2e8f0;
+        }
+        .badge-floor {
+            background: #e6f0ff;
+            color: #1e40af;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .loader-spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2c7a4b;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin: 40px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast-message {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 60px;
+            font-weight: 500;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast-message.show {
+            opacity: 1;
+        }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .modal-container { padding: 20px; }
+            .vendor-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>🏢 Vendor Management</h1>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
+        <button class="btn btn-primary" id="addVendorBtn">➕ Add Vendor</button>
+    </div>
+</div>
+
+<div id="dashboardContainer">
+    <div class="loader-spinner"></div>
+</div>
+
+<!-- Vendor Modal (Edit / View / Payment History) -->
+<div class="modal-overlay" id="vendorModal">
+    <div class="modal-container">
+        <button class="modal-close" id="closeVendorModal">&times;</button>
+        <div class="modal-title" id="vendorModalTitle">Vendor Details</div>
+        <div class="modal-subtitle" id="vendorModalSubtitle"></div>
+
+        <!-- Edit Form -->
+        <div id="vendorEditForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Vendor Name</label>
+                    <input type="text" id="editVendorName" placeholder="e.g. Sushi King">
+                </div>
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" id="editContactPerson" placeholder="e.g. Alice Tan">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="editPhone" placeholder="e.g. 012-3456789">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editEmail" placeholder="vendor@example.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Floor</label>
+                    <input type="text" id="editFloor" placeholder="e.g. Ground, 1st, 2nd">
+                </div>
+                <div class="form-group">
+                    <label>Unit Number</label>
+                    <input type="text" id="editUnit" placeholder="e.g. G-12, L1-05">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Monthly Rental (RM)</label>
+                    <input type="number" id="editRental" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Deposit (RM)</label>
+                    <input type="number" id="editDeposit" step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="editNotes" rows="2" placeholder="Any additional notes..."></textarea>
+            </div>
+            <div class="modal-actions" style="justify-content: flex-start; margin-top: 8px;">
+                <button class="btn btn-primary" id="saveVendorBtn">💾 Save Changes</button>
+                <button class="btn btn-secondary" id="deleteVendorBtn" style="color: #b91c1c; border-color: #fecaca;">🗑️ Delete Vendor</button>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Payment History & Status -->
+        <div>
+            <div class="flex-between">
+                <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Payment History</h3>
+                <span id="currentMonthStatus" class="status-pill" style="font-size: 0.85rem; padding: 6px 18px;"></span>
+            </div>
+            <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
+                <table class="payment-history-table" id="paymentHistoryTable">
+                    <thead>
+                        <tr><th>Month</th><th>Amount</th><th>Status</th><th>Date Paid</th><th></th></tr>
+                    </thead>
+                    <tbody id="paymentHistoryBody"></tbody>
+                </table>
+                <div id="noPaymentsMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No payment records yet.</div>
+            </div>
+
+            <!-- Add Payment Form -->
+            <div class="payment-form" id="paymentForm">
+                <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Payment</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Month</label>
+                        <input type="month" id="paymentMonth" style="width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Paid (RM)</label>
+                        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="paymentStatus">
+                            <option value="paid">Paid</option>
+                            <option value="partial">Partial</option>
+                            <option value="unpaid">Unpaid</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date Paid</label>
+                        <input type="date" id="paymentDate" style="width: 100%;">
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Payment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Vendor Modal -->
+<div class="modal-overlay" id="addVendorModal">
+    <div class="modal-container" style="max-width: 600px;">
+        <button class="modal-close" id="closeAddVendorModal">&times;</button>
+        <div class="modal-title">➕ Add New Vendor</div>
+        <div class="form-group">
+            <label>Vendor Name *</label>
+            <input type="text" id="addVendorName" placeholder="e.g. Sushi King">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Floor *</label>
+                <input type="text" id="addFloor" placeholder="e.g. Ground">
+            </div>
+            <div class="form-group">
+                <label>Unit Number *</label>
+                <input type="text" id="addUnit" placeholder="e.g. G-12">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Contact Person</label>
+                <input type="text" id="addContactPerson" placeholder="e.g. Alice Tan">
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="addPhone" placeholder="e.g. 012-3456789">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="addEmail" placeholder="vendor@example.com">
+            </div>
+            <div class="form-group">
+                <label>Monthly Rental (RM)</label>
+                <input type="number" id="addRental" step="0.01" min="0" placeholder="0.00">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Deposit (RM)</label>
+            <input type="number" id="addDeposit" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="cancelAddVendorBtn">Cancel</button>
+            <button class="btn btn-primary" id="confirmAddVendorBtn">✅ Create Vendor</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-message" id="toastMessage"></div>
+
+<script>
+    // ==================== SUPABASE CONFIG ====================
+    const SUPABASE_URL = "https://icvthtbhnxaoykzbadqh.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_RiKDSx7sDD9J9JkZ3U8JLw_8RDz3XOA";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==================== STATE ====================
+    let vendors = [];
+    let selectedVendor = null;
+    let currentVendorPayments = [];
+
+    // ==================== DOM REFS ====================
+    const dashboardContainer = document.getElementById('dashboardContainer');
+    const vendorModal = document.getElementById('vendorModal');
+    const addVendorModal = document.getElementById('addVendorModal');
+    const toastMessage = document.getElementById('toastMessage');
+
+    // ==================== TOAST ====================
+    function showToast(msg, isError = false) {
+        toastMessage.textContent = msg;
+        toastMessage.style.background = isError ? '#b91c1c' : '#1e293b';
+        toastMessage.classList.add('show');
+        setTimeout(() => toastMessage.classList.remove('show'), 3000);
+    }
+
+    // ==================== HELPERS ====================
+    function getCurrentMonthString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function getMonthLabel(monthStr) {
+        if (!monthStr) return '';
+        const [year, month] = monthStr.split('-');
+        const date = new Date(year, month - 1);
+        return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+
+    function getPaymentStatusForMonth(vendorId, monthStr) {
+        // Find payment record for this vendor and month
+        const record = currentVendorPayments.find(p => p.month === monthStr && p.vendor_id === vendorId);
+        if (!record) return { status: 'unpaid', amount: 0, date_paid: null, id: null };
+        return {
+            status: record.status,
+            amount: record.amount,
+            date_paid: record.date_paid,
+            id: record.id
+        };
+    }
+
+    function getStatusPillClass(status) {
+        if (status === 'paid') return 'pill-paid';
+        if (status === 'partial') return 'pill-partial';
+        return 'pill-unpaid';
+    }
+
+    function getStatusText(status) {
+        if (status === 'paid') return '✅ Fully Paid';
+        if (status === 'partial') return '⚠️ Partially Paid';
+        return '❌ Unpaid';
+    }
+
+    // ==================== FETCH VENDORS ====================
+    async function fetchVendors() {
+        try {
+            const { data, error } = await supabase
+                .from('vendors')
+                .select('*')
+                .order('floor')
+                .order('unit');
+            if (error) throw error;
+            vendors = data || [];
+            renderDashboard();
+        } catch (err) {
+            console.error('Error fetching vendors:', err);
+            dashboardContainer.innerHTML = `<div class="empty-state">❌ Failed to load vendors: ${err.message}</div>`;
+        }
+    }
+
+    // ==================== FETCH PAYMENTS FOR VENDOR ====================
+    async function fetchVendorPayments(vendorId) {
+        try {
+            const { data, error } = await supabase
+                .from('vendor_payments')
+                .select('*')
+                .eq('vendor_id', vendorId)
+                .order('month', { ascending: false });
+            if (error) throw error;
+            currentVendorPayments = data || [];
+            return currentVendorPayments;
+        } catch (err) {
+            console.error('Error fetching payments:', err);
+            return [];
+        }
+    }
+
+    // ==================== RENDER DASHBOARD ====================
+    function renderDashboard() {
+        if (!vendors.length) {
+            dashboardContainer.innerHTML = `<div class="empty-state">🏪 No vendors yet. Click "Add Vendor" to get started.</div>`;
+            return;
+        }
+
+        // Group by floor
+        const floors = {};
+        vendors.forEach(v => {
+            const floor = v.floor || 'Unassigned';
+            if (!floors[floor]) floors[floor] = [];
+            floors[floor].push(v);
+        });
+
+        let html = '';
+        const sortedFloors = Object.keys(floors).sort();
+
+        for (const floor of sortedFloors) {
+            html += `<div class="floor-section">`;
+            html += `<div class="floor-title"><span class="badge-floor">${floor}</span> <span style="font-size: 0.95rem; color: #64748b; font-weight: 400;">${floors[floor].length} vendor(s)</span></div>`;
+            html += `<div class="vendor-grid">`;
+            for (const vendor of floors[floor]) {
+                // Determine current month payment status (we'll just show a generic indicator)
+                // For simplicity, we show "Click to view" status; real status is loaded in modal
+                html += `
+                    <div class="vendor-card" data-vendor-id="${vendor.id}">
+                        <span class="unit-badge">📌 ${vendor.unit || 'No unit'}</span>
+                        <div class="vendor-name">${escapeHtml(vendor.name)}</div>
+                        <div class="vendor-meta">
+                            <span>👤 ${escapeHtml(vendor.contact_person || '—')}</span>
+                            <span>📞 ${escapeHtml(vendor.phone || '—')}</span>
+                        </div>
+                        <div class="payment-status-badge status-no-data" id="status-badge-${vendor.id}">
+                            Click to view
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div></div>`;
+        }
+        dashboardContainer.innerHTML = html;
+
+        // Attach click listeners
+        document.querySelectorAll('.vendor-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const vendorId = card.dataset.vendorId;
+                openVendorModal(vendorId);
+            });
+        });
+
+        // After rendering, asynchronously load status for each vendor's current month
+        loadStatusForAllVendors();
+    }
+
+    async function loadStatusForAllVendors() {
+        const currentMonth = getCurrentMonthString();
+        for (const vendor of vendors) {
+            try {
+                const { data, error } = await supabase
+                    .from('vendor_payments')
+                    .select('status')
+                    .eq('vendor_id', vendor.id)
+                    .eq('month', currentMonth)
+                    .maybeSingle();
+                const badge = document.getElementById(`status-badge-${vendor.id}`);
+                if (badge) {
+                    if (error) {
+                        badge.textContent = '⚠️ Error';
+                        badge.className = 'payment-status-badge status-no-data';
+                    } else if (!data) {
+                        badge.textContent = '❌ No payment';
+                        badge.className = 'payment-status-badge status-unpaid';
+                    } else {
+                        const status = data.status;
+                        if (status === 'paid') {
+                            badge.textContent = '✅ Paid';
+                            badge.className = 'payment-status-badge status-paid';
+                        } else if (status === 'partial') {
+                            badge.textContent = '⚠️ Partial';
+                            badge.className = 'payment-status-badge status-partial';
+                        } else {
+                            badge.textContent = '❌ Unpaid';
+                            badge.className = 'payment-status-badge status-unpaid';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('status load error', e);
+            }
+        }
+    }
+
+    // ==================== OPEN VENDOR MODAL ====================
+    async function openVendorModal(vendorId) {
+        const vendor = vendors.find(v => v.id == vendorId);
+        if (!vendor) return;
+        selectedVendor = vendor;
+
+        // Set modal title
+        document.getElementById('vendorModalTitle').textContent = `🏪 ${vendor.name}`;
+        document.getElementById('vendorModalSubtitle').textContent = `${vendor.floor} · Unit ${vendor.unit}`;
+
+        // Populate edit form
+        document.getElementById('editVendorName').value = vendor.name || '';
+        document.getElementById('editContactPerson').value = vendor.contact_person || '';
+        document.getElementById('editPhone').value = vendor.phone || '';
+        document.getElementById('editEmail').value = vendor.email || '';
+        document.getElementById('editFloor').value = vendor.floor || '';
+        document.getElementById('editUnit').value = vendor.unit || '';
+        document.getElementById('editRental').value = vendor.monthly_rental || 0;
+        document.getElementById('editDeposit').value = vendor.deposit || 0;
+        document.getElementById('editNotes').value = vendor.notes || '';
+
+        // Load payments
+        await fetchVendorPayments(vendor.id);
+        renderPaymentHistory(vendor);
+
+        // Show modal
+        vendorModal.classList.add('active');
+    }
+
+    // ==================== RENDER PAYMENT HISTORY ====================
+    function renderPaymentHistory(vendor) {
+        const tbody = document.getElementById('paymentHistoryBody');
+        const noPaymentsMsg = document.getElementById('noPaymentsMsg');
+        const statusBadge = document.getElementById('currentMonthStatus');
+
+        if (!currentVendorPayments.length) {
+            tbody.innerHTML = '';
+            noPaymentsMsg.style.display = 'block';
+        } else {
+            noPaymentsMsg.style.display = 'none';
+            let html = '';
+            for (const pay of currentVendorPayments) {
+                const monthLabel = getMonthLabel(pay.month);
+                const datePaid = pay.date_paid ? new Date(pay.date_paid).toLocaleDateString() : '—';
+                html += `
+                    <tr>
+                        <td><strong>${monthLabel}</strong></td>
+                        <td>RM ${parseFloat(pay.amount).toFixed(2)}</td>
+                        <td><span class="status-pill ${getStatusPillClass(pay.status)}">${getStatusText(pay.status)}</span></td>
+                        <td>${datePaid}</td>
+                        <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c; font-size:0.8rem;" onclick="deletePayment('${pay.id}')">✕</button></td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        // Show current month status
+        const currentMonth = getCurrentMonthString();
+        const currentPayment = currentVendorPayments.find(p => p.month === currentMonth);
+        if (currentPayment) {
+            const status = currentPayment.status;
+            statusBadge.className = `status-pill ${getStatusPillClass(status)}`;
+            statusBadge.textContent = getStatusText(status);
+            statusBadge.style.fontSize = '0.85rem';
+            statusBadge.style.padding = '6px 18px';
+        } else {
+            statusBadge.className = `status-pill pill-unpaid`;
+            statusBadge.textContent = '❌ No payment record for current month';
+            statusBadge.style.fontSize = '0.85rem';
+            statusBadge.style.padding = '6px 18px';
+        }
+
+        // Pre-fill payment form with current month
+        document.getElementById('paymentMonth').value = currentMonth;
+        document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('paymentAmount').value = vendor.monthly_rental || 0;
+    }
+
+    // ==================== DELETE PAYMENT (global) ====================
+    window.deletePayment = async function(paymentId) {
+        if (!confirm('Delete this payment record?')) return;
+        try {
+            const { error } = await supabase.from('vendor_payments').delete().eq('id', paymentId);
+            if (error) throw error;
+            showToast('Payment deleted');
+            if (selectedVendor) {
+                await fetchVendorPayments(selectedVendor.id);
+                renderPaymentHistory(selectedVendor);
+            }
+            loadStatusForAllVendors();
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    };
+
+    // ==================== SAVE VENDOR EDIT ====================
+    async function saveVendor() {
+        if (!selectedVendor) return;
+        const updates = {
+            name: document.getElementById('editVendorName').value.trim(),
+            contact_person: document.getElementById('editContactPerson').value.trim(),
+            phone: document.getElementById('editPhone').value.trim(),
+            email: document.getElementById('editEmail').value.trim(),
+            floor: document.getElementById('editFloor').value.trim(),
+            unit: document.getElementById('editUnit').value.trim(),
+            monthly_rental: parseFloat(document.getElementById('editRental').value) || 0,
+            deposit: parseFloat(document.getElementById('editDeposit').value) || 0,
+            notes: document.getElementById('editNotes').value.trim()
+        };
+        if (!updates.name || !updates.floor || !updates.unit) {
+            showToast('Name, Floor, and Unit are required', true);
+            return;
+        }
+        try {
+            const { error } = await supabase
+                .from('vendors')
+                .update(updates)
+                .eq('id', selectedVendor.id);
+            if (error) throw error;
+            showToast('Vendor updated');
+            await fetchVendors(); // reload dashboard
+            // Update selected vendor data
+            const refreshed = vendors.find(v => v.id == selectedVendor.id);
+            if (refreshed) {
+                selectedVendor = refreshed;
+                document.getElementById('vendorModalTitle').textContent = `🏪 ${refreshed.name}`;
+                document.getElementById('vendorModalSubtitle').textContent = `${refreshed.floor} · Unit ${refreshed.unit}`;
+            }
+            // Refresh statuses
+            loadStatusForAllVendors();
+            // Reload payment history (might not change but just in case)
+            await fetchVendorPayments(selectedVendor.id);
+            renderPaymentHistory(selectedVendor);
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    }
+
+    // ==================== DELETE VENDOR ====================
+    async function deleteVendor() {
+        if (!selectedVendor) return;
+        if (!confirm(`Delete vendor "${selectedVendor.name}" and ALL payment records?`)) return;
+        try {
+            // Delete payments first (cascade should handle, but we do explicit)
+            await supabase.from('vendor_payments').delete().eq('vendor_id', selectedVendor.id);
+            const { error } = await supabase.from('vendors').delete().eq('id', selectedVendor.id);
+            if (error) throw error;
+            showToast('Vendor deleted');
+            vendorModal.classList.remove('active');
+            await fetchVendors();
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    }
+
+    // ==================== ADD PAYMENT ====================
+    async function addPayment() {
+        if (!selectedVendor) return;
+        const month = document.getElementById('paymentMonth').value;
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        const status = document.getElementById('paymentStatus').value;
+        const datePaid = document.getElementById('paymentDate').value;
+
+        if (!month) {
+            showToast('Please select a month', true);
+            return;
+        }
+        if (isNaN(amount) || amount < 0) {
+            showToast('Please enter a valid amount', true);
+            return;
+        }
+
+        // Check if a payment for this month already exists
+        const existing = currentVendorPayments.find(p => p.month === month);
+        if (existing) {
+            // Update instead
+            if (!confirm(`A payment record for ${getMonthLabel(month)} already exists. Update it?`)) return;
+            try {
+                const { error } = await supabase
+                    .from('vendor_payments')
+                    .update({ amount, status, date_paid: datePaid || null })
+                    .eq('id', existing.id);
+                if (error) throw error;
+                showToast('Payment updated');
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+                return;
+            }
+        } else {
+            // Insert new
+            try {
+                const { error } = await supabase
+                    .from('vendor_payments')
+                    .insert([{
+                        vendor_id: selectedVendor.id,
+                        month: month,
+                        amount: amount,
+                        status: status,
+                        date_paid: datePaid || null
+                    }]);
+                if (error) throw error;
+                showToast('Payment recorded');
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+                return;
+            }
+        }
+
+        // Refresh
+        await fetchVendorPayments(selectedVendor.id);
+        renderPaymentHistory(selectedVendor);
+        loadStatusForAllVendors();
+        // Clear amount field
+        document.getElementById('paymentAmount').value = selectedVendor.monthly_rental || 0;
+    }
+
+    // ==================== ADD VENDOR ====================
+    async function createVendor() {
+        const name = document.getElementById('addVendorName').value.trim();
+        const floor = document.getElementById('addFloor').value.trim();
+        const unit = document.getElementById('addUnit').value.trim();
+        const contact = document.getElementById('addContactPerson').value.trim();
+        const phone = document.getElementById('addPhone').value.trim();
+        const email = document.getElementById('addEmail').value.trim();
+        const rental = parseFloat(document.getElementById('addRental').value) || 0;
+        const deposit = parseFloat(document.getElementById('addDeposit').value) || 0;
+
+        if (!name || !floor || !unit) {
+            showToast('Name, Floor, and Unit are required', true);
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('vendors')
+                .insert([{
+                    name,
+                    floor,
+                    unit,
+                    contact_person: contact,
+                    phone,
+                    email,
+                    monthly_rental: rental,
+                    deposit
+                }]);
+            if (error) throw error;
+            showToast('Vendor created');
+            addVendorModal.classList.remove('active');
+            // Clear form
+            document.getElementById('addVendorName').value = '';
+            document.getElementById('addFloor').value = '';
+            document.getElementById('addUnit').value = '';
+            document.getElementById('addContactPerson').value = '';
+            document.getElementById('addPhone').value = '';
+            document.getElementById('addEmail').value = '';
+            document.getElementById('addRental').value = '';
+            document.getElementById('addDeposit').value = '';
+            await fetchVendors();
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    }
+
+    // ==================== UTIL ====================
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        // Load vendors on start
+        fetchVendors();
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            fetchVendors();
+            showToast('Refreshed');
+        });
+
+        // Add vendor button
+        document.getElementById('addVendorBtn').addEventListener('click', () => {
+            addVendorModal.classList.add('active');
+        });
+
+        // Close add vendor modal
+        document.getElementById('closeAddVendorModal').addEventListener('click', () => {
+            addVendorModal.classList.remove('active');
+        });
+        document.getElementById('cancelAddVendorBtn').addEventListener('click', () => {
+            addVendorModal.classList.remove('active');
+        });
+        document.getElementById('confirmAddVendorBtn').addEventListener('click', createVendor);
+
+        // Close vendor modal
+        document.getElementById('closeVendorModal').addEventListener('click', () => {
+            vendorModal.classList.remove('active');
+            selectedVendor = null;
+            currentVendorPayments = [];
+        });
+
+        // Save vendor changes
+        document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
+        // Delete vendor
+        document.getElementById('deleteVendorBtn').addEventListener('click', deleteVendor);
+
+        // Add payment
+        document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
+
+        // Close modals on overlay click
+        [vendorModal, addVendorModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    if (modal === vendorModal) {
+                        selectedVendor = null;
+                        currentVendorPayments = [];
+                    }
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
