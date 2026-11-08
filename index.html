@@ -75,14 +75,30 @@
         .type-category { background: #ede9fe; color: #6d28d9; }
         .type-fnb      { background: #fee2e2; color: #991b1b; }
 
+        /* Two badges stacked on cards */
+        .vendor-card .badge-stack {
+            display: flex; flex-direction: column; gap: 6px;
+            margin-top: 12px;
+        }
         .vendor-card .payment-status-badge {
-            margin-top: 12px; font-size: 0.8rem; font-weight: 700;
-            padding: 6px 14px; border-radius: 20px; align-self: flex-start;
+            font-size: 0.78rem; font-weight: 700;
+            padding: 6px 12px; border-radius: 20px;
             display: inline-flex; align-items: center; gap: 6px;
+            align-self: flex-start;
+        }
+        .vendor-card .payment-status-badge.deposit {
+            font-size: 0.72rem;
+            padding: 5px 11px;
+            opacity: 0.95;
         }
         .status-paid    .payment-status-badge { background: #dcfce7; color: #166534; }
         .status-partial .payment-status-badge { background: #fef3c7; color: #92400e; }
         .status-unpaid  .payment-status-badge { background: #fee2e2; color: #991b1b; }
+
+        /* Deposit-only colours (independent from rental) */
+        .deposit-paid    { background: #dcfce7 !important; color: #166534 !important; }
+        .deposit-partial { background: #fef3c7 !important; color: #92400e !important; }
+        .deposit-unpaid  { background: #fee2e2 !important; color: #991b1b !important; }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -130,6 +146,7 @@
 
         .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
         .payment-form { background: #f8fafc; border-radius: 24px; padding: 20px; margin: 20px 0 10px; }
+        .deposit-form { background: #fefce8; border-radius: 24px; padding: 20px; margin: 20px 0 10px; border: 1px solid #fde68a; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .empty-state {
             text-align: center; padding: 40px 20px; color: #94a3b8;
@@ -158,6 +175,10 @@
             padding: 8px 14px; border-radius: 12px; margin-top: 8px;
             border-left: 3px solid #3b82f6;
         }
+        .auto-status-hint.deposit-hint {
+            background: #fefce8; color: #854d0e;
+            border-left-color: #f59e0b;
+        }
 
         .month-summary-row td {
             background: #f8fafc; font-weight: 600; border-top: 2px solid #e2e8f0;
@@ -182,9 +203,7 @@
             padding: 10px 14px; background: white; border-radius: 12px;
             border: 1px solid #e2e8f0; margin-bottom: 8px;
         }
-        .floor-row .floor-name {
-            flex: 1; font-weight: 600; color: #0f172a;
-        }
+        .floor-row .floor-name { flex: 1; font-weight: 600; color: #0f172a; }
         .floor-row .floor-name-input {
             flex: 1; padding: 8px 12px; border-radius: 8px; border: 2px solid #3b82f6;
             font-size: 0.95rem; font-weight: 600;
@@ -291,9 +310,15 @@
                 <input type="number" id="editRental" step="0.01" min="0">
             </div>
         </div>
-        <div class="form-group">
-            <label>Deposit (RM)</label>
-            <input type="number" id="editDeposit" step="0.01" min="0">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Deposit Required (RM)</label>
+                <input type="number" id="editDeposit" step="0.01" min="0" placeholder="Agreed deposit amount">
+            </div>
+            <div class="form-group">
+                <label>Deposit Paid (RM) <span style="font-weight:400;color:#94a3b8;">(auto)</span></label>
+                <input type="text" id="editDepositPaid" readonly style="background:#f8fafc; font-weight:700; color:#0f172a;">
+            </div>
         </div>
         <div class="form-group">
             <label>Notes</label>
@@ -307,8 +332,9 @@
 
         <div class="divider"></div>
 
+        <!-- ============= RENTAL PAYMENT HISTORY ============= -->
         <div class="flex-between">
-            <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Payment History</h3>
+            <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Rental Payment History</h3>
             <span id="currentMonthStatus" class="status-pill"></span>
         </div>
         <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 340px; overflow-y: auto;">
@@ -318,11 +344,11 @@
                 </thead>
                 <tbody id="paymentHistoryBody"></tbody>
             </table>
-            <div id="noPaymentsMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No payment records yet.</div>
+            <div id="noPaymentsMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No rental payments recorded yet.</div>
         </div>
 
         <div class="payment-form">
-            <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Payment Instalment</h4>
+            <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Rental Instalment</h4>
             <div class="form-row">
                 <div class="form-group">
                     <label>Month</label>
@@ -343,10 +369,56 @@
                     <input type="text" id="paymentNote" placeholder="e.g. 1st instalment">
                 </div>
             </div>
-            <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Instalment</button>
+            <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Rental Instalment</button>
             <div class="auto-status-hint">
                 Multiple instalments per month are allowed. The month's <strong>total</strong> determines the status:
                 <strong>Total ≥ Rental → Paid (green)</strong> · <strong>0 &lt; Total &lt; Rental → Partial (orange)</strong> · <strong>Total = 0 → Unpaid (red)</strong>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ============= DEPOSIT HISTORY ============= -->
+        <div class="flex-between">
+            <h3 style="font-size: 1.25rem; font-weight: 700;">💰 Deposit History</h3>
+            <span id="depositStatusPill" class="status-pill"></span>
+        </div>
+        <div id="depositHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
+            <table class="payment-history-table">
+                <thead>
+                    <tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody id="depositHistoryBody"></tbody>
+            </table>
+            <div id="noDepositMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No deposit payments recorded yet.</div>
+        </div>
+
+        <div class="deposit-form">
+            <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Deposit Instalment</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Month</label>
+                    <input type="month" id="depositMonth">
+                </div>
+                <div class="form-group">
+                    <label>Amount Paid (RM)</label>
+                    <input type="number" id="depositAmount" step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date Paid</label>
+                    <input type="date" id="depositDate">
+                </div>
+                <div class="form-group">
+                    <label>Note (optional)</label>
+                    <input type="text" id="depositNote" placeholder="e.g. Security deposit, 1st instalment">
+                </div>
+            </div>
+            <button class="btn btn-primary" id="addDepositBtn" style="margin-top: 6px; background:#b45309; box-shadow: 0 4px 12px rgba(180,83,9,0.25);">💵 Add Deposit Instalment</button>
+            <div class="auto-status-hint deposit-hint">
+                Deposit is tracked separately from rental. Status:
+                <strong>Total Paid ≥ Deposit Required → Paid (green)</strong> · <strong>0 &lt; Total &lt; Required → Partial (orange)</strong> · <strong>Total = 0 → Unpaid (red)</strong>
             </div>
         </div>
     </div>
@@ -401,7 +473,7 @@
                 <input type="number" id="addRental" step="0.01" min="0">
             </div>
             <div class="form-group">
-                <label>Deposit (RM)</label>
+                <label>Deposit Required (RM)</label>
                 <input type="number" id="addDeposit" step="0.01" min="0">
             </div>
         </div>
@@ -419,13 +491,11 @@
         <div class="modal-title">🏗️ Manage Floors</div>
         <div class="modal-subtitle">Add, rename, or delete floors. Changes apply immediately to all vendor forms.</div>
 
-        <!-- Add new floor -->
         <div style="display: flex; gap: 8px; margin-bottom: 20px;">
             <input type="text" id="newFloorName" placeholder="e.g. Mezzanine, Podium, 11th…" style="flex: 1; padding: 12px 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
             <button class="btn btn-primary" id="addFloorBtn" style="padding: 12px 20px;">➕ Add Floor</button>
         </div>
 
-        <!-- Floor list -->
         <div id="floorListContainer" style="max-height: 400px; overflow-y: auto;"></div>
 
         <div class="modal-actions">
@@ -502,13 +572,15 @@
 
     // ==================== STATE ====================
     let vendors = [];
-    let floors = [];                  // ← NEW: array of {id, name, sort_order}
+    let floors = [];
     let selectedVendor = null;
-    let currentVendorPayments = [];
+    let currentVendorPayments = [];       // rental instalments
+    let currentVendorDeposits = [];       // deposit instalments
     let companySettings = null;
 
     let savingVendor = false;
     let savingPayment = false;
+    let savingDeposit = false;
     let savingCompany = false;
 
     // ==================== DOM ====================
@@ -568,12 +640,16 @@
         return '🛍️';
     }
 
-    function computeStatus(totalPaid, monthlyRental) {
+    /**
+     * Auto-compute status from the total vs the target amount.
+     * Used for BOTH rental and deposit.
+     */
+    function computeStatus(totalPaid, targetAmount) {
         const a = parseFloat(totalPaid) || 0;
-        const r = parseFloat(monthlyRental) || 0;
+        const t = parseFloat(targetAmount) || 0;
         if (a <= 0) return 'unpaid';
-        if (r > 0 && a >= r) return 'paid';
-        if (r > 0 && a < r) return 'partial';
+        if (t > 0 && a >= t) return 'paid';
+        if (t > 0 && a < t) return 'partial';
         return 'paid';
     }
 
@@ -597,10 +673,7 @@
         });
     }
 
-    // ==================== FLOORS (DB-driven) ====================
-    /**
-     * Fetch all floors from the `floors` table, ordered by sort_order, then name.
-     */
+    // ==================== FLOORS ====================
     async function fetchFloors() {
         try {
             const { data, error } = await supabase
@@ -617,11 +690,6 @@
         }
     }
 
-    /**
-     * Populate a floor <select> from the `floors` array.
-     * If `selectedFloor` doesn't exist, prepend it as an emergency option
-     * so editing a vendor whose floor was deleted doesn't silently reset.
-     */
     function populateFloorDropdown(selectId, selectedFloor = '') {
         const select = document.getElementById(selectId);
         if (!select) return;
@@ -629,7 +697,6 @@
         let html = '<option value="">-- Select floor --</option>';
         const floorNames = floors.map(f => f.name);
 
-        // If editing a vendor whose floor no longer exists, show it too
         if (selectedFloor && !floorNames.includes(selectedFloor)) {
             html += `<option value="${escapeHtml(selectedFloor)}">${escapeHtml(selectedFloor)} (⚠️ deleted)</option>`;
         }
@@ -638,7 +705,6 @@
             html += `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`;
         });
 
-        // If no floors exist yet, show a hint option
         if (floors.length === 0) {
             html += '<option value="" disabled>— No floors yet. Click "Manage Floors" —</option>';
         }
@@ -647,9 +713,6 @@
         select.value = selectedFloor || '';
     }
 
-    /**
-     * Render the list of floors inside the Manage Floors modal.
-     */
     function renderFloorList() {
         const container = document.getElementById('floorListContainer');
         if (!container) return;
@@ -676,7 +739,6 @@
         });
         container.innerHTML = html;
 
-        // Wire up buttons
         container.querySelectorAll('.edit-floor-btn').forEach(btn => {
             btn.addEventListener('click', () => enterFloorEditMode(btn.dataset.id));
         });
@@ -685,9 +747,6 @@
         });
     }
 
-    /**
-     * Replace a floor row's name span with an input so it can be renamed inline.
-     */
     function enterFloorEditMode(floorId) {
         const floor = floors.find(f => f.id === floorId);
         if (!floor) return;
@@ -723,7 +782,6 @@
         if (!newName) { showToast('Floor name cannot be empty', true); return; }
         if (newName === oldName) { renderFloorList(); return; }
 
-        // Uniqueness check
         if (floors.some(f => f.id !== floorId && f.name.toLowerCase() === newName.toLowerCase())) {
             showToast('A floor with that name already exists', true);
             return;
@@ -736,7 +794,6 @@
                 .eq('id', floorId);
             if (error) throw error;
 
-            // Update any vendors that used the old floor name
             const { error: vErr } = await supabase
                 .from('vendors')
                 .update({ floor: newName })
@@ -762,7 +819,6 @@
             return;
         }
 
-        // Next sort_order = max + 1
         const nextSort = floors.length ? Math.max(...floors.map(f => f.sort_order || 0)) + 1 : 1;
 
         try {
@@ -781,7 +837,6 @@
     }
 
     async function deleteFloor(floorId, floorName) {
-        // Warn if any vendors use this floor
         const affected = vendors.filter(v => v.floor === floorName).length;
         let msg = `Delete floor "${floorName}"?`;
         if (affected > 0) {
@@ -804,17 +859,10 @@
         }
     }
 
-    /**
-     * Re-populate every floor dropdown in the app from the current `floors` array.
-     */
     function refreshAllFloorDropdowns() {
-        // Add vendor modal — preserve selection if any
         const addFloorSelect = document.getElementById('addFloor');
-        if (addFloorSelect) {
-            const cur = addFloorSelect.value;
-            populateFloorDropdown('addFloor', cur);
-        }
-        // Edit vendor modal — use selectedVendor's floor if present
+        if (addFloorSelect) populateFloorDropdown('addFloor', addFloorSelect.value);
+
         const editFloorSelect = document.getElementById('editFloor');
         if (editFloorSelect && selectedVendor) {
             populateFloorDropdown('editFloor', selectedVendor.floor || '');
@@ -906,7 +954,13 @@
                 .order('unit');
             if (error) throw error;
             vendors = data || [];
-            await loadCurrentMonthTotalsForAll();
+
+            // Load ALL payment data (rental + deposit) in bulk
+            await Promise.all([
+                loadCurrentMonthTotalsForAll(),
+                loadCurrentMonthDepositTotalsForAll()
+            ]);
+
             renderDashboard();
         } catch (err) {
             console.error('Error fetching vendors:', err);
@@ -929,8 +983,30 @@
             });
             vendors.forEach(v => { v._currentTotal = sumMap[v.id] || 0; });
         } catch (err) {
-            console.warn('Current month totals fetch failed:', err.message);
+            console.warn('Current month rental totals fetch failed:', err.message);
             vendors.forEach(v => { v._currentTotal = 0; });
+        }
+    }
+
+    /**
+     * Fetch total DEPOSIT paid to date (all months) per vendor.
+     * Deposit is a one-off, not monthly, so we sum all entries.
+     */
+    async function loadCurrentMonthDepositTotalsForAll() {
+        try {
+            const { data, error } = await supabase
+                .from('vendor_deposit_payments')
+                .select('vendor_id, amount');
+            if (error) throw error;
+            const sumMap = {};
+            (data || []).forEach(p => {
+                const id = p.vendor_id;
+                sumMap[id] = (sumMap[id] || 0) + (parseFloat(p.amount) || 0);
+            });
+            vendors.forEach(v => { v._depositPaid = sumMap[v.id] || 0; });
+        } catch (err) {
+            console.warn('Deposit totals fetch failed:', err.message);
+            vendors.forEach(v => { v._depositPaid = 0; });
         }
     }
 
@@ -941,7 +1017,6 @@
             return;
         }
 
-        // Sort floors: by floors table sort_order, then alphabetical
         const floorSortIndex = {};
         floors.forEach(f => { floorSortIndex[f.name] = f.sort_order; });
 
@@ -955,7 +1030,6 @@
         const sortedFloorNames = Object.keys(groups).sort((a, b) => {
             const aIdx = floorSortIndex[a];
             const bIdx = floorSortIndex[b];
-            // Floors in the floors table come first, in sort_order
             if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
             if (aIdx !== undefined) return -1;
             if (bIdx !== undefined) return 1;
@@ -972,16 +1046,34 @@
             for (const vendor of groups[floor]) {
                 const rental = parseFloat(vendor.monthly_rental) || 0;
                 const totalPaid = vendor._currentTotal || 0;
-                const status = computeStatus(totalPaid, rental);
-                const cardClass = 'status-' + status;
+                const rentalStatus = computeStatus(totalPaid, rental);
+                const cardClass = 'status-' + rentalStatus;
+
+                const depositRequired = parseFloat(vendor.deposit) || 0;
+                const depositPaid = vendor._depositPaid || 0;
+                const depositStatus = computeStatus(depositPaid, depositRequired);
+
                 const vType = vendor.vendor_type || 'Selling';
                 const typeClass = getVendorTypePillClass(vType);
                 const typeEmoji = getVendorTypeEmoji(vType);
 
-                let badgeText;
-                if (status === 'paid')    badgeText = `✅ Paid · RM ${totalPaid.toFixed(2)}`;
-                else if (status === 'partial') badgeText = `⚠️ Partial · RM ${totalPaid.toFixed(2)} / ${rental.toFixed(2)}`;
-                else                      badgeText = `❌ Unpaid · RM 0.00 / ${rental.toFixed(2)}`;
+                let rentalBadge;
+                if (rentalStatus === 'paid')    rentalBadge = `✅ Rent · RM ${totalPaid.toFixed(2)}`;
+                else if (rentalStatus === 'partial') rentalBadge = `⚠️ Rent · ${totalPaid.toFixed(2)} / ${rental.toFixed(2)}`;
+                else                            rentalBadge = `❌ Rent · 0 / ${rental.toFixed(2)}`;
+
+                let depositBadge;
+                if (depositRequired <= 0) {
+                    depositBadge = `💰 No deposit set`;
+                } else if (depositStatus === 'paid') {
+                    depositBadge = `🟢 Deposit Paid · RM ${depositPaid.toFixed(2)}`;
+                } else if (depositStatus === 'partial') {
+                    depositBadge = `🟠 Deposit Partial · ${depositPaid.toFixed(2)} / ${depositRequired.toFixed(2)}`;
+                } else {
+                    depositBadge = `🔴 Deposit Unpaid · 0 / ${depositRequired.toFixed(2)}`;
+                }
+
+                const depositClass = 'deposit-' + (depositRequired <= 0 ? 'unpaid' : depositStatus);
 
                 html += `
                     <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
@@ -992,7 +1084,10 @@
                             <span>👤 ${escapeHtml(vendor.contact_person || '—')}</span>
                             <span>📞 ${escapeHtml(vendor.phone || '—')}</span>
                         </div>
-                        <div class="payment-status-badge">${badgeText}</div>
+                        <div class="badge-stack">
+                            <div class="payment-status-badge">${rentalBadge}</div>
+                            <div class="payment-status-badge deposit ${depositClass}">${depositBadge}</div>
+                        </div>
                     </div>
                 `;
             }
@@ -1025,12 +1120,16 @@
         document.getElementById('editDeposit').value = vendor.deposit || 0;
         document.getElementById('editNotes').value = vendor.notes || '';
 
-        // Refresh floors from DB so newly added floors appear here too
         await fetchFloors();
         populateFloorDropdown('editFloor', vendor.floor || '');
 
-        await fetchVendorPayments(vendor.id);
+        await Promise.all([
+            fetchVendorPayments(vendor.id),
+            fetchVendorDeposits(vendor.id)
+        ]);
+
         renderPaymentHistory(vendor);
+        renderDepositHistory(vendor);
 
         vendorModal.classList.add('active');
     }
@@ -1052,7 +1151,23 @@
         }
     }
 
-    // ==================== RENDER PAYMENT HISTORY ====================
+    async function fetchVendorDeposits(vendorId) {
+        try {
+            const { data, error } = await supabase
+                .from('vendor_deposit_payments')
+                .select('*')
+                .eq('vendor_id', vendorId)
+                .order('date_paid', { ascending: true });
+            if (error) throw error;
+            currentVendorDeposits = data || [];
+            return currentVendorDeposits;
+        } catch (err) {
+            console.error('Error fetching deposits:', err);
+            return [];
+        }
+    }
+
+    // ==================== RENDER RENTAL HISTORY ====================
     function renderPaymentHistory(vendor) {
         const tbody = document.getElementById('paymentHistoryBody');
         const noPaymentsMsg = document.getElementById('noPaymentsMsg');
@@ -1114,18 +1229,92 @@
         document.getElementById('paymentNote').value = '';
     }
 
+    // ==================== RENDER DEPOSIT HISTORY ====================
+    function renderDepositHistory(vendor) {
+        const tbody = document.getElementById('depositHistoryBody');
+        const noDepositMsg = document.getElementById('noDepositMsg');
+        const statusPill = document.getElementById('depositStatusPill');
+        const depositPaidInput = document.getElementById('editDepositPaid');
+
+        const depositRequired = parseFloat(vendor.deposit) || 0;
+        const totalDeposit = currentVendorDeposits.reduce(
+            (sum, p) => sum + (parseFloat(p.amount) || 0), 0
+        );
+
+        // Update the read-only "Deposit Paid" field in the form
+        if (depositPaidInput) {
+            depositPaidInput.value = `RM ${totalDeposit.toFixed(2)}`;
+        }
+
+        if (!currentVendorDeposits.length) {
+            tbody.innerHTML = '';
+            noDepositMsg.style.display = 'block';
+        } else {
+            noDepositMsg.style.display = 'none';
+            let runningTotal = 0;
+            let html = '';
+            for (const dep of currentVendorDeposits) {
+                const datePaid = dep.date_paid ? new Date(dep.date_paid).toLocaleDateString() : '—';
+                const amt = parseFloat(dep.amount) || 0;
+                runningTotal += amt;
+                const status = computeStatus(runningTotal, depositRequired);
+                html += `
+                    <tr>
+                        <td style="color:#64748b;">${datePaid}</td>
+                        <td>+ RM ${amt.toFixed(2)}${dep.note ? ` <span style="color:#94a3b8; font-size:0.8rem;">— ${escapeHtml(dep.note)}</span>` : ''}</td>
+                        <td style="color:#0f172a; font-weight:600;">RM ${runningTotal.toFixed(2)}</td>
+                        <td><span class="status-pill ${getStatusPillClass(status)}">${getStatusText(status)}</span></td>
+                        <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c;" onclick="deleteDeposit('${dep.id}')">✕</button></td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        // Status pill at section header
+        const currentStatus = computeStatus(totalDeposit, depositRequired);
+        statusPill.className = `status-pill ${getStatusPillClass(currentStatus)}`;
+        statusPill.textContent = depositRequired > 0
+            ? `${getStatusText(currentStatus)} · RM ${totalDeposit.toFixed(2)} / ${depositRequired.toFixed(2)}`
+            : `💰 No deposit required`;
+
+        // Pre-fill deposit form
+        document.getElementById('depositMonth').value = getCurrentMonthString();
+        document.getElementById('depositDate').value = new Date().toISOString().split('T')[0];
+        const depositRemaining = Math.max(0, depositRequired - totalDeposit);
+        document.getElementById('depositAmount').value = depositRemaining > 0 ? depositRemaining.toFixed(2) : '';
+        document.getElementById('depositNote').value = '';
+    }
+
     // ==================== DELETE PAYMENT ====================
     window.deletePayment = async function(paymentId) {
-        if (!confirm('Delete this instalment?')) return;
+        if (!confirm('Delete this rental instalment?')) return;
         try {
             const { error } = await supabase.from('vendor_payments').delete().eq('id', paymentId);
             if (error) throw error;
-            showToast('Instalment deleted');
+            showToast('Rental instalment deleted');
             if (selectedVendor) {
                 await fetchVendorPayments(selectedVendor.id);
                 renderPaymentHistory(selectedVendor);
             }
             await loadCurrentMonthTotalsForAll();
+            renderDashboard();
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    };
+
+    window.deleteDeposit = async function(depositId) {
+        if (!confirm('Delete this deposit instalment?')) return;
+        try {
+            const { error } = await supabase.from('vendor_deposit_payments').delete().eq('id', depositId);
+            if (error) throw error;
+            showToast('Deposit instalment deleted');
+            if (selectedVendor) {
+                await fetchVendorDeposits(selectedVendor.id);
+                renderDepositHistory(selectedVendor);
+            }
+            await loadCurrentMonthDepositTotalsForAll();
             renderDashboard();
         } catch (err) {
             showToast('Error: ' + err.message, true);
@@ -1138,10 +1327,7 @@
         if (savingVendor) return;
 
         const floorValue = document.getElementById('editFloor').value;
-        if (!floorValue) {
-            showToast('Please select a floor', true);
-            return;
-        }
+        if (!floorValue) { showToast('Please select a floor', true); return; }
 
         savingVendor = true;
         const btn = document.getElementById('saveVendorBtn');
@@ -1183,7 +1369,9 @@
             document.getElementById('vendorModalSubtitle').textContent = `${updates.floor} · Unit ${updates.unit}`;
 
             renderPaymentHistory(selectedVendor);
+            renderDepositHistory(selectedVendor);
             await loadCurrentMonthTotalsForAll();
+            await loadCurrentMonthDepositTotalsForAll();
             renderDashboard();
         } catch (err) {
             showToast('Error: ' + err.message, true);
@@ -1200,19 +1388,21 @@
         if (!confirm(`Delete vendor "${selectedVendor.name}" and ALL payment records?`)) return;
         try {
             await supabase.from('vendor_payments').delete().eq('vendor_id', selectedVendor.id);
+            await supabase.from('vendor_deposit_payments').delete().eq('vendor_id', selectedVendor.id);
             const { error } = await supabase.from('vendors').delete().eq('id', selectedVendor.id);
             if (error) throw error;
             showToast('Vendor deleted');
             vendorModal.classList.remove('active');
             selectedVendor = null;
             currentVendorPayments = [];
+            currentVendorDeposits = [];
             await fetchVendors();
         } catch (err) {
             showToast('Error: ' + err.message, true);
         }
     }
 
-    // ==================== ADD PAYMENT (INSTALMENT) ====================
+    // ==================== ADD RENTAL PAYMENT ====================
     async function addPayment() {
         if (!selectedVendor) return;
         if (savingPayment) return;
@@ -1249,9 +1439,7 @@
                 }]);
             if (error) throw error;
 
-            let msg = `Instalment of RM ${amount.toFixed(2)} added for ${getMonthLabel(month)}.`;
-            msg += ` Month total: RM ${newTotal.toFixed(2)} / ${rental.toFixed(2)} → ${newStatus.toUpperCase()}`;
-            showToast(msg);
+            showToast(`Rental instalment RM ${amount.toFixed(2)} added for ${getMonthLabel(month)} — total RM ${newTotal.toFixed(2)} / ${rental.toFixed(2)} → ${newStatus.toUpperCase()}`);
 
             await fetchVendorPayments(selectedVendor.id);
             renderPaymentHistory(selectedVendor);
@@ -1263,7 +1451,60 @@
         } finally {
             savingPayment = false;
             btn.disabled = false;
-            btn.textContent = '💵 Add Instalment';
+            btn.textContent = '💵 Add Rental Instalment';
+        }
+    }
+
+    // ==================== ADD DEPOSIT PAYMENT ====================
+    async function addDeposit() {
+        if (!selectedVendor) return;
+        if (savingDeposit) return;
+
+        const month = document.getElementById('depositMonth').value || getCurrentMonthString();
+        const amount = parseFloat(document.getElementById('depositAmount').value);
+        const datePaid = document.getElementById('depositDate').value;
+        const note = document.getElementById('depositNote').value.trim();
+
+        if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid deposit amount (> 0)', true); return; }
+
+        savingDeposit = true;
+        const btn = document.getElementById('addDepositBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Adding...';
+
+        const depositRequired = parseFloat(selectedVendor.deposit) || 0;
+        const previousTotal = currentVendorDeposits.reduce(
+            (sum, p) => sum + (parseFloat(p.amount) || 0), 0
+        );
+        const newTotal = previousTotal + amount;
+        const newStatus = computeStatus(newTotal, depositRequired);
+
+        try {
+            const { error } = await supabase
+                .from('vendor_deposit_payments')
+                .insert([{
+                    vendor_id: selectedVendor.id,
+                    month: month,
+                    amount: amount,
+                    status: newStatus,
+                    date_paid: datePaid || null,
+                    note: note || null
+                }]);
+            if (error) throw error;
+
+            showToast(`Deposit instalment RM ${amount.toFixed(2)} added — total RM ${newTotal.toFixed(2)} / ${depositRequired.toFixed(2)} → ${newStatus.toUpperCase()}`);
+
+            await fetchVendorDeposits(selectedVendor.id);
+            renderDepositHistory(selectedVendor);
+            await loadCurrentMonthDepositTotalsForAll();
+            renderDashboard();
+        } catch (err) {
+            console.error('Add deposit error:', err);
+            showToast('Error: ' + err.message, true);
+        } finally {
+            savingDeposit = false;
+            btn.disabled = false;
+            btn.textContent = '💵 Add Deposit Instalment';
         }
     }
 
@@ -1295,7 +1536,8 @@
                     phone,
                     email,
                     monthly_rental: rental,
-                    deposit
+                    deposit,
+                    deposit_paid: 0
                 }]);
             if (error) throw error;
             showToast('Vendor created');
@@ -1379,6 +1621,40 @@
             `).join('');
         }
 
+        // Deposit summary for the invoice (all-time)
+        const depositRequired = parseFloat(selectedVendor.deposit) || 0;
+        const totalDepositPaid = currentVendorDeposits.reduce(
+            (sum, p) => sum + (parseFloat(p.amount) || 0), 0
+        );
+
+        let depositSection = '';
+        if (depositRequired > 0) {
+            const depStatus = computeStatus(totalDepositPaid, depositRequired);
+            depositSection = `
+                <div class="invoice-section-title">Security Deposit</div>
+                <table class="invoice-table">
+                    <thead>
+                        <tr><th>Description</th><th style="text-align:right;">Amount (RM)</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Deposit Required</td>
+                            <td style="text-align:right;">${depositRequired.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td>Deposit Paid to Date</td>
+                            <td style="text-align:right; color:#16a34a;">− ${totalDepositPaid.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align:right; margin-top:8px; font-size:0.9rem;">
+                    <span class="status-pill ${getStatusPillClass(depStatus)}">${getStatusText(depStatus)}</span>
+                    &nbsp;
+                    <strong>Deposit Balance: RM ${(Math.max(0, depositRequired - totalDepositPaid)).toFixed(2)}</strong>
+                </div>
+            `;
+        }
+
         document.getElementById('invoicePreviewContent').innerHTML = `
             <div class="invoice-header-row">
                 <div>
@@ -1419,16 +1695,18 @@
                         <td style="text-align:right;">${rental.toFixed(2)}</td>
                     </tr>
                     ${instalmentRows ? `
-                        <tr><td colspan="2" style="padding-top:12px; color:#64748b; font-size:0.8rem; text-transform:uppercase;">Instalments Received</td></tr>
+                        <tr><td colspan="2" style="padding-top:12px; color:#64748b; font-size:0.8rem; text-transform:uppercase;">Rental Instalments Received</td></tr>
                         ${instalmentRows}
                         <tr>
-                            <td style="padding-top:12px;"><strong>Total Paid</strong></td>
+                            <td style="padding-top:12px;"><strong>Total Rental Paid</strong></td>
                             <td style="text-align:right; padding-top:12px; color:#16a34a;"><strong>− ${amountPaid.toFixed(2)}</strong></td>
                         </tr>
                     ` : ''}
                 </tbody>
             </table>
-            <div class="invoice-total">Balance Due: RM ${balance.toFixed(2)}</div>
+            <div class="invoice-total">Rental Balance Due: RM ${balance.toFixed(2)}</div>
+
+            ${depositSection}
 
             ${cs.bank_details ? `
                 <div class="invoice-section-title">Payment Details</div>
@@ -1450,7 +1728,6 @@
 
     // ==================== EVENTS ====================
     document.addEventListener('DOMContentLoaded', async () => {
-        // Load floors FIRST so dropdowns can be populated
         await fetchFloors();
         await fetchCompanySettings();
         await fetchVendors();
@@ -1471,7 +1748,7 @@
         });
 
         document.getElementById('addVendorBtn').addEventListener('click', async () => {
-            await fetchFloors();                       // always fresh
+            await fetchFloors();
             populateFloorDropdown('addFloor', '');
             addVendorModal.classList.add('active');
         });
@@ -1495,33 +1772,35 @@
             if (e.key === 'Enter') { e.preventDefault(); addFloor(); }
         });
 
-        // Add Vendor modal
+        // Add Vendor
         document.getElementById('closeAddVendorModal').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('cancelAddVendorBtn').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('confirmAddVendorBtn').addEventListener('click', createVendor);
 
-        // Vendor modal
+        // Vendor Modal
         document.getElementById('closeVendorModal').addEventListener('click', () => {
             vendorModal.classList.remove('active');
             selectedVendor = null;
             currentVendorPayments = [];
+            currentVendorDeposits = [];
         });
         document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
         document.getElementById('deleteVendorBtn').addEventListener('click', deleteVendor);
         document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
+        document.getElementById('addDepositBtn').addEventListener('click', addDeposit);
         document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
 
-        // Company settings modal
+        // Company Settings
         document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('saveCompanySettingsBtn').addEventListener('click', saveCompanySettings);
 
-        // Invoice modal
+        // Invoice
         document.getElementById('closeInvoiceModal').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('printInvoiceBtn').addEventListener('click', () => window.print());
 
-        // Overlay click-to-close for non-critical modals only
+        // Overlay click-to-close (vendor modal deliberately excluded)
         [addVendorModal, manageFloorsModal, companySettingsModal, invoiceModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) modal.classList.remove('active');
