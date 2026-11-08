@@ -4,14 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor Management · Floor & Unit</title>
-    <!-- Supabase client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #f4f6fb;
@@ -21,341 +16,170 @@
             min-height: 100vh;
         }
         .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 24px;
-            background: white;
-            padding: 16px 24px;
-            border-radius: 32px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+            background: white; padding: 16px 24px; border-radius: 32px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.04);
         }
-        .app-header h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #0f172a;
-            letter-spacing: -0.02em;
-        }
+        .app-header h1 { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
         .btn {
-            border: none;
-            border-radius: 40px;
-            padding: 10px 22px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: none; border-radius: 40px; padding: 10px 22px;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px;
+            background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
             border: 1px solid #e2e8f0;
         }
-        .btn-primary {
-            background: #2c7a4b;
-            color: white;
-            border: none;
-            box-shadow: 0 4px 12px rgba(44,122,75,0.25);
-        }
-        .btn-primary:hover {
-            background: #1f5e3a;
-            transform: translateY(-1px);
-        }
-        .btn-secondary {
-            background: white;
-            border: 1px solid #cbd5e1;
-            color: #1e293b;
-        }
-        .btn-secondary:hover {
-            background: #f1f5f9;
-        }
-        .btn-small {
-            padding: 6px 16px;
-            font-size: 0.85rem;
-        }
-        .floor-section {
-            margin-bottom: 32px;
-        }
+        .btn-primary { background: #2c7a4b; color: white; border: none; box-shadow: 0 4px 12px rgba(44,122,75,0.25); }
+        .btn-primary:hover { background: #1f5e3a; transform: translateY(-1px); }
+        .btn-secondary { background: white; border: 1px solid #cbd5e1; color: #1e293b; }
+        .btn-secondary:hover { background: #f1f5f9; }
+        .btn-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fecaca; }
+        .btn-small { padding: 6px 16px; font-size: 0.85rem; }
+
+        .floor-section { margin-bottom: 32px; }
         .floor-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-left: 5px solid #2c7a4b;
-            padding-left: 16px;
+            font-size: 1.3rem; font-weight: 600; margin-bottom: 16px;
+            color: #0f172a; display: flex; align-items: center; gap: 8px;
+            border-left: 5px solid #2c7a4b; padding-left: 16px;
         }
         .vendor-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 16px;
         }
         .vendor-card {
-            background: white;
-            border-radius: 24px;
-            padding: 18px 16px;
+            background: white; border-radius: 24px; padding: 18px 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            border-top: 6px solid #cbd5e1;
+            border: 1px solid #e2e8f0; cursor: pointer;
+            transition: all 0.2s ease; display: flex; flex-direction: column;
+            position: relative; border-top: 6px solid #cbd5e1;
         }
-        .vendor-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
-            border-color: #94a3b8;
-        }
+        .vendor-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+        /* Card colour by status */
+        .vendor-card.status-paid    { border-top-color: #16a34a; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 70%); }
+        .vendor-card.status-partial { border-top-color: #f59e0b; background: linear-gradient(180deg, #fffbeb 0%, #ffffff 70%); }
+        .vendor-card.status-unpaid  { border-top-color: #dc2626; background: linear-gradient(180deg, #fef2f2 0%, #ffffff 70%); }
+
         .vendor-card .unit-badge {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #64748b;
-            background: #f1f5f9;
-            padding: 4px 12px;
-            border-radius: 40px;
-            display: inline-block;
-            align-self: flex-start;
-            margin-bottom: 10px;
-            letter-spacing: 0.3px;
+            font-size: 0.75rem; font-weight: 700; color: #64748b;
+            background: #f1f5f9; padding: 4px 12px; border-radius: 40px;
+            display: inline-block; align-self: flex-start; margin-bottom: 10px;
         }
-        .vendor-card .vendor-name {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 6px;
-            line-height: 1.3;
-        }
-        .vendor-card .vendor-meta {
-            font-size: 0.8rem;
-            color: #64748b;
-            margin-top: 4px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .vendor-card .vendor-name { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+        .vendor-card .vendor-meta { font-size: 0.8rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px; }
         .vendor-card .payment-status-badge {
-            margin-top: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 20px;
-            text-align: center;
-            align-self: flex-start;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            margin-top: 12px; font-size: 0.8rem; font-weight: 700;
+            padding: 6px 14px; border-radius: 20px; align-self: flex-start;
+            display: inline-flex; align-items: center; gap: 6px;
         }
-        .status-paid {
-            background: #dcfce7;
-            color: #166534;
-        }
-        .status-partial {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-        .status-unpaid {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .status-no-data {
-            background: #f1f5f9;
-            color: #475569;
-        }
+        .status-paid    .payment-status-badge { background: #dcfce7; color: #166534; }
+        .status-partial .payment-status-badge { background: #fef3c7; color: #92400e; }
+        .status-unpaid  .payment-status-badge { background: #fee2e2; color: #991b1b; }
+
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(4px);
-            padding: 16px;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; align-items: center;
+            justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 16px;
         }
-        .modal-overlay.active {
-            display: flex;
-        }
+        .modal-overlay.active { display: flex; }
         .modal-container {
-            background: white;
-            border-radius: 32px;
-            max-width: 880px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 28px 28px 32px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-            position: relative;
+            background: white; border-radius: 32px; max-width: 880px; width: 100%;
+            max-height: 90vh; overflow-y: auto; padding: 28px 28px 32px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3); position: relative;
         }
         .modal-close {
-            position: absolute;
-            top: 18px;
-            right: 22px;
-            font-size: 2rem;
-            line-height: 1;
-            color: #94a3b8;
-            cursor: pointer;
-            background: none;
-            border: none;
-            transition: color 0.2s;
+            position: absolute; top: 18px; right: 22px; font-size: 2rem;
+            color: #94a3b8; cursor: pointer; background: none; border: none;
         }
-        .modal-close:hover {
-            color: #0f172a;
-        }
-        .modal-title {
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            padding-right: 40px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .modal-subtitle {
-            font-size: 0.95rem;
-            color: #64748b;
-            margin-top: -12px;
-            margin-bottom: 24px;
-            font-weight: 400;
-        }
-        .form-group {
-            margin-bottom: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .form-group label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #334155;
-        }
+        .modal-close:hover { color: #0f172a; }
+        .modal-title { font-size: 1.7rem; font-weight: 700; margin-bottom: 20px; padding-right: 40px; }
+        .modal-subtitle { font-size: 0.95rem; color: #64748b; margin-top: -12px; margin-bottom: 24px; }
+
+        .form-group { margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-weight: 600; font-size: 0.9rem; color: #334155; }
         .form-group input, .form-group select, .form-group textarea {
-            padding: 12px 16px;
-            border-radius: 16px;
-            border: 1.5px solid #e2e8f0;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: 0.2s;
-            background: white;
+            padding: 12px 16px; border-radius: 16px; border: 1.5px solid #e2e8f0;
+            font-size: 1rem; font-family: inherit; transition: 0.2s; background: white;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #2c7a4b;
-            box-shadow: 0 0 0 4px rgba(44,122,75,0.12);
+            outline: none; border-color: #2c7a4b; box-shadow: 0 0 0 4px rgba(44,122,75,0.12);
         }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .divider {
-            height: 1px;
-            background: #e2e8f0;
-            margin: 24px 0;
-        }
-        .payment-history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-            font-size: 0.9rem;
-        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
+
+        .payment-history-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
         .payment-history-table th {
-            text-align: left;
-            padding: 12px 8px;
-            background: #f8fafc;
-            font-weight: 600;
-            color: #475569;
-            border-radius: 12px 12px 0 0;
+            text-align: left; padding: 12px 8px; background: #f8fafc;
+            font-weight: 600; color: #475569; border-radius: 12px 12px 0 0;
         }
-        .payment-history-table td {
-            padding: 12px 8px;
-            border-bottom: 1px solid #edf2f7;
-        }
-        .payment-history-table tr:last-child td {
-            border-bottom: none;
-        }
-        .status-pill {
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-        }
+        .payment-history-table td { padding: 12px 8px; border-bottom: 1px solid #edf2f7; }
+        .payment-history-table tr:last-child td { border-bottom: none; }
+
+        .status-pill { padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
         .pill-paid { background: #dcfce7; color: #166534; }
-        .pill-partial { background: #fef9c3; color: #854d0e; }
+        .pill-partial { background: #fef3c7; color: #92400e; }
         .pill-unpaid { background: #fee2e2; color: #991b1b; }
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 24px;
-            flex-wrap: wrap;
-        }
-        .payment-form {
-            background: #f8fafc;
-            border-radius: 24px;
-            padding: 20px;
-            margin: 20px 0 10px;
-        }
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
+
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
+        .payment-form { background: #f8fafc; border-radius: 24px; padding: 20px; margin: 20px 0 10px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #94a3b8;
-            background: white;
-            border-radius: 32px;
-            border: 2px dashed #e2e8f0;
+            text-align: center; padding: 40px 20px; color: #94a3b8;
+            background: white; border-radius: 32px; border: 2px dashed #e2e8f0;
         }
         .badge-floor {
-            background: #e6f0ff;
-            color: #1e40af;
-            padding: 4px 14px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            background: #e6f0ff; color: #1e40af; padding: 4px 14px;
+            border-radius: 40px; font-size: 0.8rem; font-weight: 600;
         }
         .loader-spinner {
-            width: 40px; height: 40px;
-            border: 4px solid #e2e8f0;
-            border-top-color: #2c7a4b;
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-            margin: 40px auto;
+            width: 40px; height: 40px; border: 4px solid #e2e8f0;
+            border-top-color: #2c7a4b; border-radius: 50%;
+            animation: spin 0.9s linear infinite; margin: 40px auto;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .toast-message {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #1e293b;
-            color: white;
-            padding: 14px 24px;
-            border-radius: 60px;
-            font-weight: 500;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            position: fixed; bottom: 24px; right: 24px; background: #1e293b;
+            color: white; padding: 14px 24px; border-radius: 60px;
+            font-weight: 500; box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+            z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
-        .toast-message.show {
-            opacity: 1;
+        .toast-message.show { opacity: 1; }
+
+        /* Info banner inside payment form */
+        .auto-status-hint {
+            background: #eff6ff; color: #1e40af; font-size: 0.8rem;
+            padding: 8px 14px; border-radius: 12px; margin-top: 8px;
+            border-left: 3px solid #3b82f6;
         }
+
+        /* Invoice preview */
+        .invoice-preview {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 20px;
+            padding: 32px; font-family: 'Courier New', monospace; font-size: 0.9rem;
+            max-height: 60vh; overflow-y: auto; margin: 16px 0;
+        }
+        .invoice-preview h2 { font-size: 1.5rem; margin-bottom: 4px; }
+        .invoice-header-row { display: flex; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
+        .invoice-section-title { font-weight: 700; text-transform: uppercase; font-size: 0.8rem; color: #64748b; margin: 16px 0 6px; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .invoice-table th, .invoice-table td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        .invoice-table th { background: #f8fafc; font-weight: 600; }
+        .invoice-total { font-size: 1.2rem; font-weight: 800; color: #0f172a; text-align: right; margin-top: 12px; }
+
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
             .modal-container { padding: 20px; }
             .vendor-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #invoiceModal, #invoiceModal * { visibility: visible; }
+            #invoiceModal { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; backdrop-filter: none; padding: 0; }
+            #invoiceModal .modal-container { box-shadow: none; max-height: none; border-radius: 0; padding: 0; }
+            #invoiceModal .no-print { display: none !important; }
+            .invoice-preview { border: none; max-height: none; overflow: visible; padding: 0; }
         }
     </style>
 </head>
@@ -364,6 +188,7 @@
 <div class="app-header">
     <h1>🏢 Vendor Management</h1>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" id="companySettingsBtn">🏢 Company Details</button>
         <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
         <button class="btn btn-primary" id="addVendorBtn">➕ Add Vendor</button>
     </div>
@@ -373,7 +198,7 @@
     <div class="loader-spinner"></div>
 </div>
 
-<!-- Vendor Modal (Edit / View / Payment History) -->
+<!-- ============ VENDOR MODAL ============ -->
 <div class="modal-overlay" id="vendorModal">
     <div class="modal-container">
         <button class="modal-close" id="closeVendorModal">&times;</button>
@@ -381,116 +206,111 @@
         <div class="modal-subtitle" id="vendorModalSubtitle"></div>
 
         <!-- Edit Form -->
-        <div id="vendorEditForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Vendor Name</label>
-                    <input type="text" id="editVendorName" placeholder="e.g. Sushi King">
-                </div>
-                <div class="form-group">
-                    <label>Contact Person</label>
-                    <input type="text" id="editContactPerson" placeholder="e.g. Alice Tan">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Phone</label>
-                    <input type="text" id="editPhone" placeholder="e.g. 012-3456789">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="editEmail" placeholder="vendor@example.com">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Floor</label>
-                    <input type="text" id="editFloor" placeholder="e.g. Ground, 1st, 2nd">
-                </div>
-                <div class="form-group">
-                    <label>Unit Number</label>
-                    <input type="text" id="editUnit" placeholder="e.g. G-12, L1-05">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Monthly Rental (RM)</label>
-                    <input type="number" id="editRental" step="0.01" min="0" placeholder="0.00">
-                </div>
-                <div class="form-group">
-                    <label>Deposit (RM)</label>
-                    <input type="number" id="editDeposit" step="0.01" min="0" placeholder="0.00">
-                </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Vendor Name</label>
+                <input type="text" id="editVendorName">
             </div>
             <div class="form-group">
-                <label>Notes</label>
-                <textarea id="editNotes" rows="2" placeholder="Any additional notes..."></textarea>
+                <label>Contact Person</label>
+                <input type="text" id="editContactPerson">
             </div>
-            <div class="modal-actions" style="justify-content: flex-start; margin-top: 8px;">
-                <button class="btn btn-primary" id="saveVendorBtn">💾 Save Changes</button>
-                <button class="btn btn-secondary" id="deleteVendorBtn" style="color: #b91c1c; border-color: #fecaca;">🗑️ Delete Vendor</button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="editPhone">
             </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="editEmail">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Floor</label>
+                <input type="text" id="editFloor">
+            </div>
+            <div class="form-group">
+                <label>Unit Number</label>
+                <input type="text" id="editUnit">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Monthly Rental (RM)</label>
+                <input type="number" id="editRental" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Deposit (RM)</label>
+                <input type="number" id="editDeposit" step="0.01" min="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea id="editNotes" rows="2"></textarea>
+        </div>
+        <div class="modal-actions" style="justify-content: flex-start; margin-top: 8px;">
+            <button class="btn btn-primary" id="saveVendorBtn">💾 Save Changes</button>
+            <button class="btn btn-secondary" id="issueInvoiceBtn">🧾 Issue Invoice</button>
+            <button class="btn btn-danger" id="deleteVendorBtn">🗑️ Delete Vendor</button>
         </div>
 
         <div class="divider"></div>
 
-        <!-- Payment History & Status -->
-        <div>
-            <div class="flex-between">
-                <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Payment History</h3>
-                <span id="currentMonthStatus" class="status-pill" style="font-size: 0.85rem; padding: 6px 18px;"></span>
-            </div>
-            <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
-                <table class="payment-history-table" id="paymentHistoryTable">
-                    <thead>
-                        <tr><th>Month</th><th>Amount</th><th>Status</th><th>Date Paid</th><th></th></tr>
-                    </thead>
-                    <tbody id="paymentHistoryBody"></tbody>
-                </table>
-                <div id="noPaymentsMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No payment records yet.</div>
-            </div>
+        <!-- Payment History -->
+        <div class="flex-between">
+            <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Payment History</h3>
+            <span id="currentMonthStatus" class="status-pill"></span>
+        </div>
+        <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
+            <table class="payment-history-table">
+                <thead>
+                    <tr><th>Month</th><th>Amount</th><th>Status</th><th>Date Paid</th><th></th></tr>
+                </thead>
+                <tbody id="paymentHistoryBody"></tbody>
+            </table>
+            <div id="noPaymentsMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No payment records yet.</div>
+        </div>
 
-            <!-- Add Payment Form -->
-            <div class="payment-form" id="paymentForm">
-                <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Payment</h4>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Month</label>
-                        <input type="month" id="paymentMonth" style="width: 100%;">
-                    </div>
-                    <div class="form-group">
-                        <label>Amount Paid (RM)</label>
-                        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00">
-                    </div>
+        <!-- Add Payment Form -->
+        <div class="payment-form">
+            <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Payment</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Month</label>
+                    <input type="month" id="paymentMonth">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select id="paymentStatus">
-                            <option value="paid">Paid</option>
-                            <option value="partial">Partial</option>
-                            <option value="unpaid">Unpaid</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Date Paid</label>
-                        <input type="date" id="paymentDate" style="width: 100%;">
-                    </div>
+                <div class="form-group">
+                    <label>Amount Paid (RM)</label>
+                    <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00">
                 </div>
-                <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Payment</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date Paid</label>
+                    <input type="date" id="paymentDate">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" id="addPaymentBtn" style="width: 100%; justify-content: center;">💵 Add Payment</button>
+                </div>
+            </div>
+            <div class="auto-status-hint" id="autoStatusHint">
+                Status is auto-set: <strong>≥ Monthly Rental → Paid (green)</strong> · <strong>&lt; Rental → Partial (orange)</strong> · <strong>0 → Unpaid (red)</strong>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Add Vendor Modal -->
+<!-- ============ ADD VENDOR MODAL ============ -->
 <div class="modal-overlay" id="addVendorModal">
     <div class="modal-container" style="max-width: 600px;">
         <button class="modal-close" id="closeAddVendorModal">&times;</button>
         <div class="modal-title">➕ Add New Vendor</div>
         <div class="form-group">
             <label>Vendor Name *</label>
-            <input type="text" id="addVendorName" placeholder="e.g. Sushi King">
+            <input type="text" id="addVendorName">
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -505,26 +325,26 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Contact Person</label>
-                <input type="text" id="addContactPerson" placeholder="e.g. Alice Tan">
+                <input type="text" id="addContactPerson">
             </div>
             <div class="form-group">
                 <label>Phone</label>
-                <input type="text" id="addPhone" placeholder="e.g. 012-3456789">
+                <input type="text" id="addPhone">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" id="addEmail" placeholder="vendor@example.com">
+                <input type="email" id="addEmail">
             </div>
             <div class="form-group">
                 <label>Monthly Rental (RM)</label>
-                <input type="number" id="addRental" step="0.01" min="0" placeholder="0.00">
+                <input type="number" id="addRental" step="0.01" min="0">
             </div>
         </div>
         <div class="form-group">
             <label>Deposit (RM)</label>
-            <input type="number" id="addDeposit" step="0.01" min="0" placeholder="0.00">
+            <input type="number" id="addDeposit" step="0.01" min="0">
         </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" id="cancelAddVendorBtn">Cancel</button>
@@ -533,12 +353,69 @@
     </div>
 </div>
 
+<!-- ============ COMPANY SETTINGS MODAL ============ -->
+<div class="modal-overlay" id="companySettingsModal">
+    <div class="modal-container" style="max-width: 640px;">
+        <button class="modal-close" id="closeCompanySettingsModal">&times;</button>
+        <div class="modal-title">🏢 Company Details</div>
+        <div class="modal-subtitle">These details appear on every invoice you issue.</div>
+        <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" id="csCompanyName" placeholder="e.g. ABC Properties Sdn Bhd">
+        </div>
+        <div class="form-group">
+            <label>Address</label>
+            <textarea id="csAddress" rows="2" placeholder="Full business address"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="csPhone" placeholder="e.g. 03-1234 5678">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="csEmail" placeholder="billing@example.com">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>SSM / Registration No.</label>
+                <input type="text" id="csSsm" placeholder="e.g. 1234567-X">
+            </div>
+            <div class="form-group">
+                <label>Logo URL (optional)</label>
+                <input type="url" id="csLogoUrl" placeholder="https://...">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Bank / Payment Details (for invoice footer)</label>
+            <textarea id="csBankDetails" rows="2" placeholder="Bank name, account no, account holder"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="cancelCompanySettingsBtn">Cancel</button>
+            <button class="btn btn-primary" id="saveCompanySettingsBtn">💾 Save Company Details</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ INVOICE MODAL ============ -->
+<div class="modal-overlay" id="invoiceModal">
+    <div class="modal-container" style="max-width: 780px;">
+        <button class="modal-close no-print" id="closeInvoiceModal">&times;</button>
+        <div class="modal-title no-print">🧾 Invoice Preview</div>
+        <div class="invoice-preview" id="invoicePreviewContent"></div>
+        <div class="modal-actions no-print">
+            <button class="btn btn-secondary" id="cancelInvoiceBtn">Close</button>
+            <button class="btn btn-primary" id="printInvoiceBtn">🖨️ Print / Save PDF</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast-message" id="toastMessage"></div>
 
 <script>
-    // ==================== SUPABASE CONFIG ====================
-    // ⚠️ Use `var` here (not `const`) — the CDN already declares a global `supabase`.
-    //    This matches how your POS file does it.
+    // ==================== SUPABASE ====================
+    // Use `var` (not const) — matches POS behaviour, avoids "already declared"
     const SUPABASE_URL = "https://icvthtbhnxaoykzbadqh.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_RiKDSx7sDD9J9JkZ3U8JLw_8RDz3XOA";
     var supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -547,12 +424,15 @@
     let vendors = [];
     let selectedVendor = null;
     let currentVendorPayments = [];
+    let companySettings = null;
 
-    // ==================== DOM REFS ====================
+    // ==================== DOM ====================
     const dashboardContainer = document.getElementById('dashboardContainer');
-    const vendorModal = document.getElementById('vendorModal');
-    const addVendorModal = document.getElementById('addVendorModal');
-    const toastMessage = document.getElementById('toastMessage');
+    const vendorModal        = document.getElementById('vendorModal');
+    const addVendorModal     = document.getElementById('addVendorModal');
+    const companySettingsModal = document.getElementById('companySettingsModal');
+    const invoiceModal       = document.getElementById('invoiceModal');
+    const toastMessage       = document.getElementById('toastMessage');
 
     // ==================== TOAST ====================
     function showToast(msg, isError = false) {
@@ -567,24 +447,108 @@
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
-
     function getMonthLabel(monthStr) {
         if (!monthStr) return '';
         const [year, month] = monthStr.split('-');
         const date = new Date(year, month - 1);
         return date.toLocaleString('default', { month: 'long', year: 'numeric' });
     }
-
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, m => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[m]));
+    }
     function getStatusPillClass(status) {
         if (status === 'paid') return 'pill-paid';
         if (status === 'partial') return 'pill-partial';
         return 'pill-unpaid';
     }
-
     function getStatusText(status) {
         if (status === 'paid') return '✅ Fully Paid';
         if (status === 'partial') return '⚠️ Partially Paid';
         return '❌ Unpaid';
+    }
+
+    /**
+     * Auto-compute status based on amount paid vs monthly rental.
+     *   amount >= rental  → 'paid'    (green)
+     *   amount  > 0       → 'partial' (orange)
+     *   amount <= 0       → 'unpaid'  (red)
+     */
+    function computeStatus(amountPaid, monthlyRental) {
+        const a = parseFloat(amountPaid) || 0;
+        const r = parseFloat(monthlyRental) || 0;
+        if (a <= 0) return 'unpaid';
+        if (r > 0 && a >= r) return 'paid';
+        if (r > 0 && a < r) return 'partial';
+        // Fallback: rental is 0 but amount > 0 → treat as paid
+        return 'paid';
+    }
+
+    // ==================== COMPANY SETTINGS ====================
+    async function fetchCompanySettings() {
+        try {
+            const { data, error } = await supabase
+                .from('company_settings')
+                .select('*')
+                .eq('id', 1)
+                .maybeSingle();
+            if (error) throw error;
+            companySettings = data || null;
+        } catch (err) {
+            console.warn('Company settings fetch failed:', err.message);
+            companySettings = null;
+        }
+    }
+
+    function populateCompanySettingsForm() {
+        if (!companySettings) {
+            document.getElementById('csCompanyName').value = '';
+            document.getElementById('csAddress').value = '';
+            document.getElementById('csPhone').value = '';
+            document.getElementById('csEmail').value = '';
+            document.getElementById('csSsm').value = '';
+            document.getElementById('csLogoUrl').value = '';
+            document.getElementById('csBankDetails').value = '';
+            return;
+        }
+        document.getElementById('csCompanyName').value = companySettings.company_name || '';
+        document.getElementById('csAddress').value = companySettings.company_address || '';
+        document.getElementById('csPhone').value = companySettings.company_phone || '';
+        document.getElementById('csEmail').value = companySettings.company_email || '';
+        document.getElementById('csSsm').value = companySettings.company_ssm || '';
+        document.getElementById('csLogoUrl').value = companySettings.company_logo_url || '';
+        document.getElementById('csBankDetails').value = companySettings.bank_details || '';
+    }
+
+    async function saveCompanySettings() {
+        const payload = {
+            id: 1,
+            company_name: document.getElementById('csCompanyName').value.trim(),
+            company_address: document.getElementById('csAddress').value.trim(),
+            company_phone: document.getElementById('csPhone').value.trim(),
+            company_email: document.getElementById('csEmail').value.trim(),
+            company_ssm: document.getElementById('csSsm').value.trim(),
+            company_logo_url: document.getElementById('csLogoUrl').value.trim(),
+            bank_details: document.getElementById('csBankDetails').value.trim(),
+            updated_at: new Date().toISOString()
+        };
+        if (!payload.company_name) {
+            showToast('Company name is required', true);
+            return;
+        }
+        try {
+            const { error } = await supabase
+                .from('company_settings')
+                .upsert(payload, { onConflict: 'id' });
+            if (error) throw error;
+            companySettings = payload;
+            showToast('Company details saved');
+            companySettingsModal.classList.remove('active');
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
     }
 
     // ==================== FETCH VENDORS ====================
@@ -597,14 +561,124 @@
                 .order('unit');
             if (error) throw error;
             vendors = data || [];
+            // Pre-load current-month payments for all vendors to colour cards
+            await loadCurrentMonthPaymentsForAll();
             renderDashboard();
         } catch (err) {
             console.error('Error fetching vendors:', err);
-            dashboardContainer.innerHTML = `<div class="empty-state">❌ Failed to load vendors: ${err.message}</div>`;
+            dashboardContainer.innerHTML = `<div class="empty-state">❌ Failed to load vendors: ${escapeHtml(err.message)}</div>`;
         }
     }
 
-    // ==================== FETCH PAYMENTS FOR VENDOR ====================
+    /**
+     * Loads all current-month payments in ONE query so cards can be coloured instantly.
+     * Stores result on each vendor as `_currentPayment`.
+     */
+    async function loadCurrentMonthPaymentsForAll() {
+        const month = getCurrentMonthString();
+        try {
+            const { data, error } = await supabase
+                .from('vendor_payments')
+                .select('vendor_id, amount, status, month')
+                .eq('month', month);
+            if (error) throw error;
+            const map = {};
+            (data || []).forEach(p => { map[p.vendor_id] = p; });
+            vendors.forEach(v => { v._currentPayment = map[v.id] || null; });
+        } catch (err) {
+            console.warn('Current month payments fetch failed:', err.message);
+            vendors.forEach(v => { v._currentPayment = null; });
+        }
+    }
+
+    // ==================== RENDER DASHBOARD ====================
+    function renderDashboard() {
+        if (!vendors.length) {
+            dashboardContainer.innerHTML = `<div class="empty-state">🏪 No vendors yet. Click "Add Vendor" to get started.</div>`;
+            return;
+        }
+
+        const floors = {};
+        vendors.forEach(v => {
+            const floor = v.floor || 'Unassigned';
+            if (!floors[floor]) floors[floor] = [];
+            floors[floor].push(v);
+        });
+
+        let html = '';
+        const sortedFloors = Object.keys(floors).sort();
+
+        for (const floor of sortedFloors) {
+            html += `<div class="floor-section">`;
+            html += `<div class="floor-title"><span class="badge-floor">${escapeHtml(floor)}</span>
+                     <span style="font-size: 0.95rem; color: #64748b; font-weight: 400;">${floors[floor].length} vendor(s)</span></div>`;
+            html += `<div class="vendor-grid">`;
+
+            for (const vendor of floors[floor]) {
+                const rental = parseFloat(vendor.monthly_rental) || 0;
+                const pay = vendor._currentPayment;
+                let status, amountPaid;
+                if (!pay) {
+                    status = 'unpaid';
+                    amountPaid = 0;
+                } else {
+                    amountPaid = parseFloat(pay.amount) || 0;
+                    status = computeStatus(amountPaid, rental);
+                }
+
+                const cardClass = 'status-' + status;
+                let badgeText, badgeClass;
+                if (status === 'paid')    { badgeText = `✅ Paid · RM ${amountPaid.toFixed(2)}`; badgeClass = 'status-paid'; }
+                else if (status === 'partial') { badgeText = `⚠️ Partial · RM ${amountPaid.toFixed(2)} / ${rental.toFixed(2)}`; badgeClass = 'status-partial'; }
+                else                      { badgeText = `❌ Unpaid · RM 0.00 / ${rental.toFixed(2)}`; badgeClass = 'status-unpaid'; }
+
+                html += `
+                    <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
+                        <span class="unit-badge">📌 ${escapeHtml(vendor.unit || 'No unit')}</span>
+                        <div class="vendor-name">${escapeHtml(vendor.name)}</div>
+                        <div class="vendor-meta">
+                            <span>👤 ${escapeHtml(vendor.contact_person || '—')}</span>
+                            <span>📞 ${escapeHtml(vendor.phone || '—')}</span>
+                        </div>
+                        <div class="payment-status-badge">${badgeText}</div>
+                    </div>
+                `;
+            }
+            html += `</div></div>`;
+        }
+
+        dashboardContainer.innerHTML = html;
+
+        document.querySelectorAll('.vendor-card').forEach(card => {
+            card.addEventListener('click', () => openVendorModal(card.dataset.vendorId));
+        });
+    }
+
+    // ==================== OPEN VENDOR MODAL ====================
+    async function openVendorModal(vendorId) {
+        const vendor = vendors.find(v => v.id == vendorId);
+        if (!vendor) return;
+        selectedVendor = vendor;
+
+        document.getElementById('vendorModalTitle').textContent = `🏪 ${vendor.name}`;
+        document.getElementById('vendorModalSubtitle').textContent = `${vendor.floor} · Unit ${vendor.unit}`;
+
+        document.getElementById('editVendorName').value = vendor.name || '';
+        document.getElementById('editContactPerson').value = vendor.contact_person || '';
+        document.getElementById('editPhone').value = vendor.phone || '';
+        document.getElementById('editEmail').value = vendor.email || '';
+        document.getElementById('editFloor').value = vendor.floor || '';
+        document.getElementById('editUnit').value = vendor.unit || '';
+        document.getElementById('editRental').value = vendor.monthly_rental || 0;
+        document.getElementById('editDeposit').value = vendor.deposit || 0;
+        document.getElementById('editNotes').value = vendor.notes || '';
+
+        await fetchVendorPayments(vendor.id);
+        renderPaymentHistory(vendor);
+
+        vendorModal.classList.add('active');
+    }
+
     async function fetchVendorPayments(vendorId) {
         try {
             const { data, error } = await supabase
@@ -621,131 +695,13 @@
         }
     }
 
-    // ==================== RENDER DASHBOARD ====================
-    function renderDashboard() {
-        if (!vendors.length) {
-            dashboardContainer.innerHTML = `<div class="empty-state">🏪 No vendors yet. Click "Add Vendor" to get started.</div>`;
-            return;
-        }
-
-        // Group by floor
-        const floors = {};
-        vendors.forEach(v => {
-            const floor = v.floor || 'Unassigned';
-            if (!floors[floor]) floors[floor] = [];
-            floors[floor].push(v);
-        });
-
-        let html = '';
-        const sortedFloors = Object.keys(floors).sort();
-
-        for (const floor of sortedFloors) {
-            html += `<div class="floor-section">`;
-            html += `<div class="floor-title"><span class="badge-floor">${floor}</span> <span style="font-size: 0.95rem; color: #64748b; font-weight: 400;">${floors[floor].length} vendor(s)</span></div>`;
-            html += `<div class="vendor-grid">`;
-            for (const vendor of floors[floor]) {
-                html += `
-                    <div class="vendor-card" data-vendor-id="${vendor.id}">
-                        <span class="unit-badge">📌 ${vendor.unit || 'No unit'}</span>
-                        <div class="vendor-name">${escapeHtml(vendor.name)}</div>
-                        <div class="vendor-meta">
-                            <span>👤 ${escapeHtml(vendor.contact_person || '—')}</span>
-                            <span>📞 ${escapeHtml(vendor.phone || '—')}</span>
-                        </div>
-                        <div class="payment-status-badge status-no-data" id="status-badge-${vendor.id}">
-                            Click to view
-                        </div>
-                    </div>
-                `;
-            }
-            html += `</div></div>`;
-        }
-        dashboardContainer.innerHTML = html;
-
-        // Attach click listeners
-        document.querySelectorAll('.vendor-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const vendorId = card.dataset.vendorId;
-                openVendorModal(vendorId);
-            });
-        });
-
-        // After rendering, asynchronously load status for each vendor's current month
-        loadStatusForAllVendors();
-    }
-
-    async function loadStatusForAllVendors() {
-        const currentMonth = getCurrentMonthString();
-        for (const vendor of vendors) {
-            try {
-                const { data, error } = await supabase
-                    .from('vendor_payments')
-                    .select('status')
-                    .eq('vendor_id', vendor.id)
-                    .eq('month', currentMonth)
-                    .maybeSingle();
-                const badge = document.getElementById(`status-badge-${vendor.id}`);
-                if (badge) {
-                    if (error) {
-                        badge.textContent = '⚠️ Error';
-                        badge.className = 'payment-status-badge status-no-data';
-                    } else if (!data) {
-                        badge.textContent = '❌ No payment';
-                        badge.className = 'payment-status-badge status-unpaid';
-                    } else {
-                        const status = data.status;
-                        if (status === 'paid') {
-                            badge.textContent = '✅ Paid';
-                            badge.className = 'payment-status-badge status-paid';
-                        } else if (status === 'partial') {
-                            badge.textContent = '⚠️ Partial';
-                            badge.className = 'payment-status-badge status-partial';
-                        } else {
-                            badge.textContent = '❌ Unpaid';
-                            badge.className = 'payment-status-badge status-unpaid';
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('status load error', e);
-            }
-        }
-    }
-
-    // ==================== OPEN VENDOR MODAL ====================
-    async function openVendorModal(vendorId) {
-        const vendor = vendors.find(v => v.id == vendorId);
-        if (!vendor) return;
-        selectedVendor = vendor;
-
-        // Set modal title
-        document.getElementById('vendorModalTitle').textContent = `🏪 ${vendor.name}`;
-        document.getElementById('vendorModalSubtitle').textContent = `${vendor.floor} · Unit ${vendor.unit}`;
-
-        // Populate edit form
-        document.getElementById('editVendorName').value = vendor.name || '';
-        document.getElementById('editContactPerson').value = vendor.contact_person || '';
-        document.getElementById('editPhone').value = vendor.phone || '';
-        document.getElementById('editEmail').value = vendor.email || '';
-        document.getElementById('editFloor').value = vendor.floor || '';
-        document.getElementById('editUnit').value = vendor.unit || '';
-        document.getElementById('editRental').value = vendor.monthly_rental || 0;
-        document.getElementById('editDeposit').value = vendor.deposit || 0;
-        document.getElementById('editNotes').value = vendor.notes || '';
-
-        // Load payments
-        await fetchVendorPayments(vendor.id);
-        renderPaymentHistory(vendor);
-
-        // Show modal
-        vendorModal.classList.add('active');
-    }
-
     // ==================== RENDER PAYMENT HISTORY ====================
     function renderPaymentHistory(vendor) {
         const tbody = document.getElementById('paymentHistoryBody');
         const noPaymentsMsg = document.getElementById('noPaymentsMsg');
         const statusBadge = document.getElementById('currentMonthStatus');
+
+        const rental = parseFloat(vendor.monthly_rental) || 0;
 
         if (!currentVendorPayments.length) {
             tbody.innerHTML = '';
@@ -756,42 +712,39 @@
             for (const pay of currentVendorPayments) {
                 const monthLabel = getMonthLabel(pay.month);
                 const datePaid = pay.date_paid ? new Date(pay.date_paid).toLocaleDateString() : '—';
+                const amount = parseFloat(pay.amount) || 0;
+                const status = computeStatus(amount, rental);
                 html += `
                     <tr>
                         <td><strong>${monthLabel}</strong></td>
-                        <td>RM ${parseFloat(pay.amount).toFixed(2)}</td>
-                        <td><span class="status-pill ${getStatusPillClass(pay.status)}">${getStatusText(pay.status)}</span></td>
+                        <td>RM ${amount.toFixed(2)}</td>
+                        <td><span class="status-pill ${getStatusPillClass(status)}">${getStatusText(status)}</span></td>
                         <td>${datePaid}</td>
-                        <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c; font-size:0.8rem;" onclick="deletePayment('${pay.id}')">✕</button></td>
+                        <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c;" onclick="deletePayment('${pay.id}')">✕</button></td>
                     </tr>
                 `;
             }
             tbody.innerHTML = html;
         }
 
-        // Show current month status
         const currentMonth = getCurrentMonthString();
         const currentPayment = currentVendorPayments.find(p => p.month === currentMonth);
         if (currentPayment) {
-            const status = currentPayment.status;
+            const amount = parseFloat(currentPayment.amount) || 0;
+            const status = computeStatus(amount, rental);
             statusBadge.className = `status-pill ${getStatusPillClass(status)}`;
             statusBadge.textContent = getStatusText(status);
-            statusBadge.style.fontSize = '0.85rem';
-            statusBadge.style.padding = '6px 18px';
         } else {
             statusBadge.className = `status-pill pill-unpaid`;
             statusBadge.textContent = '❌ No payment record for current month';
-            statusBadge.style.fontSize = '0.85rem';
-            statusBadge.style.padding = '6px 18px';
         }
 
-        // Pre-fill payment form with current month
         document.getElementById('paymentMonth').value = currentMonth;
         document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('paymentAmount').value = vendor.monthly_rental || 0;
+        document.getElementById('paymentAmount').value = rental || 0;
     }
 
-    // ==================== DELETE PAYMENT (global) ====================
+    // ==================== DELETE PAYMENT ====================
     window.deletePayment = async function(paymentId) {
         if (!confirm('Delete this payment record?')) return;
         try {
@@ -802,13 +755,14 @@
                 await fetchVendorPayments(selectedVendor.id);
                 renderPaymentHistory(selectedVendor);
             }
-            loadStatusForAllVendors();
+            await loadCurrentMonthPaymentsForAll();
+            renderDashboard();
         } catch (err) {
             showToast('Error: ' + err.message, true);
         }
     };
 
-    // ==================== SAVE VENDOR EDIT ====================
+    // ==================== SAVE VENDOR ====================
     async function saveVendor() {
         if (!selectedVendor) return;
         const updates = {
@@ -827,23 +781,16 @@
             return;
         }
         try {
-            const { error } = await supabase
-                .from('vendors')
-                .update(updates)
-                .eq('id', selectedVendor.id);
+            const { error } = await supabase.from('vendors').update(updates).eq('id', selectedVendor.id);
             if (error) throw error;
             showToast('Vendor updated');
-            await fetchVendors(); // reload dashboard
-            // Update selected vendor data
+            await fetchVendors();
             const refreshed = vendors.find(v => v.id == selectedVendor.id);
             if (refreshed) {
                 selectedVendor = refreshed;
                 document.getElementById('vendorModalTitle').textContent = `🏪 ${refreshed.name}`;
                 document.getElementById('vendorModalSubtitle').textContent = `${refreshed.floor} · Unit ${refreshed.unit}`;
             }
-            // Refresh statuses
-            loadStatusForAllVendors();
-            // Reload payment history (might not change but just in case)
             await fetchVendorPayments(selectedVendor.id);
             renderPaymentHistory(selectedVendor);
         } catch (err) {
@@ -856,7 +803,6 @@
         if (!selectedVendor) return;
         if (!confirm(`Delete vendor "${selectedVendor.name}" and ALL payment records?`)) return;
         try {
-            // Delete payments first (cascade should handle, but we do explicit)
             await supabase.from('vendor_payments').delete().eq('vendor_id', selectedVendor.id);
             const { error } = await supabase.from('vendors').delete().eq('id', selectedVendor.id);
             if (error) throw error;
@@ -868,27 +814,21 @@
         }
     }
 
-    // ==================== ADD PAYMENT ====================
+    // ==================== ADD PAYMENT (auto-status) ====================
     async function addPayment() {
         if (!selectedVendor) return;
         const month = document.getElementById('paymentMonth').value;
         const amount = parseFloat(document.getElementById('paymentAmount').value);
-        const status = document.getElementById('paymentStatus').value;
         const datePaid = document.getElementById('paymentDate').value;
 
-        if (!month) {
-            showToast('Please select a month', true);
-            return;
-        }
-        if (isNaN(amount) || amount < 0) {
-            showToast('Please enter a valid amount', true);
-            return;
-        }
+        if (!month) { showToast('Please select a month', true); return; }
+        if (isNaN(amount) || amount < 0) { showToast('Please enter a valid amount', true); return; }
 
-        // Check if a payment for this month already exists
+        const rental = parseFloat(selectedVendor.monthly_rental) || 0;
+        const status = computeStatus(amount, rental);
+
         const existing = currentVendorPayments.find(p => p.month === month);
         if (existing) {
-            // Update instead
             if (!confirm(`A payment record for ${getMonthLabel(month)} already exists. Update it?`)) return;
             try {
                 const { error } = await supabase
@@ -896,13 +836,12 @@
                     .update({ amount, status, date_paid: datePaid || null })
                     .eq('id', existing.id);
                 if (error) throw error;
-                showToast('Payment updated');
+                showToast(`Payment updated — status: ${status.toUpperCase()}`);
             } catch (err) {
                 showToast('Error: ' + err.message, true);
                 return;
             }
         } else {
-            // Insert new
             try {
                 const { error } = await supabase
                     .from('vendor_payments')
@@ -914,19 +853,17 @@
                         date_paid: datePaid || null
                     }]);
                 if (error) throw error;
-                showToast('Payment recorded');
+                showToast(`Payment recorded — status: ${status.toUpperCase()}`);
             } catch (err) {
                 showToast('Error: ' + err.message, true);
                 return;
             }
         }
 
-        // Refresh
         await fetchVendorPayments(selectedVendor.id);
         renderPaymentHistory(selectedVendor);
-        loadStatusForAllVendors();
-        // Clear amount field
-        document.getElementById('paymentAmount').value = selectedVendor.monthly_rental || 0;
+        await loadCurrentMonthPaymentsForAll();
+        renderDashboard();
     }
 
     // ==================== ADD VENDOR ====================
@@ -940,90 +877,197 @@
         const rental = parseFloat(document.getElementById('addRental').value) || 0;
         const deposit = parseFloat(document.getElementById('addDeposit').value) || 0;
 
-        if (!name || !floor || !unit) {
-            showToast('Name, Floor, and Unit are required', true);
-            return;
-        }
+        if (!name || !floor || !unit) { showToast('Name, Floor, and Unit are required', true); return; }
 
         try {
             const { error } = await supabase
                 .from('vendors')
-                .insert([{
-                    name,
-                    floor,
-                    unit,
-                    contact_person: contact,
-                    phone,
-                    email,
-                    monthly_rental: rental,
-                    deposit
-                }]);
+                .insert([{ name, floor, unit, contact_person: contact, phone, email, monthly_rental: rental, deposit }]);
             if (error) throw error;
             showToast('Vendor created');
             addVendorModal.classList.remove('active');
-            // Clear form
-            document.getElementById('addVendorName').value = '';
-            document.getElementById('addFloor').value = '';
-            document.getElementById('addUnit').value = '';
-            document.getElementById('addContactPerson').value = '';
-            document.getElementById('addPhone').value = '';
-            document.getElementById('addEmail').value = '';
-            document.getElementById('addRental').value = '';
-            document.getElementById('addDeposit').value = '';
+            ['addVendorName','addFloor','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit']
+                .forEach(id => document.getElementById(id).value = '');
             await fetchVendors();
         } catch (err) {
             showToast('Error: ' + err.message, true);
         }
     }
 
-    // ==================== UTIL ====================
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    // ==================== ISSUE INVOICE ====================
+    async function openInvoiceModal() {
+        if (!selectedVendor) return;
+        if (!companySettings) await fetchCompanySettings();
+
+        const month = document.getElementById('paymentMonth').value || getCurrentMonthString();
+        const rental = parseFloat(selectedVendor.monthly_rental) || 0;
+
+        // Find the payment record for that month (if any)
+        const payment = currentVendorPayments.find(p => p.month === month);
+        const amountPaid = payment ? (parseFloat(payment.amount) || 0) : 0;
+        const balance = Math.max(0, rental - amountPaid);
+        const status = computeStatus(amountPaid, rental);
+
+        // Build invoice number: INV-YYYYMM-XXXX
+        const shortId = selectedVendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
+        const invoiceNo = `INV-${month.replace('-','')}-${shortId}`;
+
+        const issueDate = new Date().toISOString().split('T')[0];
+        // Due date = 7th of the month AFTER the invoice month
+        const [y, m] = month.split('-').map(Number);
+        const dueDate = `${y}-${String(m + 1).padStart(2,'0')}-07`;
+
+        // Save invoice record to DB (upsert to avoid duplicates on re-issue)
+        try {
+            const { data: existing } = await supabase
+                .from('vendor_invoices')
+                .select('id')
+                .eq('invoice_no', invoiceNo)
+                .maybeSingle();
+
+            const payload = {
+                invoice_no: invoiceNo,
+                vendor_id: selectedVendor.id,
+                vendor_name: selectedVendor.name,
+                vendor_unit: selectedVendor.unit,
+                vendor_floor: selectedVendor.floor,
+                month,
+                rental_amount: rental,
+                amount_paid: amountPaid,
+                balance,
+                status,
+                issue_date: issueDate,
+                due_date: dueDate,
+                notes: document.getElementById('editNotes').value.trim()
+            };
+
+            if (existing) {
+                await supabase.from('vendor_invoices').update(payload).eq('id', existing.id);
+            } else {
+                await supabase.from('vendor_invoices').insert([payload]);
+            }
+        } catch (err) {
+            console.warn('Invoice save failed:', err.message);
+            // Non-blocking — we still show the preview
+        }
+
+        // Build preview HTML
+        const cs = companySettings || {};
+        const statusPillClass = getStatusPillClass(status);
+        const statusLabel = getStatusText(status);
+
+        document.getElementById('invoicePreviewContent').innerHTML = `
+            <div class="invoice-header-row">
+                <div>
+                    ${cs.company_logo_url ? `<img src="${escapeHtml(cs.company_logo_url)}" style="max-height:60px;margin-bottom:8px;" onerror="this.style.display='none'">` : ''}
+                    <h2>${escapeHtml(cs.company_name || 'YOUR COMPANY')}</h2>
+                    <div style="white-space:pre-line; color:#475569;">${escapeHtml(cs.company_address || '')}</div>
+                    ${cs.company_phone ? `<div style="color:#475569;">📞 ${escapeHtml(cs.company_phone)}</div>` : ''}
+                    ${cs.company_email ? `<div style="color:#475569;">✉️ ${escapeHtml(cs.company_email)}</div>` : ''}
+                    ${cs.company_ssm ? `<div style="color:#475569;">SSM: ${escapeHtml(cs.company_ssm)}</div>` : ''}
+                </div>
+                <div style="text-align:right;">
+                    <h2 style="color:#2c7a4b;">INVOICE</h2>
+                    <div><strong>${escapeHtml(invoiceNo)}</strong></div>
+                    <div>Issue: ${issueDate}</div>
+                    <div>Due: ${dueDate}</div>
+                    <div style="margin-top:8px;"><span class="status-pill ${statusPillClass}">${statusLabel}</span></div>
+                </div>
+            </div>
+
+            <div class="invoice-section-title">Billed To</div>
+            <div style="line-height:1.6;">
+                <strong>${escapeHtml(selectedVendor.name)}</strong><br>
+                ${escapeHtml(selectedVendor.floor)} · Unit ${escapeHtml(selectedVendor.unit)}<br>
+                ${selectedVendor.contact_person ? `Attn: ${escapeHtml(selectedVendor.contact_person)}<br>` : ''}
+                ${selectedVendor.phone ? `📞 ${escapeHtml(selectedVendor.phone)}<br>` : ''}
+                ${selectedVendor.email ? `✉️ ${escapeHtml(selectedVendor.email)}` : ''}
+            </div>
+
+            <div class="invoice-section-title">Charges</div>
+            <table class="invoice-table">
+                <thead>
+                    <tr><th>Description</th><th style="text-align:right;">Amount (RM)</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Monthly Rental — ${escapeHtml(getMonthLabel(month))}</td>
+                        <td style="text-align:right;">${rental.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>Amount Paid</td>
+                        <td style="text-align:right; color:#16a34a;">− ${amountPaid.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="invoice-total">Balance Due: RM ${balance.toFixed(2)}</div>
+
+            ${cs.bank_details ? `
+                <div class="invoice-section-title">Payment Details</div>
+                <div style="white-space:pre-line; color:#475569;">${escapeHtml(cs.bank_details)}</div>
+            ` : ''}
+
+            ${selectedVendor.notes ? `
+                <div class="invoice-section-title">Notes</div>
+                <div style="white-space:pre-line; color:#475569;">${escapeHtml(selectedVendor.notes)}</div>
+            ` : ''}
+
+            <div style="margin-top:32px; font-size:0.75rem; color:#94a3b8; text-align:center;">
+                Thank you for your business · This is a computer-generated invoice.
+            </div>
+        `;
+
+        invoiceModal.classList.add('active');
     }
 
-    // ==================== EVENT LISTENERS ====================
-    document.addEventListener('DOMContentLoaded', () => {
-        // Load vendors on start
-        fetchVendors();
+    // ==================== EVENTS ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+        await fetchCompanySettings();
+        await fetchVendors();
 
-        // Refresh button
-        document.getElementById('refreshBtn').addEventListener('click', () => {
-            fetchVendors();
+        // Header buttons
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+            await fetchVendors();
             showToast('Refreshed');
         });
-
-        // Add vendor button
         document.getElementById('addVendorBtn').addEventListener('click', () => {
             addVendorModal.classList.add('active');
         });
+        document.getElementById('companySettingsBtn').addEventListener('click', () => {
+            populateCompanySettingsForm();
+            companySettingsModal.classList.add('active');
+        });
 
-        // Close add vendor modal
-        document.getElementById('closeAddVendorModal').addEventListener('click', () => {
-            addVendorModal.classList.remove('active');
-        });
-        document.getElementById('cancelAddVendorBtn').addEventListener('click', () => {
-            addVendorModal.classList.remove('active');
-        });
+        // Add vendor modal
+        document.getElementById('closeAddVendorModal').addEventListener('click', () => addVendorModal.classList.remove('active'));
+        document.getElementById('cancelAddVendorBtn').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('confirmAddVendorBtn').addEventListener('click', createVendor);
 
-        // Close vendor modal
+        // Vendor modal
         document.getElementById('closeVendorModal').addEventListener('click', () => {
             vendorModal.classList.remove('active');
             selectedVendor = null;
             currentVendorPayments = [];
         });
-
-        // Save vendor changes
         document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
-        // Delete vendor
         document.getElementById('deleteVendorBtn').addEventListener('click', deleteVendor);
-
-        // Add payment
         document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
+        document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
 
-        // Close modals on overlay click
-        [vendorModal, addVendorModal].forEach(modal => {
+        // Company settings modal
+        document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
+        document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
+        document.getElementById('saveCompanySettingsBtn').addEventListener('click', saveCompanySettings);
+
+        // Invoice modal
+        document.getElementById('closeInvoiceModal').addEventListener('click', () => invoiceModal.classList.remove('active'));
+        document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
+        document.getElementById('printInvoiceBtn').addEventListener('click', () => {
+            window.print();
+        });
+
+        // Close on overlay click
+        [vendorModal, addVendorModal, companySettingsModal, invoiceModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.classList.remove('active');
