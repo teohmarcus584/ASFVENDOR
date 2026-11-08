@@ -176,6 +176,38 @@
         .invoice-table th { background: #f8fafc; font-weight: 600; }
         .invoice-total { font-size: 1.2rem; font-weight: 800; color: #0f172a; text-align: right; margin-top: 12px; }
 
+        /* Floor management rows */
+        .floor-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; background: white; border-radius: 12px;
+            border: 1px solid #e2e8f0; margin-bottom: 8px;
+        }
+        .floor-row .floor-name {
+            flex: 1; font-weight: 600; color: #0f172a;
+        }
+        .floor-row .floor-name-input {
+            flex: 1; padding: 8px 12px; border-radius: 8px; border: 2px solid #3b82f6;
+            font-size: 0.95rem; font-weight: 600;
+        }
+        .floor-row .floor-badge {
+            background: #f1f5f9; color: #64748b; padding: 2px 10px;
+            border-radius: 20px; font-size: 0.75rem;
+        }
+        .floor-row .floor-actions { display: flex; gap: 6px; }
+        .floor-row .floor-actions button {
+            background: none; border: none; cursor: pointer;
+            padding: 4px 10px; border-radius: 8px; font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .floor-row .floor-actions .edit-floor-btn { color: #3b82f6; }
+        .floor-row .floor-actions .edit-floor-btn:hover { background: #eff6ff; }
+        .floor-row .floor-actions .delete-floor-btn { color: #dc2626; }
+        .floor-row .floor-actions .delete-floor-btn:hover { background: #fee2e2; }
+        .floor-row .floor-actions .save-floor-btn { color: #16a34a; }
+        .floor-row .floor-actions .save-floor-btn:hover { background: #f0fdf4; }
+        .floor-row .floor-actions .cancel-floor-btn { color: #64748b; }
+        .floor-row .floor-actions .cancel-floor-btn:hover { background: #f1f5f9; }
+
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
             .modal-container { padding: 20px; }
@@ -197,6 +229,7 @@
 <div class="app-header">
     <h1>🏢 Vendor Management</h1>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" id="manageFloorsBtn">🏗️ Manage Floors</button>
         <button class="btn btn-secondary" id="companySettingsBtn">🏢 Company Details</button>
         <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
         <button class="btn btn-primary" id="addVendorBtn">➕ Add Vendor</button>
@@ -252,7 +285,6 @@
             <div class="form-group">
                 <label>Floor</label>
                 <select id="editFloor"></select>
-                <input type="text" id="editFloorNew" placeholder="Enter new floor name" style="display:none; margin-top:8px;">
             </div>
             <div class="form-group">
                 <label>Monthly Rental (RM)</label>
@@ -341,7 +373,6 @@
             <div class="form-group">
                 <label>Floor *</label>
                 <select id="addFloor"></select>
-                <input type="text" id="addFloorNew" placeholder="Enter new floor name" style="display:none; margin-top:8px;">
             </div>
         </div>
         <div class="form-row">
@@ -377,6 +408,28 @@
         <div class="modal-actions">
             <button class="btn btn-secondary" id="cancelAddVendorBtn">Cancel</button>
             <button class="btn btn-primary" id="confirmAddVendorBtn">✅ Create Vendor</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ MANAGE FLOORS MODAL ============ -->
+<div class="modal-overlay" id="manageFloorsModal">
+    <div class="modal-container" style="max-width: 560px;">
+        <button class="modal-close" id="closeManageFloorsModal">&times;</button>
+        <div class="modal-title">🏗️ Manage Floors</div>
+        <div class="modal-subtitle">Add, rename, or delete floors. Changes apply immediately to all vendor forms.</div>
+
+        <!-- Add new floor -->
+        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+            <input type="text" id="newFloorName" placeholder="e.g. Mezzanine, Podium, 11th…" style="flex: 1; padding: 12px 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+            <button class="btn btn-primary" id="addFloorBtn" style="padding: 12px 20px;">➕ Add Floor</button>
+        </div>
+
+        <!-- Floor list -->
+        <div id="floorListContainer" style="max-height: 400px; overflow-y: auto;"></div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="closeManageFloorsBtn">Close</button>
         </div>
     </div>
 </div>
@@ -449,6 +502,7 @@
 
     // ==================== STATE ====================
     let vendors = [];
+    let floors = [];                  // ← NEW: array of {id, name, sort_order}
     let selectedVendor = null;
     let currentVendorPayments = [];
     let companySettings = null;
@@ -457,22 +511,14 @@
     let savingPayment = false;
     let savingCompany = false;
 
-    // Default floor suggestions (shown even if not yet in DB)
-    const DEFAULT_FLOORS = [
-        'Basement',
-        'Ground',
-        '1st', '2nd', '3rd', '4th', '5th',
-        '6th', '7th', '8th', '9th', '10th',
-        'Roof'
-    ];
-
     // ==================== DOM ====================
-    const dashboardContainer = document.getElementById('dashboardContainer');
-    const vendorModal        = document.getElementById('vendorModal');
-    const addVendorModal     = document.getElementById('addVendorModal');
-    const companySettingsModal = document.getElementById('companySettingsModal');
-    const invoiceModal       = document.getElementById('invoiceModal');
-    const toastMessage       = document.getElementById('toastMessage');
+    const dashboardContainer    = document.getElementById('dashboardContainer');
+    const vendorModal           = document.getElementById('vendorModal');
+    const addVendorModal        = document.getElementById('addVendorModal');
+    const manageFloorsModal     = document.getElementById('manageFloorsModal');
+    const companySettingsModal  = document.getElementById('companySettingsModal');
+    const invoiceModal          = document.getElementById('invoiceModal');
+    const toastMessage          = document.getElementById('toastMessage');
 
     // ==================== TOAST ====================
     function showToast(msg, isError = false) {
@@ -551,101 +597,228 @@
         });
     }
 
-    // ==================== FLOOR DROPDOWN ====================
+    // ==================== FLOORS (DB-driven) ====================
     /**
-     * Collect all floor names currently used by any vendor.
-     * Returns a sorted, deduplicated array.
+     * Fetch all floors from the `floors` table, ordered by sort_order, then name.
      */
-    function getExistingFloors() {
-        const usedFloors = new Set();
-        vendors.forEach(v => {
-            if (v.floor && v.floor.trim()) usedFloors.add(v.floor.trim());
-        });
-        return [...usedFloors];
+    async function fetchFloors() {
+        try {
+            const { data, error } = await supabase
+                .from('floors')
+                .select('*')
+                .order('sort_order', { ascending: true })
+                .order('name', { ascending: true });
+            if (error) throw error;
+            floors = data || [];
+        } catch (err) {
+            console.error('Failed to load floors:', err);
+            floors = [];
+            showToast('⚠️ Could not load floors table — did you create it?', true);
+        }
     }
 
     /**
-     * Populate a floor <select> with:
-     *   1. An empty "-- Select floor --" placeholder
-     *   2. Every default floor not yet in the DB
-     *   3. Every floor that already has vendors in the DB
-     *   4. An "➕ Add new floor…" option at the bottom
-     *
-     * @param {string} selectId  The select element's ID
-     * @param {string} newInputId The text input that appears when "Add new" is selected
-     * @param {string} selectedFloor  Pre-selected value (edit mode)
+     * Populate a floor <select> from the `floors` array.
+     * If `selectedFloor` doesn't exist, prepend it as an emergency option
+     * so editing a vendor whose floor was deleted doesn't silently reset.
      */
-    function populateFloorDropdown(selectId, newInputId, selectedFloor = '') {
+    function populateFloorDropdown(selectId, selectedFloor = '') {
         const select = document.getElementById(selectId);
-        const newInput = document.getElementById(newInputId);
         if (!select) return;
 
-        const usedFloors = getExistingFloors();
-        // Merge defaults + used (de-duplicated), preserving a sensible order
-        const combined = [];
-        DEFAULT_FLOORS.forEach(f => { if (!combined.includes(f)) combined.push(f); });
-        usedFloors.forEach(f => { if (!combined.includes(f)) combined.push(f); });
-
-        // Build <option> list
         let html = '<option value="">-- Select floor --</option>';
-        combined.forEach(f => {
-            const badge = usedFloors.includes(f) ? '' : '  ·  (new)';
-            html += `<option value="${escapeHtml(f)}">${escapeHtml(f)}${badge}</option>`;
+        const floorNames = floors.map(f => f.name);
+
+        // If editing a vendor whose floor no longer exists, show it too
+        if (selectedFloor && !floorNames.includes(selectedFloor)) {
+            html += `<option value="${escapeHtml(selectedFloor)}">${escapeHtml(selectedFloor)} (⚠️ deleted)</option>`;
+        }
+
+        floors.forEach(f => {
+            html += `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`;
         });
-        html += '<option value="__NEW__">➕ Add new floor…</option>';
+
+        // If no floors exist yet, show a hint option
+        if (floors.length === 0) {
+            html += '<option value="" disabled>— No floors yet. Click "Manage Floors" —</option>';
+        }
+
         select.innerHTML = html;
-
-        // Pre-select if we have a target
-        if (selectedFloor) {
-            if ([...select.options].some(o => o.value === selectedFloor)) {
-                select.value = selectedFloor;
-            } else {
-                // Floor doesn't exist in options yet — add it as a used floor
-                const opt = document.createElement('option');
-                opt.value = selectedFloor;
-                opt.textContent = selectedFloor;
-                select.insertBefore(opt, select.lastElementChild);
-                select.value = selectedFloor;
-            }
-        } else {
-            select.value = '';
-        }
-
-        // Hide the "new floor" input by default
-        if (newInput) {
-            newInput.style.display = 'none';
-            newInput.value = '';
-        }
-
-        // Rebind change listener (use .onchange so it doesn't stack)
-        select.onchange = () => {
-            if (select.value === '__NEW__') {
-                if (newInput) {
-                    newInput.style.display = 'block';
-                    newInput.focus();
-                }
-            } else {
-                if (newInput) {
-                    newInput.style.display = 'none';
-                    newInput.value = '';
-                }
-            }
-        };
+        select.value = selectedFloor || '';
     }
 
     /**
-     * Resolve the final floor name from either the dropdown or the "new floor" input.
-     * Returns '' if invalid.
+     * Render the list of floors inside the Manage Floors modal.
      */
-    function resolveFloorValue(selectId, newInputId) {
-        const select = document.getElementById(selectId);
-        const newInput = document.getElementById(newInputId);
-        if (!select) return '';
-        if (select.value === '__NEW__') {
-            const v = (newInput?.value || '').trim();
-            return v;
+    function renderFloorList() {
+        const container = document.getElementById('floorListContainer');
+        if (!container) return;
+
+        if (floors.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:32px; color:#94a3b8; background:#f8fafc; border-radius:16px;">
+                🏗️ No floors yet. Add your first one above.
+            </div>`;
+            return;
         }
-        return select.value;
+
+        let html = '';
+        floors.forEach(f => {
+            html += `
+                <div class="floor-row" data-floor-id="${f.id}">
+                    <span class="floor-badge">#${f.sort_order}</span>
+                    <span class="floor-name">${escapeHtml(f.name)}</span>
+                    <div class="floor-actions">
+                        <button class="edit-floor-btn" data-id="${f.id}" title="Rename">✏️ Edit</button>
+                        <button class="delete-floor-btn" data-id="${f.id}" data-name="${escapeHtml(f.name)}" title="Delete">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+
+        // Wire up buttons
+        container.querySelectorAll('.edit-floor-btn').forEach(btn => {
+            btn.addEventListener('click', () => enterFloorEditMode(btn.dataset.id));
+        });
+        container.querySelectorAll('.delete-floor-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteFloor(btn.dataset.id, btn.dataset.name));
+        });
+    }
+
+    /**
+     * Replace a floor row's name span with an input so it can be renamed inline.
+     */
+    function enterFloorEditMode(floorId) {
+        const floor = floors.find(f => f.id === floorId);
+        if (!floor) return;
+        const row = document.querySelector(`.floor-row[data-floor-id="${floorId}"]`);
+        if (!row) return;
+
+        const nameSpan = row.querySelector('.floor-name');
+        const actionsDiv = row.querySelector('.floor-actions');
+
+        nameSpan.outerHTML = `<input class="floor-name-input" value="${escapeHtml(floor.name)}" data-original="${escapeHtml(floor.name)}">`;
+        actionsDiv.innerHTML = `
+            <button class="save-floor-btn" title="Save">💾 Save</button>
+            <button class="cancel-floor-btn" title="Cancel">✖ Cancel</button>
+        `;
+
+        const input = row.querySelector('.floor-name-input');
+        input.focus();
+        input.select();
+
+        const save = () => saveFloorRename(floorId, input.value.trim(), input.dataset.original);
+        const cancel = () => renderFloorList();
+
+        row.querySelector('.save-floor-btn').addEventListener('click', save);
+        row.querySelector('.cancel-floor-btn').addEventListener('click', cancel);
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); save(); }
+            if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        });
+    }
+
+    async function saveFloorRename(floorId, newName, oldName) {
+        if (!newName) { showToast('Floor name cannot be empty', true); return; }
+        if (newName === oldName) { renderFloorList(); return; }
+
+        // Uniqueness check
+        if (floors.some(f => f.id !== floorId && f.name.toLowerCase() === newName.toLowerCase())) {
+            showToast('A floor with that name already exists', true);
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('floors')
+                .update({ name: newName })
+                .eq('id', floorId);
+            if (error) throw error;
+
+            // Update any vendors that used the old floor name
+            const { error: vErr } = await supabase
+                .from('vendors')
+                .update({ floor: newName })
+                .eq('floor', oldName);
+            if (vErr) console.warn('Failed to rename vendors’ floor:', vErr.message);
+
+            showToast(`Floor renamed to "${newName}"`);
+            await fetchFloors();
+            await fetchVendors();
+            renderFloorList();
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    }
+
+    async function addFloor() {
+        const input = document.getElementById('newFloorName');
+        const name = (input.value || '').trim();
+        if (!name) { showToast('Enter a floor name', true); return; }
+
+        if (floors.some(f => f.name.toLowerCase() === name.toLowerCase())) {
+            showToast('That floor already exists', true);
+            return;
+        }
+
+        // Next sort_order = max + 1
+        const nextSort = floors.length ? Math.max(...floors.map(f => f.sort_order || 0)) + 1 : 1;
+
+        try {
+            const { error } = await supabase
+                .from('floors')
+                .insert([{ name, sort_order: nextSort }]);
+            if (error) throw error;
+            showToast(`Floor "${name}" added`);
+            input.value = '';
+            await fetchFloors();
+            renderFloorList();
+            refreshAllFloorDropdowns();
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    }
+
+    async function deleteFloor(floorId, floorName) {
+        // Warn if any vendors use this floor
+        const affected = vendors.filter(v => v.floor === floorName).length;
+        let msg = `Delete floor "${floorName}"?`;
+        if (affected > 0) {
+            msg += `\n\n⚠️ ${affected} vendor(s) currently use this floor. Their floor will become "(deleted)".`;
+        }
+        if (!confirm(msg)) return;
+
+        try {
+            const { error } = await supabase
+                .from('floors')
+                .delete()
+                .eq('id', floorId);
+            if (error) throw error;
+            showToast(`Floor "${floorName}" deleted`);
+            await fetchFloors();
+            renderFloorList();
+            refreshAllFloorDropdowns();
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        }
+    }
+
+    /**
+     * Re-populate every floor dropdown in the app from the current `floors` array.
+     */
+    function refreshAllFloorDropdowns() {
+        // Add vendor modal — preserve selection if any
+        const addFloorSelect = document.getElementById('addFloor');
+        if (addFloorSelect) {
+            const cur = addFloorSelect.value;
+            populateFloorDropdown('addFloor', cur);
+        }
+        // Edit vendor modal — use selectedVendor's floor if present
+        const editFloorSelect = document.getElementById('editFloor');
+        if (editFloorSelect && selectedVendor) {
+            populateFloorDropdown('editFloor', selectedVendor.floor || '');
+        }
     }
 
     // ==================== COMPANY SETTINGS ====================
@@ -768,23 +941,35 @@
             return;
         }
 
-        const floors = {};
+        // Sort floors: by floors table sort_order, then alphabetical
+        const floorSortIndex = {};
+        floors.forEach(f => { floorSortIndex[f.name] = f.sort_order; });
+
+        const groups = {};
         vendors.forEach(v => {
             const floor = v.floor || 'Unassigned';
-            if (!floors[floor]) floors[floor] = [];
-            floors[floor].push(v);
+            if (!groups[floor]) groups[floor] = [];
+            groups[floor].push(v);
+        });
+
+        const sortedFloorNames = Object.keys(groups).sort((a, b) => {
+            const aIdx = floorSortIndex[a];
+            const bIdx = floorSortIndex[b];
+            // Floors in the floors table come first, in sort_order
+            if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
+            if (aIdx !== undefined) return -1;
+            if (bIdx !== undefined) return 1;
+            return a.localeCompare(b);
         });
 
         let html = '';
-        const sortedFloors = Object.keys(floors).sort();
-
-        for (const floor of sortedFloors) {
+        for (const floor of sortedFloorNames) {
             html += `<div class="floor-section">`;
             html += `<div class="floor-title"><span class="badge-floor">${escapeHtml(floor)}</span>
-                     <span style="font-size: 0.95rem; color: #64748b; font-weight: 400;">${floors[floor].length} vendor(s)</span></div>`;
+                     <span style="font-size: 0.95rem; color: #64748b; font-weight: 400;">${groups[floor].length} vendor(s)</span></div>`;
             html += `<div class="vendor-grid">`;
 
-            for (const vendor of floors[floor]) {
+            for (const vendor of groups[floor]) {
                 const rental = parseFloat(vendor.monthly_rental) || 0;
                 const totalPaid = vendor._currentTotal || 0;
                 const status = computeStatus(totalPaid, rental);
@@ -840,8 +1025,9 @@
         document.getElementById('editDeposit').value = vendor.deposit || 0;
         document.getElementById('editNotes').value = vendor.notes || '';
 
-        // Populate floor dropdown with the vendor's current floor pre-selected
-        populateFloorDropdown('editFloor', 'editFloorNew', vendor.floor || '');
+        // Refresh floors from DB so newly added floors appear here too
+        await fetchFloors();
+        populateFloorDropdown('editFloor', vendor.floor || '');
 
         await fetchVendorPayments(vendor.id);
         renderPaymentHistory(vendor);
@@ -951,9 +1137,9 @@
         if (!selectedVendor) return;
         if (savingVendor) return;
 
-        const floorValue = resolveFloorValue('editFloor', 'editFloorNew');
+        const floorValue = document.getElementById('editFloor').value;
         if (!floorValue) {
-            showToast('Please select or add a floor', true);
+            showToast('Please select a floor', true);
             return;
         }
 
@@ -1085,7 +1271,7 @@
     async function createVendor() {
         const name = document.getElementById('addVendorName').value.trim();
         const vendorType = document.getElementById('addVendorType').value;
-        const floorValue = resolveFloorValue('addFloor', 'addFloorNew');
+        const floorValue = document.getElementById('addFloor').value;
         const unit = document.getElementById('addUnit').value.trim();
         const contact = document.getElementById('addContactPerson').value.trim();
         const phone = document.getElementById('addPhone').value.trim();
@@ -1094,7 +1280,7 @@
         const deposit = parseFloat(document.getElementById('addDeposit').value) || 0;
 
         if (!name) { showToast('Vendor name is required', true); return; }
-        if (!floorValue) { showToast('Please select or add a floor', true); return; }
+        if (!floorValue) { showToast('Please select a floor', true); return; }
         if (!unit) { showToast('Unit number is required', true); return; }
 
         try {
@@ -1117,9 +1303,7 @@
             ['addVendorName','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('addVendorType').value = 'Selling';
-            document.getElementById('addFloorNew').value = '';
-            document.getElementById('addFloorNew').style.display = 'none';
-            document.getElementById('addFloor').value = '';
+            populateFloorDropdown('addFloor', '');
             await fetchVendors();
         } catch (err) {
             showToast('Error: ' + err.message, true);
@@ -1266,36 +1450,57 @@
 
     // ==================== EVENTS ====================
     document.addEventListener('DOMContentLoaded', async () => {
+        // Load floors FIRST so dropdowns can be populated
+        await fetchFloors();
         await fetchCompanySettings();
         await fetchVendors();
 
-        // Populate floor dropdowns with current data
-        populateFloorDropdown('addFloor', 'addFloorNew', '');
+        populateFloorDropdown('addFloor', '');
 
         preventEnterSubmitInModal('vendorModal');
         preventEnterSubmitInModal('addVendorModal');
+        preventEnterSubmitInModal('manageFloorsModal');
         preventEnterSubmitInModal('companySettingsModal');
         preventEnterSubmitInModal('invoiceModal');
 
         document.getElementById('refreshBtn').addEventListener('click', async () => {
+            await fetchFloors();
             await fetchVendors();
-            // Refresh add-floor dropdown so newly-used floors show up
-            populateFloorDropdown('addFloor', 'addFloorNew', '');
+            populateFloorDropdown('addFloor', '');
             showToast('Refreshed');
         });
-        document.getElementById('addVendorBtn').addEventListener('click', () => {
-            populateFloorDropdown('addFloor', 'addFloorNew', '');
+
+        document.getElementById('addVendorBtn').addEventListener('click', async () => {
+            await fetchFloors();                       // always fresh
+            populateFloorDropdown('addFloor', '');
             addVendorModal.classList.add('active');
         });
+
+        document.getElementById('manageFloorsBtn').addEventListener('click', async () => {
+            await fetchFloors();
+            renderFloorList();
+            manageFloorsModal.classList.add('active');
+        });
+
         document.getElementById('companySettingsBtn').addEventListener('click', () => {
             populateCompanySettingsForm();
             companySettingsModal.classList.add('active');
         });
 
+        // Manage Floors
+        document.getElementById('closeManageFloorsModal').addEventListener('click', () => manageFloorsModal.classList.remove('active'));
+        document.getElementById('closeManageFloorsBtn').addEventListener('click', () => manageFloorsModal.classList.remove('active'));
+        document.getElementById('addFloorBtn').addEventListener('click', addFloor);
+        document.getElementById('newFloorName').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); addFloor(); }
+        });
+
+        // Add Vendor modal
         document.getElementById('closeAddVendorModal').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('cancelAddVendorBtn').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('confirmAddVendorBtn').addEventListener('click', createVendor);
 
+        // Vendor modal
         document.getElementById('closeVendorModal').addEventListener('click', () => {
             vendorModal.classList.remove('active');
             selectedVendor = null;
@@ -1306,20 +1511,20 @@
         document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
         document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
 
+        // Company settings modal
         document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('saveCompanySettingsBtn').addEventListener('click', saveCompanySettings);
 
+        // Invoice modal
         document.getElementById('closeInvoiceModal').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('printInvoiceBtn').addEventListener('click', () => window.print());
 
-        // Overlay click-to-close ONLY for modals other than vendorModal
-        [addVendorModal, companySettingsModal, invoiceModal].forEach(modal => {
+        // Overlay click-to-close for non-critical modals only
+        [addVendorModal, manageFloorsModal, companySettingsModal, invoiceModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                }
+                if (e.target === modal) modal.classList.remove('active');
             });
         });
     });
