@@ -61,27 +61,20 @@
         .vendor-card.status-partial { border-top-color: #f59e0b; background: linear-gradient(180deg, #fffbeb 0%, #ffffff 70%); }
         .vendor-card.status-unpaid  { border-top-color: #dc2626; background: linear-gradient(180deg, #fef2f2 0%, #ffffff 70%); }
 
-        /* ============ TOP ROW: unit badge + deposit badge on one line ============ */
         .vendor-card .top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
         }
         .vendor-card .unit-badge {
             font-size: 0.75rem; font-weight: 700; color: #64748b;
             background: #f1f5f9; padding: 4px 12px; border-radius: 40px;
-            display: inline-block;
-            flex-shrink: 0;
+            display: inline-block; flex-shrink: 0;
         }
         .vendor-card .deposit-badge-top {
             font-size: 0.68rem; font-weight: 700;
             padding: 4px 10px; border-radius: 20px;
             display: inline-flex; align-items: center; gap: 4px;
-            white-space: nowrap;
-            flex-shrink: 0;
+            white-space: nowrap; flex-shrink: 0;
         }
 
         .deposit-paid    { background: #dcfce7; color: #166534; }
@@ -101,7 +94,6 @@
         .type-category { background: #ede9fe; color: #6d28d9; }
         .type-fnb      { background: #fee2e2; color: #991b1b; }
 
-        /* Badge stack now only shows: rent, tenancy, overdue */
         .vendor-card .badge-stack {
             display: flex; flex-direction: column; gap: 6px;
             margin-top: 12px;
@@ -123,11 +115,8 @@
         .tenancy-not-set   { background: #f1f5f9 !important; color: #64748b !important; }
 
         .overdue-rent-badge {
-            background: #fee2e2 !important;
-            color: #991b1b !important;
-            font-size: 0.72rem;
-            padding: 5px 11px;
-            font-weight: 700;
+            background: #fee2e2 !important; color: #991b1b !important;
+            font-size: 0.72rem; padding: 5px 11px; font-weight: 700;
             animation: overduePulse 2s ease-in-out infinite;
         }
         @keyframes overduePulse {
@@ -176,10 +165,8 @@
         .tenancy-summary { font-size: 0.85rem; font-weight: 600; color: #0f172a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
         .rental-months-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
-            margin-top: 12px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px; margin-top: 12px;
         }
         .rental-month-tile {
             background: white; border: 2px solid #e2e8f0; border-radius: 12px;
@@ -273,13 +260,43 @@
         .invoice-table th { background: #f8fafc; font-weight: 600; }
         .invoice-total { font-size: 1.2rem; font-weight: 800; color: #0f172a; text-align: right; margin-top: 12px; }
 
-        .deposit-invoice-badge {
+        /* Deposit invoice count badge (replaces single issued badge) */
+        .deposit-invoice-count-badge {
             display: inline-block; padding: 4px 12px; border-radius: 20px;
-            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 0.72rem; font-weight: 700;
+            background: #fef3c7; color: #92400e;
         }
-        .deposit-badge-issued { background: #fef3c7; color: #92400e; }
-        .deposit-badge-none   { background: #f1f5f9; color: #64748b; }
+        .deposit-invoice-count-badge.zero {
+            background: #f1f5f9; color: #64748b;
+        }
+
+        /* Deposit invoice history list */
+        .deposit-invoice-history {
+            margin-top: 12px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 12px;
+        }
+        .deposit-invoice-history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; background: white; border-radius: 10px;
+            border: 1px solid #e2e8f0; margin-bottom: 6px;
+            font-size: 0.82rem;
+        }
+        .deposit-invoice-history-item .inv-no {
+            font-family: monospace; font-weight: 700; color: #b45309;
+        }
+        .deposit-invoice-history-item .inv-date {
+            color: #64748b; font-size: 0.75rem;
+        }
+        .deposit-invoice-history-item .inv-actions button {
+            background: none; border: none; cursor: pointer;
+            font-size: 0.8rem; padding: 4px 8px; border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .deposit-invoice-history-item .view-btn { color: #3b82f6; }
+        .deposit-invoice-history-item .view-btn:hover { background: #eff6ff; }
+        .deposit-invoice-history-item .delete-btn { color: #dc2626; }
+        .deposit-invoice-history-item .delete-btn:hover { background: #fee2e2; }
 
         .floor-row {
             display: flex; align-items: center; gap: 8px;
@@ -341,10 +358,7 @@
         <div class="modal-subtitle" id="vendorModalSubtitle"></div>
 
         <div class="form-row">
-            <div class="form-group">
-                <label>Vendor Name</label>
-                <input type="text" id="editVendorName">
-            </div>
+            <div class="form-group"><label>Vendor Name</label><input type="text" id="editVendorName"></div>
             <div class="form-group">
                 <label>Vendor Type</label>
                 <select id="editVendorType">
@@ -355,65 +369,33 @@
             </div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label>Contact Person</label>
-                <input type="text" id="editContactPerson">
-            </div>
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="text" id="editPhone">
-            </div>
+            <div class="form-group"><label>Contact Person</label><input type="text" id="editContactPerson"></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="editPhone"></div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="editEmail">
-            </div>
-            <div class="form-group">
-                <label>Unit Number</label>
-                <input type="text" id="editUnit">
-            </div>
+            <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
+            <div class="form-group"><label>Unit Number</label><input type="text" id="editUnit"></div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label>Floor</label>
-                <select id="editFloor"></select>
-            </div>
-            <div class="form-group">
-                <label>Monthly Rental (RM)</label>
-                <input type="number" id="editRental" step="0.01" min="0">
-            </div>
+            <div class="form-group"><label>Floor</label><select id="editFloor"></select></div>
+            <div class="form-group"><label>Monthly Rental (RM)</label><input type="number" id="editRental" step="0.01" min="0"></div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label>Deposit Required (RM)</label>
-                <input type="number" id="editDeposit" step="0.01" min="0">
-            </div>
+            <div class="form-group"><label>Deposit Required (RM)</label><input type="number" id="editDeposit" step="0.01" min="0"></div>
             <div class="form-group">
                 <label>Deposit Paid (RM) <span style="font-weight:400;color:#94a3b8;">(auto)</span></label>
                 <input type="text" id="editDepositPaid" readonly style="background:#f8fafc; font-weight:700; color:#0f172a;">
             </div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label>Tenancy Start</label>
-                <input type="date" id="editTenancyStart">
-            </div>
-            <div class="form-group">
-                <label>Tenancy End</label>
-                <input type="date" id="editTenancyEnd">
-            </div>
+            <div class="form-group"><label>Tenancy Start</label><input type="date" id="editTenancyStart"></div>
+            <div class="form-group"><label>Tenancy End</label><input type="date" id="editTenancyEnd"></div>
         </div>
 
         <div id="tenancyPreviewWrap" class="tenancy-bar-wrap" style="display:none;">
             <div class="tenancy-summary" id="tenancySummaryText"></div>
-            <div class="tenancy-bar-outer">
-                <div class="tenancy-bar-fill" id="tenancyBarFill" style="width: 0%"></div>
-            </div>
-            <div class="tenancy-meta">
-                <span id="tenancyStartLabel"></span>
-                <span id="tenancyEndLabel"></span>
-            </div>
+            <div class="tenancy-bar-outer"><div class="tenancy-bar-fill" id="tenancyBarFill" style="width: 0%"></div></div>
+            <div class="tenancy-meta"><span id="tenancyStartLabel"></span><span id="tenancyEndLabel"></span></div>
         </div>
 
         <div class="form-group" style="margin-top: 18px;">
@@ -448,9 +430,7 @@
         </div>
         <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 340px; overflow-y: auto;">
             <table class="payment-history-table">
-                <thead>
-                    <tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr>
-                </thead>
+                <thead><tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr></thead>
                 <tbody id="paymentHistoryBody"></tbody>
             </table>
             <div id="noPaymentsMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No rental payments recorded yet.</div>
@@ -459,33 +439,19 @@
         <div class="payment-form">
             <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Rental Instalment</h4>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Month</label>
-                    <input type="month" id="paymentMonth">
-                </div>
-                <div class="form-group">
-                    <label>Amount Paid (RM)</label>
-                    <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00">
-                </div>
+                <div class="form-group"><label>Month</label><input type="month" id="paymentMonth"></div>
+                <div class="form-group"><label>Amount Paid (RM)</label><input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00"></div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Date Paid</label>
-                    <input type="date" id="paymentDate">
-                </div>
-                <div class="form-group">
-                    <label>Note (optional)</label>
-                    <input type="text" id="paymentNote" placeholder="e.g. 1st instalment">
-                </div>
+                <div class="form-group"><label>Date Paid</label><input type="date" id="paymentDate"></div>
+                <div class="form-group"><label>Note (optional)</label><input type="text" id="paymentNote" placeholder="e.g. 1st instalment"></div>
             </div>
             <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Rental Instalment</button>
-            <div class="auto-status-hint">
-                Multiple instalments per month are allowed. The month's <strong>total</strong> determines the status.
-            </div>
         </div>
 
         <div class="divider"></div>
 
+        <!-- DEPOSIT SECTION -->
         <div class="flex-between">
             <h3 style="font-size: 1.25rem; font-weight: 700;">💰 Deposit History</h3>
             <span id="depositStatusPill" class="status-pill"></span>
@@ -493,20 +459,23 @@
 
         <div id="depositInvoiceStatusRow" style="margin-top: 12px; padding: 12px 16px; background: #f8fafc; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <span class="deposit-invoice-badge deposit-badge-none" id="depositInvoiceBadge">Not Issued</span>
-                <span style="font-size: 0.85rem; color: #64748b;" id="depositInvoiceInfo">No deposit invoice has been issued yet.</span>
+                <span class="deposit-invoice-count-badge zero" id="depositInvoiceCount">0 invoices</span>
+                <span style="font-size: 0.85rem; color: #64748b;" id="depositInvoiceInfo">No deposit invoice has been generated yet.</span>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-deposit" id="issueDepositInvoiceBtn" style="padding: 8px 18px; font-size: 0.85rem;">🧾 Issue Deposit Invoice</button>
-                <button class="btn btn-secondary" id="viewDepositInvoiceBtn" style="padding: 8px 18px; font-size: 0.85rem; display: none;">👁️ View / Reprint</button>
+                <button class="btn btn-deposit" id="generateDepositInvoiceBtn" style="padding: 8px 18px; font-size: 0.85rem;">🧾 Generate Deposit Invoice</button>
             </div>
+        </div>
+
+        <!-- Deposit invoice history -->
+        <div id="depositInvoiceHistoryWrap" class="deposit-invoice-history" style="display:none;">
+            <div style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 8px;">📜 Deposit Invoice History</div>
+            <div id="depositInvoiceHistoryList"></div>
         </div>
 
         <div id="depositHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
             <table class="payment-history-table">
-                <thead>
-                    <tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr>
-                </thead>
+                <thead><tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr></thead>
                 <tbody id="depositHistoryBody"></tbody>
             </table>
             <div id="noDepositMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No deposit payments recorded yet.</div>
@@ -515,24 +484,12 @@
         <div class="deposit-form">
             <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Deposit Instalment</h4>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Month</label>
-                    <input type="month" id="depositMonth">
-                </div>
-                <div class="form-group">
-                    <label>Amount Paid (RM)</label>
-                    <input type="number" id="depositAmount" step="0.01" min="0" placeholder="0.00">
-                </div>
+                <div class="form-group"><label>Month</label><input type="month" id="depositMonth"></div>
+                <div class="form-group"><label>Amount Paid (RM)</label><input type="number" id="depositAmount" step="0.01" min="0" placeholder="0.00"></div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Date Paid</label>
-                    <input type="date" id="depositDate">
-                </div>
-                <div class="form-group">
-                    <label>Note (optional)</label>
-                    <input type="text" id="depositNote" placeholder="e.g. Security deposit">
-                </div>
+                <div class="form-group"><label>Date Paid</label><input type="date" id="depositDate"></div>
+                <div class="form-group"><label>Note (optional)</label><input type="text" id="depositNote" placeholder="e.g. Security deposit"></div>
             </div>
             <button class="btn btn-deposit" id="addDepositBtn" style="margin-top: 6px;">💵 Add Deposit Instalment</button>
             <div class="auto-status-hint deposit-hint">
@@ -648,14 +605,12 @@
     let selectedVendor = null;
     let currentVendorPayments = [];
     let currentVendorDeposits = [];
-    let currentDepositInvoice = null;
+    let currentDepositInvoices = [];   // ← array of deposit invoices for selected vendor
     let companySettings = null;
-    let currentInvoiceMode = 'rental';
 
     let savingVendor = false, savingPayment = false, savingDeposit = false;
-    let savingCompany = false, issuingDepositInvoice = false;
+    let savingCompany = false, generatingDepositInvoice = false;
 
-    // ==================== DOM ====================
     const dashboardContainer    = document.getElementById('dashboardContainer');
     const vendorModal           = document.getElementById('vendorModal');
     const addVendorModal        = document.getElementById('addVendorModal');
@@ -716,7 +671,6 @@
         if (type === 'F&B') return '🍔';
         return '🛍️';
     }
-
     function computeStatus(totalPaid, targetAmount) {
         const a = parseFloat(totalPaid) || 0;
         const t = parseFloat(targetAmount) || 0;
@@ -725,7 +679,6 @@
         if (t > 0 && a < t) return 'partial';
         return 'paid';
     }
-
     function groupPaymentsByMonth(payments) {
         const map = {};
         (payments || []).forEach(p => {
@@ -735,7 +688,6 @@
         });
         return map;
     }
-
     function preventEnterSubmitInModal(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
@@ -746,51 +698,29 @@
         });
     }
 
-    // ==================== FLOOR / UNIT NUMERIC SORTING ====================
-    /**
-     * Convert any floor name → a numeric rank for sorting.
-     *   Basement/B1/B2… → negative (deeper = smaller)
-     *   Ground/G/GF     → 0
-     *   1st, 1, L1      → 1
-     *   2nd, 2, L2      → 2
-     *   Roof/R          → 999
-     *   Unknown string  → 500 (sorted between numbers and roof)
-     */
+    // ==================== FLOOR / UNIT SORTING ====================
     function floorRank(floorName) {
         if (!floorName) return 10000;
         const s = String(floorName).trim().toLowerCase();
-
         if (/^roof/.test(s) || s === 'r') return 999;
         if (/^basement|^b\d+|^b$/.test(s)) {
             const n = parseInt(s.replace(/\D/g, '')) || 1;
             return -n;
         }
         if (/^(ground|g|gf|level\s*g)$/.test(s)) return 0;
-
-        // Extract any number in the string
         const numMatch = s.match(/(\d+)/);
-        if (numMatch) {
-            return parseInt(numMatch[1]);
-        }
-
-        // Named floor with no number — put after all numbered floors
+        if (numMatch) return parseInt(numMatch[1]);
         return 500;
     }
-
-    /**
-     * Numeric comparison for unit numbers like G-2 vs G-10.
-     */
     function compareUnits(a, b) {
         const sa = (a || '').toString().trim();
         const sb = (b || '').toString().trim();
-        // Extract all number groups
         const na = (sa.match(/\d+/g) || []).map(n => parseInt(n));
         const nb = (sb.match(/\d+/g) || []).map(n => parseInt(n));
         const len = Math.min(na.length, nb.length);
         for (let i = 0; i < len; i++) {
             if (na[i] !== nb[i]) return na[i] - nb[i];
         }
-        // Fall back to lexicographic if numerically equal
         return sa.localeCompare(sb);
     }
 
@@ -855,7 +785,7 @@
         endLabel.textContent = 'End: ' + formatDate(endStr);
     }
 
-    // ==================== RENTAL MONTH GRID ====================
+    // ==================== RENTAL MONTHS ====================
     function getRentalMonthWindow(vendor) {
         const months = [];
         const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
@@ -864,9 +794,7 @@
             const end = new Date(tenancyInfo.end.getFullYear(), tenancyInfo.end.getMonth(), 1);
             const cur = new Date(start);
             while (cur <= end) {
-                const y = cur.getFullYear();
-                const m = String(cur.getMonth() + 1).padStart(2, '0');
-                months.push(`${y}-${m}`);
+                months.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
                 cur.setMonth(cur.getMonth() + 1);
             }
         } else {
@@ -967,15 +895,11 @@
     function populateFloorDropdown(selectId, selectedFloor = '') {
         const select = document.getElementById(selectId);
         if (!select) return;
-
-        // Sort floors numerically
         const sortedFloors = [...floors].sort((a, b) => {
-            const ra = floorRank(a.name);
-            const rb = floorRank(b.name);
+            const ra = floorRank(a.name), rb = floorRank(b.name);
             if (ra !== rb) return ra - rb;
             return a.name.localeCompare(b.name);
         });
-
         let html = '<option value="">-- Select floor --</option>';
         const floorNames = sortedFloors.map(f => f.name);
         if (selectedFloor && !floorNames.includes(selectedFloor)) {
@@ -984,9 +908,7 @@
         sortedFloors.forEach(f => {
             html += `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`;
         });
-        if (sortedFloors.length === 0) {
-            html += '<option value="" disabled>— No floors yet —</option>';
-        }
+        if (sortedFloors.length === 0) html += '<option value="" disabled>— No floors yet —</option>';
         select.innerHTML = html;
         select.value = selectedFloor || '';
     }
@@ -994,20 +916,15 @@
     function renderFloorList() {
         const container = document.getElementById('floorListContainer');
         if (!container) return;
-
         if (floors.length === 0) {
             container.innerHTML = `<div style="text-align:center; padding:32px; color:#94a3b8; background:#f8fafc; border-radius:16px;">🏗️ No floors yet. Add your first one above.</div>`;
             return;
         }
-
-        // Render sorted numerically
         const sortedFloors = [...floors].sort((a, b) => {
-            const ra = floorRank(a.name);
-            const rb = floorRank(b.name);
+            const ra = floorRank(a.name), rb = floorRank(b.name);
             if (ra !== rb) return ra - rb;
             return a.name.localeCompare(b.name);
         });
-
         let html = '';
         sortedFloors.forEach((f, idx) => {
             html += `
@@ -1066,9 +983,7 @@
         const input = document.getElementById('newFloorName');
         const name = (input.value || '').trim();
         if (!name) { showToast('Enter a floor name', true); return; }
-        if (floors.some(f => f.name.toLowerCase() === name.toLowerCase())) {
-            showToast('That floor already exists', true); return;
-        }
+        if (floors.some(f => f.name.toLowerCase() === name.toLowerCase())) { showToast('That floor already exists', true); return; }
         const nextSort = floors.length ? Math.max(...floors.map(f => f.sort_order || 0)) + 1 : 1;
         try {
             const { error } = await supabase.from('floors').insert([{ name, sort_order: nextSort }]);
@@ -1155,7 +1070,7 @@
         }
     }
 
-    // ==================== FETCH VENDORS ====================
+    // ==================== FETCH ====================
     async function fetchVendors() {
         try {
             const { data, error } = await supabase.from('vendors').select('*');
@@ -1201,9 +1116,7 @@
                 grouped[p.vendor_id][p.month] += parseFloat(p.amount) || 0;
             });
             vendors.forEach(v => { v._allRentalPayments = grouped[v.id] || {}; });
-        } catch (err) {
-            vendors.forEach(v => { v._allRentalPayments = {}; });
-        }
+        } catch (err) { vendors.forEach(v => { v._allRentalPayments = {}; }); }
     }
 
     function countOverdueMonthsForVendor(vendor) {
@@ -1228,10 +1141,8 @@
             dashboardContainer.innerHTML = `<div class="empty-state">🏪 No vendors yet. Click "Add Vendor" to get started.</div>`;
             return;
         }
-
         await loadAllRentalPaymentsForAll();
 
-        // Group vendors by floor
         const groups = {};
         vendors.forEach(v => {
             const floor = v.floor || 'Unassigned';
@@ -1239,19 +1150,15 @@
             groups[floor].push(v);
         });
 
-        // Sort floor names numerically by rank
         const sortedFloorNames = Object.keys(groups).sort((a, b) => {
-            const ra = floorRank(a);
-            const rb = floorRank(b);
+            const ra = floorRank(a), rb = floorRank(b);
             if (ra !== rb) return ra - rb;
             return a.localeCompare(b);
         });
 
         let html = '';
         for (const floor of sortedFloorNames) {
-            // Sort units inside the floor numerically
             groups[floor].sort((a, b) => compareUnits(a.unit, b.unit));
-
             html += `<div class="floor-section">`;
             html += `<div class="floor-title"><span class="badge-floor">${escapeHtml(floor)}</span>
                      <span style="font-size: 0.95rem; color: #64748b; font-weight: 400;">${groups[floor].length} vendor(s)</span></div>`;
@@ -1276,7 +1183,6 @@
                 else if (rentalStatus === 'partial') rentalBadge = `⚠️ Rent · ${totalPaid.toFixed(2)} / ${rental.toFixed(2)}`;
                 else                            rentalBadge = `❌ Rent · 0 / ${rental.toFixed(2)}`;
 
-                // ============ DEPOSIT BADGE (moved to top row) ============
                 let depositBadgeText, depositClass;
                 if (depositRequired <= 0) {
                     depositBadgeText = `💰 No deposit`;
@@ -1295,17 +1201,13 @@
                 const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
                 let tenancyBadge, tenancyClass;
                 if (tenancyInfo.status === 'not-set') {
-                    tenancyBadge = '📅 Tenancy not set';
-                    tenancyClass = 'tenancy-not-set';
+                    tenancyBadge = '📅 Tenancy not set'; tenancyClass = 'tenancy-not-set';
                 } else if (tenancyInfo.status === 'expired') {
-                    tenancyBadge = `⏰ Tenancy expired`;
-                    tenancyClass = 'tenancy-expired';
+                    tenancyBadge = `⏰ Tenancy expired`; tenancyClass = 'tenancy-expired';
                 } else if (tenancyInfo.status === 'expiring') {
-                    tenancyBadge = `⏳ Expires ${formatDate(vendor.tenancy_end)} · ${tenancyInfo.label}`;
-                    tenancyClass = 'tenancy-expiring';
+                    tenancyBadge = `⏳ Expires ${formatDate(vendor.tenancy_end)} · ${tenancyInfo.label}`; tenancyClass = 'tenancy-expiring';
                 } else {
-                    tenancyBadge = `📅 ${formatDate(vendor.tenancy_start)} → ${formatDate(vendor.tenancy_end)}`;
-                    tenancyClass = 'tenancy-active';
+                    tenancyBadge = `📅 ${formatDate(vendor.tenancy_start)} → ${formatDate(vendor.tenancy_end)}`; tenancyClass = 'tenancy-active';
                 }
 
                 const overdue = countOverdueMonthsForVendor(vendor);
@@ -1323,7 +1225,6 @@
 
                 html += `
                     <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
-                        <!-- ===== TOP ROW: unit badge + deposit badge ===== -->
                         <div class="top-row">
                             <span class="unit-badge">📌 ${escapeHtml(vendor.unit || 'No unit')}</span>
                             <span class="deposit-badge-top ${depositClass}" title="${escapeHtml(
@@ -1332,7 +1233,6 @@
                                     : 'No deposit set'
                             )}">${depositBadgeText}</span>
                         </div>
-
                         <span class="vendor-type-pill ${typeClass}">${typeEmoji} ${escapeHtml(vType)}</span>
                         <div class="vendor-name">${escapeHtml(vendor.name)}</div>
                         <div class="vendor-meta">
@@ -1351,7 +1251,6 @@
         }
 
         dashboardContainer.innerHTML = html;
-
         document.querySelectorAll('.vendor-card').forEach(card => {
             card.addEventListener('click', () => openVendorModal(card.dataset.vendorId));
         });
@@ -1383,7 +1282,11 @@
         await fetchFloors();
         populateFloorDropdown('editFloor', vendor.floor || '');
 
-        await Promise.all([fetchVendorPayments(vendor.id), fetchVendorDeposits(vendor.id), fetchDepositInvoice(vendor.id)]);
+        await Promise.all([
+            fetchVendorPayments(vendor.id),
+            fetchVendorDeposits(vendor.id),
+            fetchDepositInvoices(vendor.id)
+        ]);
 
         renderPaymentHistory(vendor);
         renderRentalMonthsGrid(vendor);
@@ -1411,15 +1314,23 @@
         } catch (err) { return []; }
     }
 
-    async function fetchDepositInvoice(vendorId) {
+    async function fetchDepositInvoices(vendorId) {
         try {
-            const { data, error } = await supabase.from('vendor_deposit_invoices').select('*').eq('vendor_id', vendorId).maybeSingle();
-            if (error && error.code !== 'PGRST116') throw error;
-            currentDepositInvoice = data || null;
-            return currentDepositInvoice;
-        } catch (err) { currentDepositInvoice = null; return null; }
+            const { data, error } = await supabase.from('vendor_deposit_invoices')
+                .select('*')
+                .eq('vendor_id', vendorId)
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            currentDepositInvoices = data || [];
+            return currentDepositInvoices;
+        } catch (err) {
+            console.warn('Could not load deposit invoices:', err.message);
+            currentDepositInvoices = [];
+            return [];
+        }
     }
 
+    // ==================== RENDER HISTORY ====================
     function renderPaymentHistory(vendor) {
         const tbody = document.getElementById('paymentHistoryBody');
         const noPaymentsMsg = document.getElementById('noPaymentsMsg');
@@ -1523,29 +1434,73 @@
         document.getElementById('depositNote').value = '';
     }
 
+    // ==================== DEPOSIT INVOICE STATUS + HISTORY ====================
     function renderDepositInvoiceStatus() {
-        const badge = document.getElementById('depositInvoiceBadge');
+        const countBadge = document.getElementById('depositInvoiceCount');
         const info = document.getElementById('depositInvoiceInfo');
-        const issueBtn = document.getElementById('issueDepositInvoiceBtn');
-        const viewBtn = document.getElementById('viewDepositInvoiceBtn');
-        if (!badge || !info || !issueBtn || !viewBtn) return;
+        const historyWrap = document.getElementById('depositInvoiceHistoryWrap');
+        const historyList = document.getElementById('depositInvoiceHistoryList');
+        if (!countBadge || !info) return;
 
-        if (currentDepositInvoice) {
-            badge.className = 'deposit-invoice-badge deposit-badge-issued';
-            badge.textContent = '✅ Issued';
-            info.innerHTML = `Invoice <strong>${escapeHtml(currentDepositInvoice.invoice_no)}</strong> issued on ${formatDate(currentDepositInvoice.issue_date)}.`;
-            issueBtn.style.display = 'none';
-            viewBtn.style.display = 'inline-flex';
+        const count = currentDepositInvoices.length;
+        countBadge.textContent = `${count} invoice${count !== 1 ? 's' : ''}`;
+        countBadge.classList.toggle('zero', count === 0);
+
+        if (count === 0) {
+            info.textContent = 'No deposit invoice has been generated yet. Click "Generate Deposit Invoice" to create one.';
+            if (historyWrap) historyWrap.style.display = 'none';
         } else {
-            badge.className = 'deposit-invoice-badge deposit-badge-none';
-            badge.textContent = 'Not Issued';
-            info.textContent = 'No deposit invoice has been issued yet. Once issued, it cannot be re-issued.';
-            issueBtn.style.display = 'inline-flex';
-            viewBtn.style.display = 'none';
+            info.textContent = `${count} deposit invoice${count !== 1 ? 's' : ''} generated for this vendor.`;
+            if (historyWrap) historyWrap.style.display = 'block';
+
+            let html = '';
+            currentDepositInvoices.forEach(inv => {
+                html += `
+                    <div class="deposit-invoice-history-item">
+                        <div>
+                            <span class="inv-no">${escapeHtml(inv.invoice_no)}</span>
+                            <span class="inv-date"> — ${formatDate(inv.issue_date)}</span>
+                            <span style="margin-left: 8px; font-size: 0.75rem; color: #64748b;">
+                                RM ${(parseFloat(inv.deposit_paid) || 0).toFixed(2)} paid / RM ${(parseFloat(inv.deposit_required) || 0).toFixed(2)} required
+                            </span>
+                        </div>
+                        <div class="inv-actions">
+                            <button class="view-btn" data-invoice-id="${inv.id}">👁️ View</button>
+                            <button class="delete-btn" data-invoice-id="${inv.id}">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = html;
+
+            historyList.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const inv = currentDepositInvoices.find(i => i.id === btn.dataset.invoiceId);
+                    if (inv) { if (!companySettings) fetchCompanySettings().then(() => renderDepositInvoicePreview(inv)); else renderDepositInvoicePreview(inv); invoiceModal.classList.add('active'); }
+                });
+            });
+            historyList.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteDepositInvoice(btn.dataset.invoiceId));
+            });
         }
     }
 
-    // ==================== DELETE ====================
+    async function deleteDepositInvoice(invoiceId) {
+        const inv = currentDepositInvoices.find(i => i.id === invoiceId);
+        if (!inv) return;
+        if (!confirm(`Delete deposit invoice "${inv.invoice_no}"?`)) return;
+        try {
+            const { error } = await supabase.from('vendor_deposit_invoices').delete().eq('id', invoiceId);
+            if (error) throw error;
+            showToast('Deposit invoice deleted');
+            if (selectedVendor) {
+                await fetchDepositInvoices(selectedVendor.id);
+                renderDepositInvoiceStatus();
+            }
+        } catch (err) { showToast('Error: ' + err.message, true); }
+    }
+
+    // ==================== DELETE PAYMENT / DEPOSIT ====================
     window.deletePayment = async function(paymentId) {
         if (!confirm('Delete this rental instalment?')) return;
         try {
@@ -1641,7 +1596,7 @@
     // ==================== DELETE VENDOR ====================
     async function deleteVendor() {
         if (!selectedVendor) return;
-        if (!confirm(`Delete vendor "${selectedVendor.name}" and ALL payment records?`)) return;
+        if (!confirm(`Delete vendor "${selectedVendor.name}" and ALL records?`)) return;
         try {
             await supabase.from('vendor_payments').delete().eq('vendor_id', selectedVendor.id);
             await supabase.from('vendor_deposit_payments').delete().eq('vendor_id', selectedVendor.id);
@@ -1653,12 +1608,12 @@
             selectedVendor = null;
             currentVendorPayments = [];
             currentVendorDeposits = [];
-            currentDepositInvoice = null;
+            currentDepositInvoices = [];
             await fetchVendors();
         } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
-    // ==================== ADD RENTAL PAYMENT ====================
+    // ==================== ADD RENTAL ====================
     async function addPayment() {
         if (!selectedVendor || savingPayment) return;
         const month = document.getElementById('paymentMonth').value;
@@ -1774,7 +1729,6 @@
     async function openInvoiceModal() {
         if (!selectedVendor) return;
         if (!companySettings) await fetchCompanySettings();
-        currentInvoiceMode = 'rental';
 
         const month = document.getElementById('paymentMonth').value || getCurrentMonthString();
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
@@ -1924,69 +1878,69 @@
         invoiceModal.classList.add('active');
     }
 
-    // ==================== DEPOSIT INVOICE ====================
-    async function issueDepositInvoice() {
-        if (!selectedVendor || issuingDepositInvoice) return;
-        if (currentDepositInvoice) { showToast('Deposit invoice already issued. Use View / Reprint.', true); return; }
+    // ==================== GENERATE DEPOSIT INVOICE (no restriction) ====================
+    async function generateDepositInvoice() {
+        if (!selectedVendor || generatingDepositInvoice) return;
 
         const depositRequired = parseFloat(selectedVendor.deposit) || 0;
         const totalDepositPaid = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
 
-        if (depositRequired <= 0) { showToast('Deposit Required must be greater than 0', true); return; }
-        if (totalDepositPaid <= 0) { showToast('Record at least one deposit instalment first', true); return; }
+        if (depositRequired <= 0) {
+            showToast('Deposit Required must be greater than 0', true);
+            return;
+        }
 
-        const confirmed = await showConfirmModal(
-            '🧾 Issue Deposit Invoice',
-            `<div style="text-align:left;">
-                <p>Issue the <strong>one-time</strong> deposit invoice for <strong>${escapeHtml(selectedVendor.name)}</strong>?</p>
-                <p style="margin-top:10px;">Required: <strong>RM ${depositRequired.toFixed(2)}</strong><br>
-                   Paid: <strong>RM ${totalDepositPaid.toFixed(2)}</strong><br>
-                   Balance: <strong>RM ${Math.max(0, depositRequired - totalDepositPaid).toFixed(2)}</strong></p>
-                <p style="margin-top:12px; color:#b45309;"><strong>⚠️ Cannot be re-issued after this.</strong></p>
-            </div>`
-        );
-        if (!confirmed) return;
-
-        issuingDepositInvoice = true;
-        const btn = document.getElementById('issueDepositInvoiceBtn');
-        btn.disabled = true; btn.textContent = '⏳ Issuing...';
+        generatingDepositInvoice = true;
+        const btn = document.getElementById('generateDepositInvoiceBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Generating...';
 
         try {
             if (!companySettings) await fetchCompanySettings();
+
+            const now = new Date();
             const month = getCurrentMonthString();
+            const timestamp = now.getTime().toString().slice(-6);
             const shortId = selectedVendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
-            const invoiceNo = `DEP-${month.replace('-','')}-${shortId}`;
-            const issueDate = new Date().toISOString().split('T')[0];
+            // Multiple invoices → include timestamp to guarantee uniqueness
+            const invoiceNo = `DEP-${month.replace('-','')}-${shortId}-${timestamp}`;
+            const issueDate = now.toISOString().split('T')[0];
             const balance = Math.max(0, depositRequired - totalDepositPaid);
             const status = computeStatus(totalDepositPaid, depositRequired);
 
             const payload = {
-                invoice_no: invoiceNo, vendor_id: selectedVendor.id,
-                vendor_name: selectedVendor.name, vendor_unit: selectedVendor.unit, vendor_floor: selectedVendor.floor,
-                deposit_required: depositRequired, deposit_paid: totalDepositPaid, balance, status,
-                issue_date: issueDate, notes: document.getElementById('editNotes').value.trim()
+                invoice_no: invoiceNo,
+                vendor_id: selectedVendor.id,
+                vendor_name: selectedVendor.name,
+                vendor_unit: selectedVendor.unit,
+                vendor_floor: selectedVendor.floor,
+                deposit_required: depositRequired,
+                deposit_paid: totalDepositPaid,
+                balance,
+                status,
+                issue_date: issueDate,
+                notes: document.getElementById('editNotes').value.trim()
             };
 
             const { data, error } = await supabase.from('vendor_deposit_invoices').insert([payload]).select().single();
-            if (error) {
-                if (error.code === '23505') throw new Error('A deposit invoice has already been issued for this vendor.');
-                throw error;
-            }
-            currentDepositInvoice = data;
-            showToast('Deposit invoice issued successfully');
+            if (error) throw error;
+
+            showToast('Deposit invoice generated successfully');
+            await fetchDepositInvoices(selectedVendor.id);
             renderDepositInvoiceStatus();
             renderDepositInvoicePreview(data);
             invoiceModal.classList.add('active');
-        } catch (err) { showToast('Error: ' + err.message, true); }
-        finally {
-            issuingDepositInvoice = false;
-            btn.disabled = false; btn.textContent = '🧾 Issue Deposit Invoice';
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        } finally {
+            generatingDepositInvoice = false;
+            btn.disabled = false;
+            btn.textContent = '🧾 Generate Deposit Invoice';
         }
     }
 
     function renderDepositInvoicePreview(depositInvoiceRecord) {
         if (!selectedVendor || !companySettings) return;
-        currentInvoiceMode = 'deposit';
 
         const cs = companySettings || {};
         const vType = selectedVendor.vendor_type || 'Selling';
@@ -2022,10 +1976,6 @@
 
         document.getElementById('invoiceModalTitle').textContent = '🧾 Deposit Invoice Preview';
         document.getElementById('invoicePreviewContent').innerHTML = `
-            <div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:0.85rem; color:#92400e;">
-                <strong>⚠️ One-time deposit invoice</strong> — cannot be re-issued.
-            </div>
-
             <div class="invoice-header-row">
                 <div>
                     ${cs.company_logo_url ? `<img src="${escapeHtml(cs.company_logo_url)}" style="max-height:60px;margin-bottom:8px;" onerror="this.style.display='none'">` : ''}
@@ -2087,37 +2037,6 @@
         `;
     }
 
-    async function viewDepositInvoice() {
-        if (!currentDepositInvoice) return;
-        if (!companySettings) await fetchCompanySettings();
-        renderDepositInvoicePreview(currentDepositInvoice);
-        invoiceModal.classList.add('active');
-    }
-
-    // ==================== CONFIRM MODAL ====================
-    function showConfirmModal(title, messageHtml) {
-        return new Promise((resolve) => {
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay active';
-            overlay.style.zIndex = '99999';
-            overlay.innerHTML = `
-                <div class="modal-container" style="max-width: 480px;">
-                    <div class="modal-title">${title}</div>
-                    <div style="color:#334155; font-size:0.95rem; line-height:1.5;">${messageHtml}</div>
-                    <div class="modal-actions">
-                        <button class="btn btn-secondary" id="confirmModalCancel">Cancel</button>
-                        <button class="btn btn-primary" id="confirmModalOk">Confirm</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-            const cleanup = () => overlay.remove();
-            overlay.querySelector('#confirmModalCancel').addEventListener('click', () => { cleanup(); resolve(false); });
-            overlay.querySelector('#confirmModalOk').addEventListener('click', () => { cleanup(); resolve(true); });
-            overlay.addEventListener('click', (e) => { if (e.target === overlay) { cleanup(); resolve(false); } });
-        });
-    }
-
     // ==================== EVENTS ====================
     document.addEventListener('DOMContentLoaded', async () => {
         await fetchFloors();
@@ -2175,15 +2094,14 @@
             selectedVendor = null;
             currentVendorPayments = [];
             currentVendorDeposits = [];
-            currentDepositInvoice = null;
+            currentDepositInvoices = [];
         });
         document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
         document.getElementById('deleteVendorBtn').addEventListener('click', deleteVendor);
         document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
         document.getElementById('addDepositBtn').addEventListener('click', addDeposit);
         document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
-        document.getElementById('issueDepositInvoiceBtn').addEventListener('click', issueDepositInvoice);
-        document.getElementById('viewDepositInvoiceBtn').addEventListener('click', viewDepositInvoice);
+        document.getElementById('generateDepositInvoiceBtn').addEventListener('click', generateDepositInvoice);
 
         document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
