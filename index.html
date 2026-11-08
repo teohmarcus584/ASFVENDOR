@@ -43,7 +43,7 @@
         }
         .vendor-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 16px;
         }
         .vendor-card {
@@ -54,6 +54,7 @@
             position: relative; border-top: 6px solid #cbd5e1;
         }
         .vendor-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+        /* Card colour driven by RENTAL status (as before) */
         .vendor-card.status-paid    { border-top-color: #16a34a; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 70%); }
         .vendor-card.status-partial { border-top-color: #f59e0b; background: linear-gradient(180deg, #fffbeb 0%, #ffffff 70%); }
         .vendor-card.status-unpaid  { border-top-color: #dc2626; background: linear-gradient(180deg, #fef2f2 0%, #ffffff 70%); }
@@ -75,7 +76,6 @@
         .type-category { background: #ede9fe; color: #6d28d9; }
         .type-fnb      { background: #fee2e2; color: #991b1b; }
 
-        /* Two badges stacked on cards */
         .vendor-card .badge-stack {
             display: flex; flex-direction: column; gap: 6px;
             margin-top: 12px;
@@ -89,16 +89,23 @@
         .vendor-card .payment-status-badge.deposit {
             font-size: 0.72rem;
             padding: 5px 11px;
-            opacity: 0.95;
+        }
+        .vendor-card .payment-status-badge.tenancy {
+            font-size: 0.7rem;
+            padding: 5px 11px;
         }
         .status-paid    .payment-status-badge { background: #dcfce7; color: #166534; }
         .status-partial .payment-status-badge { background: #fef3c7; color: #92400e; }
         .status-unpaid  .payment-status-badge { background: #fee2e2; color: #991b1b; }
 
-        /* Deposit-only colours (independent from rental) */
         .deposit-paid    { background: #dcfce7 !important; color: #166534 !important; }
         .deposit-partial { background: #fef3c7 !important; color: #92400e !important; }
         .deposit-unpaid  { background: #fee2e2 !important; color: #991b1b !important; }
+
+        .tenancy-active    { background: #dbeafe !important; color: #1e40af !important; }
+        .tenancy-expiring  { background: #fef3c7 !important; color: #92400e !important; }
+        .tenancy-expired   { background: #fee2e2 !important; color: #991b1b !important; }
+        .tenancy-not-set   { background: #f1f5f9 !important; color: #64748b !important; }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -130,6 +137,32 @@
         }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
+
+        /* Tenancy progress bar */
+        .tenancy-bar-wrap {
+            background: #f1f5f9; border-radius: 12px; padding: 12px 16px;
+            margin-top: 8px;
+        }
+        .tenancy-bar-outer {
+            height: 10px; background: #e2e8f0; border-radius: 6px;
+            overflow: hidden; margin: 8px 0;
+        }
+        .tenancy-bar-fill {
+            height: 100%; border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        .tenancy-bar-fill.active   { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .tenancy-bar-fill.expiring { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .tenancy-bar-fill.expired  { background: #dc2626; }
+        .tenancy-meta {
+            display: flex; justify-content: space-between;
+            font-size: 0.78rem; color: #64748b; margin-top: 4px;
+        }
+        .tenancy-summary {
+            font-size: 0.85rem; font-weight: 600; color: #0f172a;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px;
+        }
 
         .payment-history-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
         .payment-history-table th {
@@ -197,7 +230,6 @@
         .invoice-table th { background: #f8fafc; font-weight: 600; }
         .invoice-total { font-size: 1.2rem; font-weight: 800; color: #0f172a; text-align: right; margin-top: 12px; }
 
-        /* Floor management rows */
         .floor-row {
             display: flex; align-items: center; gap: 8px;
             padding: 10px 14px; background: white; border-radius: 12px;
@@ -320,7 +352,32 @@
                 <input type="text" id="editDepositPaid" readonly style="background:#f8fafc; font-weight:700; color:#0f172a;">
             </div>
         </div>
-        <div class="form-group">
+
+        <!-- Tenancy -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Tenancy Start</label>
+                <input type="date" id="editTenancyStart">
+            </div>
+            <div class="form-group">
+                <label>Tenancy End</label>
+                <input type="date" id="editTenancyEnd">
+            </div>
+        </div>
+
+        <!-- Tenancy summary preview -->
+        <div id="tenancyPreviewWrap" class="tenancy-bar-wrap" style="display:none;">
+            <div class="tenancy-summary" id="tenancySummaryText"></div>
+            <div class="tenancy-bar-outer">
+                <div class="tenancy-bar-fill" id="tenancyBarFill" style="width: 0%"></div>
+            </div>
+            <div class="tenancy-meta">
+                <span id="tenancyStartLabel"></span>
+                <span id="tenancyEndLabel"></span>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 18px;">
             <label>Notes</label>
             <textarea id="editNotes" rows="2"></textarea>
         </div>
@@ -417,7 +474,7 @@
             </div>
             <button class="btn btn-primary" id="addDepositBtn" style="margin-top: 6px; background:#b45309; box-shadow: 0 4px 12px rgba(180,83,9,0.25);">💵 Add Deposit Instalment</button>
             <div class="auto-status-hint deposit-hint">
-                Deposit is tracked separately from rental. Status:
+                Deposit is tracked separately from rental and uses the same rule:
                 <strong>Total Paid ≥ Deposit Required → Paid (green)</strong> · <strong>0 &lt; Total &lt; Required → Partial (orange)</strong> · <strong>Total = 0 → Unpaid (red)</strong>
             </div>
         </div>
@@ -426,7 +483,7 @@
 
 <!-- ============ ADD VENDOR MODAL ============ -->
 <div class="modal-overlay" id="addVendorModal">
-    <div class="modal-container" style="max-width: 600px;">
+    <div class="modal-container" style="max-width: 620px;">
         <button class="modal-close" id="closeAddVendorModal">&times;</button>
         <div class="modal-title">➕ Add New Vendor</div>
         <div class="form-group">
@@ -475,6 +532,16 @@
             <div class="form-group">
                 <label>Deposit Required (RM)</label>
                 <input type="number" id="addDeposit" step="0.01" min="0">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Tenancy Start</label>
+                <input type="date" id="addTenancyStart">
+            </div>
+            <div class="form-group">
+                <label>Tenancy End</label>
+                <input type="date" id="addTenancyEnd">
             </div>
         </div>
         <div class="modal-actions">
@@ -574,8 +641,8 @@
     let vendors = [];
     let floors = [];
     let selectedVendor = null;
-    let currentVendorPayments = [];       // rental instalments
-    let currentVendorDeposits = [];       // deposit instalments
+    let currentVendorPayments = [];
+    let currentVendorDeposits = [];
     let companySettings = null;
 
     let savingVendor = false;
@@ -617,6 +684,12 @@
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
         }[m]));
     }
+    function formatDate(str) {
+        if (!str) return '—';
+        const d = new Date(str);
+        if (isNaN(d.getTime())) return str;
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
     function getStatusPillClass(status) {
         if (status === 'paid') return 'pill-paid';
         if (status === 'partial') return 'pill-partial';
@@ -642,7 +715,10 @@
 
     /**
      * Auto-compute status from the total vs the target amount.
-     * Used for BOTH rental and deposit.
+     * Same rule used for BOTH rental and deposit.
+     *   total <= 0            → unpaid    (red)
+     *   total >= target       → paid      (green)
+     *   0 < total < target    → partial   (orange)
      */
     function computeStatus(totalPaid, targetAmount) {
         const a = parseFloat(totalPaid) || 0;
@@ -671,6 +747,98 @@
                 e.preventDefault();
             }
         });
+    }
+
+    // ==================== TENANCY HELPERS ====================
+    /**
+     * Compute tenancy info from start/end dates.
+     * Returns { status, label, percent, daysRemaining, totalDays, durationText }
+     *   status: 'not-set' | 'active' | 'expiring' | 'expired'
+     */
+    function computeTenancyInfo(startStr, endStr) {
+        if (!startStr || !endStr) {
+            return { status: 'not-set', label: 'Not set', percent: 0, durationText: '' };
+        }
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+            return { status: 'not-set', label: 'Invalid dates', percent: 0, durationText: '' };
+        }
+
+        const totalDays = Math.round((end - start) / (1000 * 60 * 60 * 24));
+        const daysElapsed = Math.max(0, Math.round((today - start) / (1000 * 60 * 60 * 24)));
+        const daysRemaining = Math.round((end - today) / (1000 * 60 * 60 * 24));
+
+        let percent = 0;
+        if (totalDays > 0) {
+            percent = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
+        }
+
+        // Duration in months & years
+        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        const years = months / 12;
+        let durationText = `${months} month${months !== 1 ? 's' : ''}`;
+        if (months >= 12 && months % 12 === 0) {
+            durationText += ` (${years} year${years !== 1 ? 's' : ''})`;
+        }
+
+        let status, label;
+        if (today < start) {
+            status = 'active';
+            const daysToStart = Math.round((start - today) / (1000 * 60 * 60 * 24));
+            label = `Starts in ${daysToStart} day${daysToStart !== 1 ? 's' : ''}`;
+            percent = 0;
+        } else if (today > end) {
+            status = 'expired';
+            label = `Expired ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) !== 1 ? 's' : ''} ago`;
+            percent = 100;
+        } else if (daysRemaining <= 30) {
+            status = 'expiring';
+            label = `Expires in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`;
+        } else {
+            status = 'active';
+            label = `${daysRemaining} days remaining`;
+        }
+
+        return { status, label, percent, daysRemaining, totalDays, durationText, start, end };
+    }
+
+    /**
+     * Live-update the tenancy preview bar in the vendor edit modal.
+     */
+    function updateTenancyPreviewInModal() {
+        const startStr = document.getElementById('editTenancyStart').value;
+        const endStr = document.getElementById('editTenancyEnd').value;
+        const wrap = document.getElementById('tenancyPreviewWrap');
+        const summaryEl = document.getElementById('tenancySummaryText');
+        const barEl = document.getElementById('tenancyBarFill');
+        const startLabel = document.getElementById('tenancyStartLabel');
+        const endLabel = document.getElementById('tenancyEndLabel');
+
+        if (!startStr || !endStr) {
+            wrap.style.display = 'none';
+            return;
+        }
+
+        const info = computeTenancyInfo(startStr, endStr);
+        if (info.status === 'not-set') {
+            wrap.style.display = 'none';
+            return;
+        }
+
+        wrap.style.display = 'block';
+        summaryEl.innerHTML = `
+            <span>📅 ${escapeHtml(formatDate(startStr))} → ${escapeHtml(formatDate(endStr))}</span>
+            <span style="font-weight:700;">${escapeHtml(info.durationText)}</span>
+            <span>${escapeHtml(info.label)}</span>
+        `;
+        barEl.style.width = info.percent.toFixed(1) + '%';
+        barEl.className = 'tenancy-bar-fill ' + info.status;
+        startLabel.textContent = 'Start: ' + formatDate(startStr);
+        endLabel.textContent = 'End: ' + formatDate(endStr);
     }
 
     // ==================== FLOORS ====================
@@ -955,7 +1123,6 @@
             if (error) throw error;
             vendors = data || [];
 
-            // Load ALL payment data (rental + deposit) in bulk
             await Promise.all([
                 loadCurrentMonthTotalsForAll(),
                 loadCurrentMonthDepositTotalsForAll()
@@ -988,10 +1155,6 @@
         }
     }
 
-    /**
-     * Fetch total DEPOSIT paid to date (all months) per vendor.
-     * Deposit is a one-off, not monthly, so we sum all entries.
-     */
     async function loadCurrentMonthDepositTotalsForAll() {
         try {
             const { data, error } = await supabase
@@ -1063,17 +1226,37 @@
                 else                            rentalBadge = `❌ Rent · 0 / ${rental.toFixed(2)}`;
 
                 let depositBadge;
+                let depositClass;
                 if (depositRequired <= 0) {
                     depositBadge = `💰 No deposit set`;
+                    depositClass = 'tenancy-not-set';
                 } else if (depositStatus === 'paid') {
                     depositBadge = `🟢 Deposit Paid · RM ${depositPaid.toFixed(2)}`;
+                    depositClass = 'deposit-paid';
                 } else if (depositStatus === 'partial') {
                     depositBadge = `🟠 Deposit Partial · ${depositPaid.toFixed(2)} / ${depositRequired.toFixed(2)}`;
+                    depositClass = 'deposit-partial';
                 } else {
                     depositBadge = `🔴 Deposit Unpaid · 0 / ${depositRequired.toFixed(2)}`;
+                    depositClass = 'deposit-unpaid';
                 }
 
-                const depositClass = 'deposit-' + (depositRequired <= 0 ? 'unpaid' : depositStatus);
+                // Tenancy badge
+                const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
+                let tenancyBadge, tenancyClass;
+                if (tenancyInfo.status === 'not-set') {
+                    tenancyBadge = '📅 Tenancy not set';
+                    tenancyClass = 'tenancy-not-set';
+                } else if (tenancyInfo.status === 'expired') {
+                    tenancyBadge = `⏰ Tenancy expired (${formatDate(vendor.tenancy_end)})`;
+                    tenancyClass = 'tenancy-expired';
+                } else if (tenancyInfo.status === 'expiring') {
+                    tenancyBadge = `⏳ Tenancy expires ${formatDate(vendor.tenancy_end)} · ${tenancyInfo.label}`;
+                    tenancyClass = 'tenancy-expiring';
+                } else {
+                    tenancyBadge = `📅 ${formatDate(vendor.tenancy_start)} → ${formatDate(vendor.tenancy_end)}`;
+                    tenancyClass = 'tenancy-active';
+                }
 
                 html += `
                     <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
@@ -1087,6 +1270,7 @@
                         <div class="badge-stack">
                             <div class="payment-status-badge">${rentalBadge}</div>
                             <div class="payment-status-badge deposit ${depositClass}">${depositBadge}</div>
+                            <div class="payment-status-badge tenancy ${tenancyClass}">${tenancyBadge}</div>
                         </div>
                     </div>
                 `;
@@ -1118,7 +1302,12 @@
         document.getElementById('editUnit').value = vendor.unit || '';
         document.getElementById('editRental').value = vendor.monthly_rental || 0;
         document.getElementById('editDeposit').value = vendor.deposit || 0;
+        document.getElementById('editTenancyStart').value = vendor.tenancy_start || '';
+        document.getElementById('editTenancyEnd').value = vendor.tenancy_end || '';
         document.getElementById('editNotes').value = vendor.notes || '';
+
+        // Update tenancy preview immediately
+        updateTenancyPreviewInModal();
 
         await fetchFloors();
         populateFloorDropdown('editFloor', vendor.floor || '');
@@ -1241,7 +1430,6 @@
             (sum, p) => sum + (parseFloat(p.amount) || 0), 0
         );
 
-        // Update the read-only "Deposit Paid" field in the form
         if (depositPaidInput) {
             depositPaidInput.value = `RM ${totalDeposit.toFixed(2)}`;
         }
@@ -1271,14 +1459,12 @@
             tbody.innerHTML = html;
         }
 
-        // Status pill at section header
         const currentStatus = computeStatus(totalDeposit, depositRequired);
         statusPill.className = `status-pill ${getStatusPillClass(currentStatus)}`;
         statusPill.textContent = depositRequired > 0
             ? `${getStatusText(currentStatus)} · RM ${totalDeposit.toFixed(2)} / ${depositRequired.toFixed(2)}`
             : `💰 No deposit required`;
 
-        // Pre-fill deposit form
         document.getElementById('depositMonth').value = getCurrentMonthString();
         document.getElementById('depositDate').value = new Date().toISOString().split('T')[0];
         const depositRemaining = Math.max(0, depositRequired - totalDeposit);
@@ -1286,7 +1472,7 @@
         document.getElementById('depositNote').value = '';
     }
 
-    // ==================== DELETE PAYMENT ====================
+    // ==================== DELETE HANDLERS ====================
     window.deletePayment = async function(paymentId) {
         if (!confirm('Delete this rental instalment?')) return;
         try {
@@ -1329,6 +1515,15 @@
         const floorValue = document.getElementById('editFloor').value;
         if (!floorValue) { showToast('Please select a floor', true); return; }
 
+        const tenancyStart = document.getElementById('editTenancyStart').value || null;
+        const tenancyEnd   = document.getElementById('editTenancyEnd').value   || null;
+
+        // Sanity: if both set, end must be after start
+        if (tenancyStart && tenancyEnd && new Date(tenancyEnd) <= new Date(tenancyStart)) {
+            showToast('Tenancy end date must be after start date', true);
+            return;
+        }
+
         savingVendor = true;
         const btn = document.getElementById('saveVendorBtn');
         btn.disabled = true;
@@ -1344,6 +1539,8 @@
             unit: document.getElementById('editUnit').value.trim(),
             monthly_rental: parseFloat(document.getElementById('editRental').value) || 0,
             deposit: parseFloat(document.getElementById('editDeposit').value) || 0,
+            tenancy_start: tenancyStart,
+            tenancy_end: tenancyEnd,
             notes: document.getElementById('editNotes').value.trim()
         };
 
@@ -1370,6 +1567,7 @@
 
             renderPaymentHistory(selectedVendor);
             renderDepositHistory(selectedVendor);
+            updateTenancyPreviewInModal();
             await loadCurrentMonthTotalsForAll();
             await loadCurrentMonthDepositTotalsForAll();
             renderDashboard();
@@ -1439,7 +1637,7 @@
                 }]);
             if (error) throw error;
 
-            showToast(`Rental instalment RM ${amount.toFixed(2)} added for ${getMonthLabel(month)} — total RM ${newTotal.toFixed(2)} / ${rental.toFixed(2)} → ${newStatus.toUpperCase()}`);
+            showToast(`Rental instalment RM ${amount.toFixed(2)} added — total RM ${newTotal.toFixed(2)} / ${rental.toFixed(2)} → ${newStatus.toUpperCase()}`);
 
             await fetchVendorPayments(selectedVendor.id);
             renderPaymentHistory(selectedVendor);
@@ -1519,10 +1717,16 @@
         const email = document.getElementById('addEmail').value.trim();
         const rental = parseFloat(document.getElementById('addRental').value) || 0;
         const deposit = parseFloat(document.getElementById('addDeposit').value) || 0;
+        const tenancyStart = document.getElementById('addTenancyStart').value || null;
+        const tenancyEnd   = document.getElementById('addTenancyEnd').value   || null;
 
         if (!name) { showToast('Vendor name is required', true); return; }
         if (!floorValue) { showToast('Please select a floor', true); return; }
         if (!unit) { showToast('Unit number is required', true); return; }
+        if (tenancyStart && tenancyEnd && new Date(tenancyEnd) <= new Date(tenancyStart)) {
+            showToast('Tenancy end date must be after start date', true);
+            return;
+        }
 
         try {
             const { error } = await supabase
@@ -1537,12 +1741,14 @@
                     email,
                     monthly_rental: rental,
                     deposit,
-                    deposit_paid: 0
+                    deposit_paid: 0,
+                    tenancy_start: tenancyStart,
+                    tenancy_end: tenancyEnd
                 }]);
             if (error) throw error;
             showToast('Vendor created');
             addVendorModal.classList.remove('active');
-            ['addVendorName','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit']
+            ['addVendorName','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit','addTenancyStart','addTenancyEnd']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('addVendorType').value = 'Selling';
             populateFloorDropdown('addFloor', '');
@@ -1608,6 +1814,7 @@
         const vType = selectedVendor.vendor_type || 'Selling';
         const typeEmoji = getVendorTypeEmoji(vType);
 
+        // Rental instalments
         let instalmentRows = '';
         if (monthData.entries.length > 0) {
             instalmentRows = monthData.entries.map(p => `
@@ -1621,7 +1828,7 @@
             `).join('');
         }
 
-        // Deposit summary for the invoice (all-time)
+        // Deposit summary
         const depositRequired = parseFloat(selectedVendor.deposit) || 0;
         const totalDepositPaid = currentVendorDeposits.reduce(
             (sum, p) => sum + (parseFloat(p.amount) || 0), 0
@@ -1655,6 +1862,19 @@
             `;
         }
 
+        // Tenancy info
+        const tenancyInfo = computeTenancyInfo(selectedVendor.tenancy_start, selectedVendor.tenancy_end);
+        let tenancyLine = '';
+        if (tenancyInfo.status !== 'not-set') {
+            tenancyLine = `
+                <div style="margin-top:4px; color:#475569;">
+                    📅 Tenancy: <strong>${formatDate(selectedVendor.tenancy_start)}</strong>
+                    → <strong>${formatDate(selectedVendor.tenancy_end)}</strong>
+                    <span style="color:#64748b;">(${escapeHtml(tenancyInfo.durationText)})</span>
+                </div>
+            `;
+        }
+
         document.getElementById('invoicePreviewContent').innerHTML = `
             <div class="invoice-header-row">
                 <div>
@@ -1682,6 +1902,7 @@
                 ${selectedVendor.contact_person ? `Attn: ${escapeHtml(selectedVendor.contact_person)}<br>` : ''}
                 ${selectedVendor.phone ? `📞 ${escapeHtml(selectedVendor.phone)}<br>` : ''}
                 ${selectedVendor.email ? `✉️ ${escapeHtml(selectedVendor.email)}` : ''}
+                ${tenancyLine}
             </div>
 
             <div class="invoice-section-title">Charges</div>
@@ -1740,6 +1961,10 @@
         preventEnterSubmitInModal('companySettingsModal');
         preventEnterSubmitInModal('invoiceModal');
 
+        // Live tenancy preview when dates change
+        document.getElementById('editTenancyStart').addEventListener('change', updateTenancyPreviewInModal);
+        document.getElementById('editTenancyEnd').addEventListener('change', updateTenancyPreviewInModal);
+
         document.getElementById('refreshBtn').addEventListener('click', async () => {
             await fetchFloors();
             await fetchVendors();
@@ -1764,7 +1989,6 @@
             companySettingsModal.classList.add('active');
         });
 
-        // Manage Floors
         document.getElementById('closeManageFloorsModal').addEventListener('click', () => manageFloorsModal.classList.remove('active'));
         document.getElementById('closeManageFloorsBtn').addEventListener('click', () => manageFloorsModal.classList.remove('active'));
         document.getElementById('addFloorBtn').addEventListener('click', addFloor);
@@ -1772,12 +1996,10 @@
             if (e.key === 'Enter') { e.preventDefault(); addFloor(); }
         });
 
-        // Add Vendor
         document.getElementById('closeAddVendorModal').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('cancelAddVendorBtn').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('confirmAddVendorBtn').addEventListener('click', createVendor);
 
-        // Vendor Modal
         document.getElementById('closeVendorModal').addEventListener('click', () => {
             vendorModal.classList.remove('active');
             selectedVendor = null;
@@ -1790,17 +2012,14 @@
         document.getElementById('addDepositBtn').addEventListener('click', addDeposit);
         document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
 
-        // Company Settings
         document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('saveCompanySettingsBtn').addEventListener('click', saveCompanySettings);
 
-        // Invoice
         document.getElementById('closeInvoiceModal').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('printInvoiceBtn').addEventListener('click', () => window.print());
 
-        // Overlay click-to-close (vendor modal deliberately excluded)
         [addVendorModal, manageFloorsModal, companySettingsModal, invoiceModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) modal.classList.remove('active');
