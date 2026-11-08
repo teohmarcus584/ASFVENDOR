@@ -66,14 +66,9 @@
         .vendor-card .vendor-name { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
         .vendor-card .vendor-meta { font-size: 0.8rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px; }
 
-        /* Vendor type pill */
         .vendor-type-pill {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
-            margin-bottom: 8px;
+            display: inline-block; font-size: 0.7rem; font-weight: 700;
+            padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
             letter-spacing: 0.3px;
         }
         .type-selling  { background: #dbeafe; color: #1e40af; }
@@ -256,7 +251,8 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Floor</label>
-                <input type="text" id="editFloor">
+                <select id="editFloor"></select>
+                <input type="text" id="editFloorNew" placeholder="Enter new floor name" style="display:none; margin-top:8px;">
             </div>
             <div class="form-group">
                 <label>Monthly Rental (RM)</label>
@@ -279,7 +275,6 @@
 
         <div class="divider"></div>
 
-        <!-- Payment History -->
         <div class="flex-between">
             <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Payment History</h3>
             <span id="currentMonthStatus" class="status-pill"></span>
@@ -294,7 +289,6 @@
             <div id="noPaymentsMsg" style="text-align: center; padding: 24px; color: #94a3b8;">No payment records yet.</div>
         </div>
 
-        <!-- Add Payment Form -->
         <div class="payment-form">
             <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Payment Instalment</h4>
             <div class="form-row">
@@ -346,7 +340,8 @@
             </div>
             <div class="form-group">
                 <label>Floor *</label>
-                <input type="text" id="addFloor" placeholder="e.g. Ground">
+                <select id="addFloor"></select>
+                <input type="text" id="addFloorNew" placeholder="Enter new floor name" style="display:none; margin-top:8px;">
             </div>
         </div>
         <div class="form-row">
@@ -458,10 +453,18 @@
     let currentVendorPayments = [];
     let companySettings = null;
 
-    // Locks — prevent double-fire / mid-edit interference
     let savingVendor = false;
     let savingPayment = false;
     let savingCompany = false;
+
+    // Default floor suggestions (shown even if not yet in DB)
+    const DEFAULT_FLOORS = [
+        'Basement',
+        'Ground',
+        '1st', '2nd', '3rd', '4th', '5th',
+        '6th', '7th', '8th', '9th', '10th',
+        'Roof'
+    ];
 
     // ==================== DOM ====================
     const dashboardContainer = document.getElementById('dashboardContainer');
@@ -538,10 +541,6 @@
         return map;
     }
 
-    /**
-     * Prevent Enter from doing anything inside a modal (except clicking buttons).
-     * This is the main fix for "modal closes while editing".
-     */
     function preventEnterSubmitInModal(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
@@ -550,6 +549,103 @@
                 e.preventDefault();
             }
         });
+    }
+
+    // ==================== FLOOR DROPDOWN ====================
+    /**
+     * Collect all floor names currently used by any vendor.
+     * Returns a sorted, deduplicated array.
+     */
+    function getExistingFloors() {
+        const usedFloors = new Set();
+        vendors.forEach(v => {
+            if (v.floor && v.floor.trim()) usedFloors.add(v.floor.trim());
+        });
+        return [...usedFloors];
+    }
+
+    /**
+     * Populate a floor <select> with:
+     *   1. An empty "-- Select floor --" placeholder
+     *   2. Every default floor not yet in the DB
+     *   3. Every floor that already has vendors in the DB
+     *   4. An "➕ Add new floor…" option at the bottom
+     *
+     * @param {string} selectId  The select element's ID
+     * @param {string} newInputId The text input that appears when "Add new" is selected
+     * @param {string} selectedFloor  Pre-selected value (edit mode)
+     */
+    function populateFloorDropdown(selectId, newInputId, selectedFloor = '') {
+        const select = document.getElementById(selectId);
+        const newInput = document.getElementById(newInputId);
+        if (!select) return;
+
+        const usedFloors = getExistingFloors();
+        // Merge defaults + used (de-duplicated), preserving a sensible order
+        const combined = [];
+        DEFAULT_FLOORS.forEach(f => { if (!combined.includes(f)) combined.push(f); });
+        usedFloors.forEach(f => { if (!combined.includes(f)) combined.push(f); });
+
+        // Build <option> list
+        let html = '<option value="">-- Select floor --</option>';
+        combined.forEach(f => {
+            const badge = usedFloors.includes(f) ? '' : '  ·  (new)';
+            html += `<option value="${escapeHtml(f)}">${escapeHtml(f)}${badge}</option>`;
+        });
+        html += '<option value="__NEW__">➕ Add new floor…</option>';
+        select.innerHTML = html;
+
+        // Pre-select if we have a target
+        if (selectedFloor) {
+            if ([...select.options].some(o => o.value === selectedFloor)) {
+                select.value = selectedFloor;
+            } else {
+                // Floor doesn't exist in options yet — add it as a used floor
+                const opt = document.createElement('option');
+                opt.value = selectedFloor;
+                opt.textContent = selectedFloor;
+                select.insertBefore(opt, select.lastElementChild);
+                select.value = selectedFloor;
+            }
+        } else {
+            select.value = '';
+        }
+
+        // Hide the "new floor" input by default
+        if (newInput) {
+            newInput.style.display = 'none';
+            newInput.value = '';
+        }
+
+        // Rebind change listener (use .onchange so it doesn't stack)
+        select.onchange = () => {
+            if (select.value === '__NEW__') {
+                if (newInput) {
+                    newInput.style.display = 'block';
+                    newInput.focus();
+                }
+            } else {
+                if (newInput) {
+                    newInput.style.display = 'none';
+                    newInput.value = '';
+                }
+            }
+        };
+    }
+
+    /**
+     * Resolve the final floor name from either the dropdown or the "new floor" input.
+     * Returns '' if invalid.
+     */
+    function resolveFloorValue(selectId, newInputId) {
+        const select = document.getElementById(selectId);
+        const newInput = document.getElementById(newInputId);
+        if (!select) return '';
+        if (select.value === '__NEW__') {
+            const v = (newInput?.value || '').trim();
+            return v;
+        }
+        return select.value;
     }
 
     // ==================== COMPANY SETTINGS ====================
@@ -739,11 +835,13 @@
         document.getElementById('editContactPerson').value = vendor.contact_person || '';
         document.getElementById('editPhone').value = vendor.phone || '';
         document.getElementById('editEmail').value = vendor.email || '';
-        document.getElementById('editFloor').value = vendor.floor || '';
         document.getElementById('editUnit').value = vendor.unit || '';
         document.getElementById('editRental').value = vendor.monthly_rental || 0;
         document.getElementById('editDeposit').value = vendor.deposit || 0;
         document.getElementById('editNotes').value = vendor.notes || '';
+
+        // Populate floor dropdown with the vendor's current floor pre-selected
+        populateFloorDropdown('editFloor', 'editFloorNew', vendor.floor || '');
 
         await fetchVendorPayments(vendor.id);
         renderPaymentHistory(vendor);
@@ -853,6 +951,12 @@
         if (!selectedVendor) return;
         if (savingVendor) return;
 
+        const floorValue = resolveFloorValue('editFloor', 'editFloorNew');
+        if (!floorValue) {
+            showToast('Please select or add a floor', true);
+            return;
+        }
+
         savingVendor = true;
         const btn = document.getElementById('saveVendorBtn');
         btn.disabled = true;
@@ -864,15 +968,15 @@
             contact_person: document.getElementById('editContactPerson').value.trim(),
             phone: document.getElementById('editPhone').value.trim(),
             email: document.getElementById('editEmail').value.trim(),
-            floor: document.getElementById('editFloor').value.trim(),
+            floor: floorValue,
             unit: document.getElementById('editUnit').value.trim(),
             monthly_rental: parseFloat(document.getElementById('editRental').value) || 0,
             deposit: parseFloat(document.getElementById('editDeposit').value) || 0,
             notes: document.getElementById('editNotes').value.trim()
         };
 
-        if (!updates.name || !updates.floor || !updates.unit) {
-            showToast('Name, Floor, and Unit are required', true);
+        if (!updates.name || !updates.unit) {
+            showToast('Name and Unit are required', true);
             savingVendor = false;
             btn.disabled = false;
             btn.textContent = '💾 Save Changes';
@@ -884,7 +988,6 @@
             if (error) throw error;
             showToast('Vendor updated');
 
-            // Update local state without touching the modal DOM
             const idx = vendors.findIndex(v => v.id == selectedVendor.id);
             if (idx !== -1) {
                 vendors[idx] = { ...vendors[idx], ...updates };
@@ -893,15 +996,9 @@
             document.getElementById('vendorModalTitle').textContent = `🏪 ${updates.name}`;
             document.getElementById('vendorModalSubtitle').textContent = `${updates.floor} · Unit ${updates.unit}`;
 
-            // Recompute payment history (rental may have changed)
             renderPaymentHistory(selectedVendor);
-
-            // Refresh dashboard
             await loadCurrentMonthTotalsForAll();
             renderDashboard();
-
-            // ⚠️ DO NOT close the modal here — the user might still be editing.
-            // They can close it explicitly with × or by closing the modal.
         } catch (err) {
             showToast('Error: ' + err.message, true);
         } finally {
@@ -988,7 +1085,7 @@
     async function createVendor() {
         const name = document.getElementById('addVendorName').value.trim();
         const vendorType = document.getElementById('addVendorType').value;
-        const floor = document.getElementById('addFloor').value.trim();
+        const floorValue = resolveFloorValue('addFloor', 'addFloorNew');
         const unit = document.getElementById('addUnit').value.trim();
         const contact = document.getElementById('addContactPerson').value.trim();
         const phone = document.getElementById('addPhone').value.trim();
@@ -996,7 +1093,9 @@
         const rental = parseFloat(document.getElementById('addRental').value) || 0;
         const deposit = parseFloat(document.getElementById('addDeposit').value) || 0;
 
-        if (!name || !floor || !unit) { showToast('Name, Floor, and Unit are required', true); return; }
+        if (!name) { showToast('Vendor name is required', true); return; }
+        if (!floorValue) { showToast('Please select or add a floor', true); return; }
+        if (!unit) { showToast('Unit number is required', true); return; }
 
         try {
             const { error } = await supabase
@@ -1004,7 +1103,7 @@
                 .insert([{
                     name,
                     vendor_type: vendorType,
-                    floor,
+                    floor: floorValue,
                     unit,
                     contact_person: contact,
                     phone,
@@ -1015,9 +1114,12 @@
             if (error) throw error;
             showToast('Vendor created');
             addVendorModal.classList.remove('active');
-            ['addVendorName','addFloor','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit']
+            ['addVendorName','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('addVendorType').value = 'Selling';
+            document.getElementById('addFloorNew').value = '';
+            document.getElementById('addFloorNew').style.display = 'none';
+            document.getElementById('addFloor').value = '';
             await fetchVendors();
         } catch (err) {
             showToast('Error: ' + err.message, true);
@@ -1167,7 +1269,9 @@
         await fetchCompanySettings();
         await fetchVendors();
 
-        // ✅ Prevent Enter from doing weird things inside modals
+        // Populate floor dropdowns with current data
+        populateFloorDropdown('addFloor', 'addFloorNew', '');
+
         preventEnterSubmitInModal('vendorModal');
         preventEnterSubmitInModal('addVendorModal');
         preventEnterSubmitInModal('companySettingsModal');
@@ -1175,9 +1279,14 @@
 
         document.getElementById('refreshBtn').addEventListener('click', async () => {
             await fetchVendors();
+            // Refresh add-floor dropdown so newly-used floors show up
+            populateFloorDropdown('addFloor', 'addFloorNew', '');
             showToast('Refreshed');
         });
-        document.getElementById('addVendorBtn').addEventListener('click', () => addVendorModal.classList.add('active'));
+        document.getElementById('addVendorBtn').addEventListener('click', () => {
+            populateFloorDropdown('addFloor', 'addFloorNew', '');
+            addVendorModal.classList.add('active');
+        });
         document.getElementById('companySettingsBtn').addEventListener('click', () => {
             populateCompanySettingsForm();
             companySettingsModal.classList.add('active');
@@ -1205,11 +1314,7 @@
         document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('printInvoiceBtn').addEventListener('click', () => window.print());
 
-        // ============================================================
-        // ⚠️ IMPORTANT: Overlay click-to-close — ONLY for modals other
-        // than the main vendor modal (which we never want to close by
-        // clicking outside, to avoid losing in-progress edits).
-        // ============================================================
+        // Overlay click-to-close ONLY for modals other than vendorModal
         [addVendorModal, companySettingsModal, invoiceModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
@@ -1217,8 +1322,6 @@
                 }
             });
         });
-        // vendorModal deliberately does NOT close on background click.
-        // Use the × button or Save/Close to exit.
     });
 </script>
 </body>
