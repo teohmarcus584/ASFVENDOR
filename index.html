@@ -31,6 +31,9 @@
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-secondary { background: white; border: 1px solid #cbd5e1; color: #1e293b; }
         .btn-secondary:hover { background: #f1f5f9; }
+        .btn-deposit { background: #b45309; color: white; border: none; box-shadow: 0 4px 12px rgba(180,83,9,0.25); }
+        .btn-deposit:hover { background: #92400e; transform: translateY(-1px); }
+        .btn-deposit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         .btn-danger:hover { background: #fecaca; }
         .btn-small { padding: 6px 16px; font-size: 0.85rem; }
@@ -54,7 +57,6 @@
             position: relative; border-top: 6px solid #cbd5e1;
         }
         .vendor-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
-        /* Card colour driven by RENTAL status (as before) */
         .vendor-card.status-paid    { border-top-color: #16a34a; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 70%); }
         .vendor-card.status-partial { border-top-color: #f59e0b; background: linear-gradient(180deg, #fffbeb 0%, #ffffff 70%); }
         .vendor-card.status-unpaid  { border-top-color: #dc2626; background: linear-gradient(180deg, #fef2f2 0%, #ffffff 70%); }
@@ -86,14 +88,8 @@
             display: inline-flex; align-items: center; gap: 6px;
             align-self: flex-start;
         }
-        .vendor-card .payment-status-badge.deposit {
-            font-size: 0.72rem;
-            padding: 5px 11px;
-        }
-        .vendor-card .payment-status-badge.tenancy {
-            font-size: 0.7rem;
-            padding: 5px 11px;
-        }
+        .vendor-card .payment-status-badge.deposit { font-size: 0.72rem; padding: 5px 11px; }
+        .vendor-card .payment-status-badge.tenancy { font-size: 0.7rem;  padding: 5px 11px; }
         .status-paid    .payment-status-badge { background: #dcfce7; color: #166534; }
         .status-partial .payment-status-badge { background: #fef3c7; color: #92400e; }
         .status-unpaid  .payment-status-badge { background: #fee2e2; color: #991b1b; }
@@ -106,6 +102,20 @@
         .tenancy-expiring  { background: #fef3c7 !important; color: #92400e !important; }
         .tenancy-expired   { background: #fee2e2 !important; color: #991b1b !important; }
         .tenancy-not-set   { background: #f1f5f9 !important; color: #64748b !important; }
+
+        /* Red overdue rental badge on card */
+        .overdue-rent-badge {
+            background: #fee2e2 !important;
+            color: #991b1b !important;
+            font-size: 0.72rem;
+            padding: 5px 11px;
+            font-weight: 700;
+            animation: overduePulse 2s ease-in-out infinite;
+        }
+        @keyframes overduePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            50%      { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+        }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -138,37 +148,152 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
 
-        /* Tenancy progress bar */
-        .tenancy-bar-wrap {
-            background: #f1f5f9; border-radius: 12px; padding: 12px 16px;
-            margin-top: 8px;
-        }
-        .tenancy-bar-outer {
-            height: 10px; background: #e2e8f0; border-radius: 6px;
-            overflow: hidden; margin: 8px 0;
-        }
-        .tenancy-bar-fill {
-            height: 100%; border-radius: 6px;
-            transition: width 0.3s ease;
-        }
+        .tenancy-bar-wrap { background: #f1f5f9; border-radius: 12px; padding: 12px 16px; margin-top: 8px; }
+        .tenancy-bar-outer { height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden; margin: 8px 0; }
+        .tenancy-bar-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; }
         .tenancy-bar-fill.active   { background: linear-gradient(90deg, #3b82f6, #2563eb); }
         .tenancy-bar-fill.expiring { background: linear-gradient(90deg, #f59e0b, #d97706); }
         .tenancy-bar-fill.expired  { background: #dc2626; }
-        .tenancy-meta {
-            display: flex; justify-content: space-between;
-            font-size: 0.78rem; color: #64748b; margin-top: 4px;
+        .tenancy-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: #64748b; margin-top: 4px; }
+        .tenancy-summary { font-size: 0.85rem; font-weight: 600; color: #0f172a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+        /* ============ RENTAL MONTH GRID ============ */
+        .rental-months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
         }
-        .tenancy-summary {
-            font-size: 0.85rem; font-weight: 600; color: #0f172a;
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 8px;
+        .rental-month-tile {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .rental-month-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .rental-month-tile .month-name {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+        }
+        .rental-month-tile .month-year {
+            font-size: 0.65rem;
+            color: #94a3b8;
+        }
+        .rental-month-tile .month-amount {
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+        .rental-month-tile .month-icon {
+            font-size: 1.1rem;
+            margin-bottom: 2px;
         }
 
-        .payment-history-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
-        .payment-history-table th {
-            text-align: left; padding: 12px 8px; background: #f8fafc;
-            font-weight: 600; color: #475569; border-radius: 12px 12px 0 0;
+        /* Status colours for tiles */
+        .rental-month-tile.month-paid {
+            background: #f0fdf4;
+            border-color: #16a34a;
         }
+        .rental-month-tile.month-paid .month-amount { color: #16a34a; }
+
+        .rental-month-tile.month-partial {
+            background: #fffbeb;
+            border-color: #f59e0b;
+        }
+        .rental-month-tile.month-partial .month-amount { color: #d97706; }
+
+        .rental-month-tile.month-unpaid {
+            background: #fef2f2;
+            border-color: #dc2626;
+            animation: unpaidPulse 2.5s ease-in-out infinite;
+        }
+        .rental-month-tile.month-unpaid .month-amount { color: #dc2626; }
+        @keyframes unpaidPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+            50%      { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0); }
+        }
+
+        .rental-month-tile.month-future {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            opacity: 0.7;
+        }
+        .rental-month-tile.month-future .month-amount { color: #94a3b8; }
+
+        .rental-month-tile.month-empty {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            opacity: 0.5;
+        }
+
+        .rental-month-tile.month-no-tenancy {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            cursor: default;
+        }
+
+        /* Legend */
+        .rental-legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        .rental-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .rental-legend .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .legend-paid    { background: #16a34a; }
+        .legend-partial { background: #f59e0b; }
+        .legend-unpaid  { background: #dc2626; }
+        .legend-future  { background: #cbd5e1; }
+
+        /* Overdue summary bar */
+        .overdue-summary {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            color: #991b1b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .overdue-summary.all-clear {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            border-left-color: #16a34a;
+            color: #166534;
+        }
+        .overdue-summary.all-clear .overdue-icon { animation: none; }
+        .overdue-icon { font-size: 1.3rem; }
+
+        .payment-history-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
+        .payment-history-table th { text-align: left; padding: 12px 8px; background: #f8fafc; font-weight: 600; color: #475569; border-radius: 12px 12px 0 0; }
         .payment-history-table td { padding: 12px 8px; border-bottom: 1px solid #edf2f7; }
         .payment-history-table tr:last-child td { border-bottom: none; }
 
@@ -181,19 +306,9 @@
         .payment-form { background: #f8fafc; border-radius: 24px; padding: 20px; margin: 20px 0 10px; }
         .deposit-form { background: #fefce8; border-radius: 24px; padding: 20px; margin: 20px 0 10px; border: 1px solid #fde68a; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .empty-state {
-            text-align: center; padding: 40px 20px; color: #94a3b8;
-            background: white; border-radius: 32px; border: 2px dashed #e2e8f0;
-        }
-        .badge-floor {
-            background: #e6f0ff; color: #1e40af; padding: 4px 14px;
-            border-radius: 40px; font-size: 0.8rem; font-weight: 600;
-        }
-        .loader-spinner {
-            width: 40px; height: 40px; border: 4px solid #e2e8f0;
-            border-top-color: #2c7a4b; border-radius: 50%;
-            animation: spin 0.9s linear infinite; margin: 40px auto;
-        }
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; background: white; border-radius: 32px; border: 2px dashed #e2e8f0; }
+        .badge-floor { background: #e6f0ff; color: #1e40af; padding: 4px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
+        .loader-spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #2c7a4b; border-radius: 50%; animation: spin 0.9s linear infinite; margin: 40px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .toast-message {
             position: fixed; bottom: 24px; right: 24px; background: #1e293b;
@@ -213,9 +328,7 @@
             border-left-color: #f59e0b;
         }
 
-        .month-summary-row td {
-            background: #f8fafc; font-weight: 600; border-top: 2px solid #e2e8f0;
-        }
+        .month-summary-row td { background: #f8fafc; font-weight: 600; border-top: 2px solid #e2e8f0; }
 
         .invoice-preview {
             background: #fff; border: 1px solid #e2e8f0; border-radius: 20px;
@@ -230,26 +343,24 @@
         .invoice-table th { background: #f8fafc; font-weight: 600; }
         .invoice-total { font-size: 1.2rem; font-weight: 800; color: #0f172a; text-align: right; margin-top: 12px; }
 
+        .deposit-invoice-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .deposit-badge-issued { background: #fef3c7; color: #92400e; }
+        .deposit-badge-none   { background: #f1f5f9; color: #64748b; }
+
         .floor-row {
             display: flex; align-items: center; gap: 8px;
             padding: 10px 14px; background: white; border-radius: 12px;
             border: 1px solid #e2e8f0; margin-bottom: 8px;
         }
         .floor-row .floor-name { flex: 1; font-weight: 600; color: #0f172a; }
-        .floor-row .floor-name-input {
-            flex: 1; padding: 8px 12px; border-radius: 8px; border: 2px solid #3b82f6;
-            font-size: 0.95rem; font-weight: 600;
-        }
-        .floor-row .floor-badge {
-            background: #f1f5f9; color: #64748b; padding: 2px 10px;
-            border-radius: 20px; font-size: 0.75rem;
-        }
+        .floor-row .floor-name-input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 2px solid #3b82f6; font-size: 0.95rem; font-weight: 600; }
+        .floor-row .floor-badge { background: #f1f5f9; color: #64748b; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; }
         .floor-row .floor-actions { display: flex; gap: 6px; }
-        .floor-row .floor-actions button {
-            background: none; border: none; cursor: pointer;
-            padding: 4px 10px; border-radius: 8px; font-size: 0.85rem;
-            transition: all 0.2s;
-        }
+        .floor-row .floor-actions button { background: none; border: none; cursor: pointer; padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; transition: all 0.2s; }
         .floor-row .floor-actions .edit-floor-btn { color: #3b82f6; }
         .floor-row .floor-actions .edit-floor-btn:hover { background: #eff6ff; }
         .floor-row .floor-actions .delete-floor-btn { color: #dc2626; }
@@ -263,6 +374,7 @@
             .form-row { grid-template-columns: 1fr; }
             .modal-container { padding: 20px; }
             .vendor-grid { grid-template-columns: 1fr 1fr; }
+            .rental-months-grid { grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); }
         }
 
         @media print {
@@ -345,15 +457,13 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Deposit Required (RM)</label>
-                <input type="number" id="editDeposit" step="0.01" min="0" placeholder="Agreed deposit amount">
+                <input type="number" id="editDeposit" step="0.01" min="0">
             </div>
             <div class="form-group">
                 <label>Deposit Paid (RM) <span style="font-weight:400;color:#94a3b8;">(auto)</span></label>
                 <input type="text" id="editDepositPaid" readonly style="background:#f8fafc; font-weight:700; color:#0f172a;">
             </div>
         </div>
-
-        <!-- Tenancy -->
         <div class="form-row">
             <div class="form-group">
                 <label>Tenancy Start</label>
@@ -365,7 +475,6 @@
             </div>
         </div>
 
-        <!-- Tenancy summary preview -->
         <div id="tenancyPreviewWrap" class="tenancy-bar-wrap" style="display:none;">
             <div class="tenancy-summary" id="tenancySummaryText"></div>
             <div class="tenancy-bar-outer">
@@ -383,8 +492,24 @@
         </div>
         <div class="modal-actions" style="justify-content: flex-start; margin-top: 8px;">
             <button class="btn btn-primary" id="saveVendorBtn">💾 Save Changes</button>
-            <button class="btn btn-secondary" id="issueInvoiceBtn">🧾 Issue Invoice</button>
+            <button class="btn btn-secondary" id="issueInvoiceBtn">🧾 Issue Rental Invoice</button>
             <button class="btn btn-danger" id="deleteVendorBtn">🗑️ Delete Vendor</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ============= RENTAL MONTH GRID ============= -->
+        <div class="flex-between">
+            <h3 style="font-size: 1.25rem; font-weight: 700;">📅 Rental Months</h3>
+            <span id="currentMonthStatus" class="status-pill"></span>
+        </div>
+        <div id="overdueSummary" class="overdue-summary" style="display:none;"></div>
+        <div id="rentalMonthsGrid" class="rental-months-grid"></div>
+        <div class="rental-legend">
+            <span><span class="legend-dot legend-paid"></span> Paid</span>
+            <span><span class="legend-dot legend-partial"></span> Partial</span>
+            <span><span class="legend-dot legend-unpaid"></span> Unpaid</span>
+            <span><span class="legend-dot legend-future"></span> Future / Not yet due</span>
         </div>
 
         <div class="divider"></div>
@@ -392,7 +517,6 @@
         <!-- ============= RENTAL PAYMENT HISTORY ============= -->
         <div class="flex-between">
             <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Rental Payment History</h3>
-            <span id="currentMonthStatus" class="status-pill"></span>
         </div>
         <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 340px; overflow-y: auto;">
             <table class="payment-history-table">
@@ -435,11 +559,23 @@
 
         <div class="divider"></div>
 
-        <!-- ============= DEPOSIT HISTORY ============= -->
+        <!-- ============= DEPOSIT ============= -->
         <div class="flex-between">
             <h3 style="font-size: 1.25rem; font-weight: 700;">💰 Deposit History</h3>
             <span id="depositStatusPill" class="status-pill"></span>
         </div>
+
+        <div id="depositInvoiceStatusRow" style="margin-top: 12px; padding: 12px 16px; background: #f8fafc; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <span class="deposit-invoice-badge deposit-badge-none" id="depositInvoiceBadge">Not Issued</span>
+                <span style="font-size: 0.85rem; color: #64748b;" id="depositInvoiceInfo">No deposit invoice has been issued yet.</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-deposit" id="issueDepositInvoiceBtn" style="padding: 8px 18px; font-size: 0.85rem;">🧾 Issue Deposit Invoice</button>
+                <button class="btn btn-secondary" id="viewDepositInvoiceBtn" style="padding: 8px 18px; font-size: 0.85rem; display: none;">👁️ View / Reprint</button>
+            </div>
+        </div>
+
         <div id="depositHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
             <table class="payment-history-table">
                 <thead>
@@ -472,7 +608,7 @@
                     <input type="text" id="depositNote" placeholder="e.g. Security deposit, 1st instalment">
                 </div>
             </div>
-            <button class="btn btn-primary" id="addDepositBtn" style="margin-top: 6px; background:#b45309; box-shadow: 0 4px 12px rgba(180,83,9,0.25);">💵 Add Deposit Instalment</button>
+            <button class="btn btn-deposit" id="addDepositBtn" style="margin-top: 6px;">💵 Add Deposit Instalment</button>
             <div class="auto-status-hint deposit-hint">
                 Deposit is tracked separately from rental and uses the same rule:
                 <strong>Total Paid ≥ Deposit Required → Paid (green)</strong> · <strong>0 &lt; Total &lt; Required → Partial (orange)</strong> · <strong>Total = 0 → Unpaid (red)</strong>
@@ -556,15 +692,12 @@
     <div class="modal-container" style="max-width: 560px;">
         <button class="modal-close" id="closeManageFloorsModal">&times;</button>
         <div class="modal-title">🏗️ Manage Floors</div>
-        <div class="modal-subtitle">Add, rename, or delete floors. Changes apply immediately to all vendor forms.</div>
-
+        <div class="modal-subtitle">Add, rename, or delete floors. Changes apply immediately.</div>
         <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-            <input type="text" id="newFloorName" placeholder="e.g. Mezzanine, Podium, 11th…" style="flex: 1; padding: 12px 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+            <input type="text" id="newFloorName" placeholder="e.g. Mezzanine, Podium…" style="flex: 1; padding: 12px 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
             <button class="btn btn-primary" id="addFloorBtn" style="padding: 12px 20px;">➕ Add Floor</button>
         </div>
-
         <div id="floorListContainer" style="max-height: 400px; overflow-y: auto;"></div>
-
         <div class="modal-actions">
             <button class="btn btn-secondary" id="closeManageFloorsBtn">Close</button>
         </div>
@@ -577,38 +710,17 @@
         <button class="modal-close" id="closeCompanySettingsModal">&times;</button>
         <div class="modal-title">🏢 Company Details</div>
         <div class="modal-subtitle">These details appear on every invoice you issue.</div>
-        <div class="form-group">
-            <label>Company Name</label>
-            <input type="text" id="csCompanyName">
-        </div>
-        <div class="form-group">
-            <label>Address</label>
-            <textarea id="csAddress" rows="2"></textarea>
+        <div class="form-group"><label>Company Name</label><input type="text" id="csCompanyName"></div>
+        <div class="form-group"><label>Address</label><textarea id="csAddress" rows="2"></textarea></div>
+        <div class="form-row">
+            <div class="form-group"><label>Phone</label><input type="text" id="csPhone"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="csEmail"></div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="text" id="csPhone">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="csEmail">
-            </div>
+            <div class="form-group"><label>SSM / Registration No.</label><input type="text" id="csSsm"></div>
+            <div class="form-group"><label>Logo URL (optional)</label><input type="url" id="csLogoUrl"></div>
         </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>SSM / Registration No.</label>
-                <input type="text" id="csSsm">
-            </div>
-            <div class="form-group">
-                <label>Logo URL (optional)</label>
-                <input type="url" id="csLogoUrl">
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Bank / Payment Details</label>
-            <textarea id="csBankDetails" rows="2"></textarea>
-        </div>
+        <div class="form-group"><label>Bank / Payment Details</label><textarea id="csBankDetails" rows="2"></textarea></div>
         <div class="modal-actions">
             <button class="btn btn-secondary" id="cancelCompanySettingsBtn">Cancel</button>
             <button class="btn btn-primary" id="saveCompanySettingsBtn">💾 Save Company Details</button>
@@ -620,7 +732,7 @@
 <div class="modal-overlay" id="invoiceModal">
     <div class="modal-container" style="max-width: 780px;">
         <button class="modal-close no-print" id="closeInvoiceModal">&times;</button>
-        <div class="modal-title no-print">🧾 Invoice Preview</div>
+        <div class="modal-title no-print" id="invoiceModalTitle">🧾 Invoice Preview</div>
         <div class="invoice-preview" id="invoicePreviewContent"></div>
         <div class="modal-actions no-print">
             <button class="btn btn-secondary" id="cancelInvoiceBtn">Close</button>
@@ -643,12 +755,15 @@
     let selectedVendor = null;
     let currentVendorPayments = [];
     let currentVendorDeposits = [];
+    let currentDepositInvoice = null;
     let companySettings = null;
+    let currentInvoiceMode = 'rental';   // 'rental' | 'deposit'
 
     let savingVendor = false;
     let savingPayment = false;
     let savingDeposit = false;
     let savingCompany = false;
+    let issuingDepositInvoice = false;
 
     // ==================== DOM ====================
     const dashboardContainer    = document.getElementById('dashboardContainer');
@@ -713,13 +828,6 @@
         return '🛍️';
     }
 
-    /**
-     * Auto-compute status from the total vs the target amount.
-     * Same rule used for BOTH rental and deposit.
-     *   total <= 0            → unpaid    (red)
-     *   total >= target       → paid      (green)
-     *   0 < total < target    → partial   (orange)
-     */
     function computeStatus(totalPaid, targetAmount) {
         const a = parseFloat(totalPaid) || 0;
         const t = parseFloat(targetAmount) || 0;
@@ -749,12 +857,7 @@
         });
     }
 
-    // ==================== TENANCY HELPERS ====================
-    /**
-     * Compute tenancy info from start/end dates.
-     * Returns { status, label, percent, daysRemaining, totalDays, durationText }
-     *   status: 'not-set' | 'active' | 'expiring' | 'expired'
-     */
+    // ==================== TENANCY ====================
     function computeTenancyInfo(startStr, endStr) {
         if (!startStr || !endStr) {
             return { status: 'not-set', label: 'Not set', percent: 0, durationText: '' };
@@ -763,33 +866,23 @@
         const end = new Date(endStr);
         const today = new Date();
         today.setHours(0,0,0,0);
-
         if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
             return { status: 'not-set', label: 'Invalid dates', percent: 0, durationText: '' };
         }
-
-        const totalDays = Math.round((end - start) / (1000 * 60 * 60 * 24));
-        const daysElapsed = Math.max(0, Math.round((today - start) / (1000 * 60 * 60 * 24)));
-        const daysRemaining = Math.round((end - today) / (1000 * 60 * 60 * 24));
-
+        const totalDays = Math.round((end - start) / 86400000);
+        const daysElapsed = Math.max(0, Math.round((today - start) / 86400000));
+        const daysRemaining = Math.round((end - today) / 86400000);
         let percent = 0;
-        if (totalDays > 0) {
-            percent = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
-        }
-
-        // Duration in months & years
+        if (totalDays > 0) percent = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
         const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
         const years = months / 12;
         let durationText = `${months} month${months !== 1 ? 's' : ''}`;
-        if (months >= 12 && months % 12 === 0) {
-            durationText += ` (${years} year${years !== 1 ? 's' : ''})`;
-        }
-
+        if (months >= 12 && months % 12 === 0) durationText += ` (${years} year${years !== 1 ? 's' : ''})`;
         let status, label;
         if (today < start) {
             status = 'active';
-            const daysToStart = Math.round((start - today) / (1000 * 60 * 60 * 24));
-            label = `Starts in ${daysToStart} day${daysToStart !== 1 ? 's' : ''}`;
+            const d = Math.round((start - today) / 86400000);
+            label = `Starts in ${d} day${d !== 1 ? 's' : ''}`;
             percent = 0;
         } else if (today > end) {
             status = 'expired';
@@ -802,13 +895,9 @@
             status = 'active';
             label = `${daysRemaining} days remaining`;
         }
-
         return { status, label, percent, daysRemaining, totalDays, durationText, start, end };
     }
 
-    /**
-     * Live-update the tenancy preview bar in the vendor edit modal.
-     */
     function updateTenancyPreviewInModal() {
         const startStr = document.getElementById('editTenancyStart').value;
         const endStr = document.getElementById('editTenancyEnd').value;
@@ -817,18 +906,9 @@
         const barEl = document.getElementById('tenancyBarFill');
         const startLabel = document.getElementById('tenancyStartLabel');
         const endLabel = document.getElementById('tenancyEndLabel');
-
-        if (!startStr || !endStr) {
-            wrap.style.display = 'none';
-            return;
-        }
-
+        if (!startStr || !endStr) { wrap.style.display = 'none'; return; }
         const info = computeTenancyInfo(startStr, endStr);
-        if (info.status === 'not-set') {
-            wrap.style.display = 'none';
-            return;
-        }
-
+        if (info.status === 'not-set') { wrap.style.display = 'none'; return; }
         wrap.style.display = 'block';
         summaryEl.innerHTML = `
             <span>📅 ${escapeHtml(formatDate(startStr))} → ${escapeHtml(formatDate(endStr))}</span>
@@ -839,6 +919,148 @@
         barEl.className = 'tenancy-bar-fill ' + info.status;
         startLabel.textContent = 'Start: ' + formatDate(startStr);
         endLabel.textContent = 'End: ' + formatDate(endStr);
+    }
+
+    // ==================== RENTAL MONTH GRID ====================
+    /**
+     * Build the list of months to display for a vendor.
+     * - If tenancy start & end set: every month between them (inclusive)
+     * - Else: last 12 months up to today
+     */
+    function getRentalMonthWindow(vendor) {
+        const months = [];
+        const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
+
+        if (tenancyInfo.status !== 'not-set' && tenancyInfo.start && tenancyInfo.end) {
+            const start = new Date(tenancyInfo.start.getFullYear(), tenancyInfo.start.getMonth(), 1);
+            const end = new Date(tenancyInfo.end.getFullYear(), tenancyInfo.end.getMonth(), 1);
+            const cur = new Date(start);
+            while (cur <= end) {
+                const y = cur.getFullYear();
+                const m = String(cur.getMonth() + 1).padStart(2, '0');
+                months.push(`${y}-${m}`);
+                cur.setMonth(cur.getMonth() + 1);
+            }
+        } else {
+            // Fallback: last 12 months
+            const today = new Date();
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                months.push(`${y}-${m}`);
+            }
+        }
+        return months;
+    }
+
+    /**
+     * Render the grid of month tiles.
+     */
+    function renderRentalMonthsGrid(vendor) {
+        const gridEl = document.getElementById('rentalMonthsGrid');
+        const overdueSummaryEl = document.getElementById('overdueSummary');
+        if (!gridEl) return;
+
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const months = getRentalMonthWindow(vendor);
+        const grouped = groupPaymentsByMonth(currentVendorPayments);
+        const currentMonthStr = getCurrentMonthString();
+
+        let unpaidCount = 0;
+        let partialCount = 0;
+        let paidCount = 0;
+        let html = '';
+
+        months.forEach(monthStr => {
+            const [y, m] = monthStr.split('-');
+            const monthShort = new Date(y, m - 1).toLocaleString('default', { month: 'short' });
+            const paidAmount = grouped[monthStr] ? grouped[monthStr].total : 0;
+            const status = computeStatus(paidAmount, rental);
+
+            // Future months (after current month) are "not yet due"
+            const isFuture = monthStr > currentMonthStr;
+
+            let tileClass = '';
+            let icon = '';
+            let amountText = '';
+
+            if (isFuture) {
+                tileClass = 'month-future';
+                icon = '⏳';
+                amountText = `Due ${rental.toFixed(0)}`;
+            } else if (status === 'paid') {
+                tileClass = 'month-paid';
+                icon = '✅';
+                amountText = `RM ${paidAmount.toFixed(0)}`;
+                paidCount++;
+            } else if (status === 'partial') {
+                tileClass = 'month-partial';
+                icon = '⚠️';
+                amountText = `RM ${paidAmount.toFixed(0)} / ${rental.toFixed(0)}`;
+                partialCount++;
+            } else {
+                tileClass = 'month-unpaid';
+                icon = '❌';
+                amountText = 'Unpaid';
+                unpaidCount++;
+            }
+
+            const title = `${getMonthLabel(monthStr)} — ${status.toUpperCase()} (paid: RM ${paidAmount.toFixed(2)}, rental: RM ${rental.toFixed(2)})`;
+
+            html += `
+                <div class="rental-month-tile ${tileClass}" data-month="${monthStr}" title="${escapeHtml(title)}">
+                    <div class="month-icon">${icon}</div>
+                    <div class="month-name">${monthShort}</div>
+                    <div class="month-year">${y}</div>
+                    <div class="month-amount">${amountText}</div>
+                </div>
+            `;
+        });
+
+        gridEl.innerHTML = html;
+
+        // Click any tile → jump to that month in the payment form
+        gridEl.querySelectorAll('.rental-month-tile').forEach(tile => {
+            tile.addEventListener('click', () => {
+                const monthStr = tile.dataset.month;
+                const isFuture = monthStr > currentMonthStr;
+                if (isFuture) {
+                    showToast('That month is not yet due', false);
+                }
+                document.getElementById('paymentMonth').value = monthStr;
+                document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+                const alreadyPaid = grouped[monthStr] ? grouped[monthStr].total : 0;
+                const remaining = Math.max(0, rental - alreadyPaid);
+                document.getElementById('paymentAmount').value = remaining.toFixed(2);
+                document.getElementById('paymentNote').value = '';
+                // Scroll to the payment form
+                document.querySelector('.payment-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        });
+
+        // Overdue summary
+        const totalIssues = unpaidCount + partialCount;
+        if (totalIssues > 0) {
+            overdueSummaryEl.style.display = 'flex';
+            overdueSummaryEl.classList.remove('all-clear');
+            let parts = [];
+            if (unpaidCount > 0) parts.push(`<strong>${unpaidCount}</strong> unpaid month${unpaidCount !== 1 ? 's' : ''}`);
+            if (partialCount > 0) parts.push(`<strong>${partialCount}</strong> partial month${partialCount !== 1 ? 's' : ''}`);
+            overdueSummaryEl.innerHTML = `
+                <span class="overdue-icon">⚠️</span>
+                <span>${parts.join(' · ')} — click any red / orange tile to record payment</span>
+            `;
+        } else {
+            overdueSummaryEl.style.display = 'flex';
+            overdueSummaryEl.classList.add('all-clear');
+            overdueSummaryEl.innerHTML = `
+                <span class="overdue-icon">✅</span>
+                <span>All due months are fully paid (${paidCount} month${paidCount !== 1 ? 's' : ''})</span>
+            `;
+        }
+
+        return { unpaidCount, partialCount, paidCount };
     }
 
     // ==================== FLOORS ====================
@@ -861,22 +1083,17 @@
     function populateFloorDropdown(selectId, selectedFloor = '') {
         const select = document.getElementById(selectId);
         if (!select) return;
-
         let html = '<option value="">-- Select floor --</option>';
         const floorNames = floors.map(f => f.name);
-
         if (selectedFloor && !floorNames.includes(selectedFloor)) {
             html += `<option value="${escapeHtml(selectedFloor)}">${escapeHtml(selectedFloor)} (⚠️ deleted)</option>`;
         }
-
         floors.forEach(f => {
             html += `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`;
         });
-
         if (floors.length === 0) {
             html += '<option value="" disabled>— No floors yet. Click "Manage Floors" —</option>';
         }
-
         select.innerHTML = html;
         select.value = selectedFloor || '';
     }
@@ -884,14 +1101,10 @@
     function renderFloorList() {
         const container = document.getElementById('floorListContainer');
         if (!container) return;
-
         if (floors.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:32px; color:#94a3b8; background:#f8fafc; border-radius:16px;">
-                🏗️ No floors yet. Add your first one above.
-            </div>`;
+            container.innerHTML = `<div style="text-align:center; padding:32px; color:#94a3b8; background:#f8fafc; border-radius:16px;">🏗️ No floors yet. Add your first one above.</div>`;
             return;
         }
-
         let html = '';
         floors.forEach(f => {
             html += `
@@ -906,13 +1119,8 @@
             `;
         });
         container.innerHTML = html;
-
-        container.querySelectorAll('.edit-floor-btn').forEach(btn => {
-            btn.addEventListener('click', () => enterFloorEditMode(btn.dataset.id));
-        });
-        container.querySelectorAll('.delete-floor-btn').forEach(btn => {
-            btn.addEventListener('click', () => deleteFloor(btn.dataset.id, btn.dataset.name));
-        });
+        container.querySelectorAll('.edit-floor-btn').forEach(btn => btn.addEventListener('click', () => enterFloorEditMode(btn.dataset.id)));
+        container.querySelectorAll('.delete-floor-btn').forEach(btn => btn.addEventListener('click', () => deleteFloor(btn.dataset.id, btn.dataset.name)));
     }
 
     function enterFloorEditMode(floorId) {
@@ -920,26 +1128,16 @@
         if (!floor) return;
         const row = document.querySelector(`.floor-row[data-floor-id="${floorId}"]`);
         if (!row) return;
-
         const nameSpan = row.querySelector('.floor-name');
         const actionsDiv = row.querySelector('.floor-actions');
-
         nameSpan.outerHTML = `<input class="floor-name-input" value="${escapeHtml(floor.name)}" data-original="${escapeHtml(floor.name)}">`;
-        actionsDiv.innerHTML = `
-            <button class="save-floor-btn" title="Save">💾 Save</button>
-            <button class="cancel-floor-btn" title="Cancel">✖ Cancel</button>
-        `;
-
+        actionsDiv.innerHTML = `<button class="save-floor-btn">💾 Save</button><button class="cancel-floor-btn">✖ Cancel</button>`;
         const input = row.querySelector('.floor-name-input');
-        input.focus();
-        input.select();
-
+        input.focus(); input.select();
         const save = () => saveFloorRename(floorId, input.value.trim(), input.dataset.original);
         const cancel = () => renderFloorList();
-
         row.querySelector('.save-floor-btn').addEventListener('click', save);
         row.querySelector('.cancel-floor-btn').addEventListener('click', cancel);
-
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); save(); }
             if (e.key === 'Escape') { e.preventDefault(); cancel(); }
@@ -949,114 +1147,73 @@
     async function saveFloorRename(floorId, newName, oldName) {
         if (!newName) { showToast('Floor name cannot be empty', true); return; }
         if (newName === oldName) { renderFloorList(); return; }
-
         if (floors.some(f => f.id !== floorId && f.name.toLowerCase() === newName.toLowerCase())) {
-            showToast('A floor with that name already exists', true);
-            return;
+            showToast('A floor with that name already exists', true); return;
         }
-
         try {
-            const { error } = await supabase
-                .from('floors')
-                .update({ name: newName })
-                .eq('id', floorId);
+            const { error } = await supabase.from('floors').update({ name: newName }).eq('id', floorId);
             if (error) throw error;
-
-            const { error: vErr } = await supabase
-                .from('vendors')
-                .update({ floor: newName })
-                .eq('floor', oldName);
-            if (vErr) console.warn('Failed to rename vendors’ floor:', vErr.message);
-
+            await supabase.from('vendors').update({ floor: newName }).eq('floor', oldName);
             showToast(`Floor renamed to "${newName}"`);
             await fetchFloors();
             await fetchVendors();
             renderFloorList();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        }
+        } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
     async function addFloor() {
         const input = document.getElementById('newFloorName');
         const name = (input.value || '').trim();
         if (!name) { showToast('Enter a floor name', true); return; }
-
         if (floors.some(f => f.name.toLowerCase() === name.toLowerCase())) {
-            showToast('That floor already exists', true);
-            return;
+            showToast('That floor already exists', true); return;
         }
-
         const nextSort = floors.length ? Math.max(...floors.map(f => f.sort_order || 0)) + 1 : 1;
-
         try {
-            const { error } = await supabase
-                .from('floors')
-                .insert([{ name, sort_order: nextSort }]);
+            const { error } = await supabase.from('floors').insert([{ name, sort_order: nextSort }]);
             if (error) throw error;
             showToast(`Floor "${name}" added`);
             input.value = '';
             await fetchFloors();
             renderFloorList();
             refreshAllFloorDropdowns();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        }
+        } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
     async function deleteFloor(floorId, floorName) {
         const affected = vendors.filter(v => v.floor === floorName).length;
         let msg = `Delete floor "${floorName}"?`;
-        if (affected > 0) {
-            msg += `\n\n⚠️ ${affected} vendor(s) currently use this floor. Their floor will become "(deleted)".`;
-        }
+        if (affected > 0) msg += `\n\n⚠️ ${affected} vendor(s) use this floor. Their floor will become "(deleted)".`;
         if (!confirm(msg)) return;
-
         try {
-            const { error } = await supabase
-                .from('floors')
-                .delete()
-                .eq('id', floorId);
+            const { error } = await supabase.from('floors').delete().eq('id', floorId);
             if (error) throw error;
             showToast(`Floor "${floorName}" deleted`);
             await fetchFloors();
             renderFloorList();
             refreshAllFloorDropdowns();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        }
+        } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
     function refreshAllFloorDropdowns() {
         const addFloorSelect = document.getElementById('addFloor');
         if (addFloorSelect) populateFloorDropdown('addFloor', addFloorSelect.value);
-
         const editFloorSelect = document.getElementById('editFloor');
-        if (editFloorSelect && selectedVendor) {
-            populateFloorDropdown('editFloor', selectedVendor.floor || '');
-        }
+        if (editFloorSelect && selectedVendor) populateFloorDropdown('editFloor', selectedVendor.floor || '');
     }
 
     // ==================== COMPANY SETTINGS ====================
     async function fetchCompanySettings() {
         try {
-            const { data, error } = await supabase
-                .from('company_settings')
-                .select('*')
-                .eq('id', 1)
-                .maybeSingle();
+            const { data, error } = await supabase.from('company_settings').select('*').eq('id', 1).maybeSingle();
             if (error) throw error;
             companySettings = data || null;
-        } catch (err) {
-            console.warn('Company settings fetch failed:', err.message);
-            companySettings = null;
-        }
+        } catch (err) { companySettings = null; }
     }
 
     function populateCompanySettingsForm() {
         if (!companySettings) {
-            ['csCompanyName','csAddress','csPhone','csEmail','csSsm','csLogoUrl','csBankDetails']
-                .forEach(id => document.getElementById(id).value = '');
+            ['csCompanyName','csAddress','csPhone','csEmail','csSsm','csLogoUrl','csBankDetails'].forEach(id => document.getElementById(id).value = '');
             return;
         }
         document.getElementById('csCompanyName').value = companySettings.company_name || '';
@@ -1072,9 +1229,7 @@
         if (savingCompany) return;
         savingCompany = true;
         const btn = document.getElementById('saveCompanySettingsBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Saving...';
-
+        btn.disabled = true; btn.textContent = '⏳ Saving...';
         const payload = {
             id: 1,
             company_name: document.getElementById('csCompanyName').value.trim(),
@@ -1086,48 +1241,30 @@
             bank_details: document.getElementById('csBankDetails').value.trim(),
             updated_at: new Date().toISOString()
         };
-
         if (!payload.company_name) {
             showToast('Company name is required', true);
-            savingCompany = false;
-            btn.disabled = false;
-            btn.textContent = '💾 Save Company Details';
+            savingCompany = false; btn.disabled = false; btn.textContent = '💾 Save Company Details';
             return;
         }
-
         try {
-            const { error } = await supabase
-                .from('company_settings')
-                .upsert(payload, { onConflict: 'id' });
+            const { error } = await supabase.from('company_settings').upsert(payload, { onConflict: 'id' });
             if (error) throw error;
             companySettings = payload;
             showToast('Company details saved');
             companySettingsModal.classList.remove('active');
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        } finally {
-            savingCompany = false;
-            btn.disabled = false;
-            btn.textContent = '💾 Save Company Details';
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally {
+            savingCompany = false; btn.disabled = false; btn.textContent = '💾 Save Company Details';
         }
     }
 
     // ==================== FETCH VENDORS ====================
     async function fetchVendors() {
         try {
-            const { data, error } = await supabase
-                .from('vendors')
-                .select('*')
-                .order('floor')
-                .order('unit');
+            const { data, error } = await supabase.from('vendors').select('*').order('floor').order('unit');
             if (error) throw error;
             vendors = data || [];
-
-            await Promise.all([
-                loadCurrentMonthTotalsForAll(),
-                loadCurrentMonthDepositTotalsForAll()
-            ]);
-
+            await Promise.all([loadCurrentMonthTotalsForAll(), loadDepositTotalsForAll()]);
             renderDashboard();
         } catch (err) {
             console.error('Error fetching vendors:', err);
@@ -1138,47 +1275,74 @@
     async function loadCurrentMonthTotalsForAll() {
         const month = getCurrentMonthString();
         try {
-            const { data, error } = await supabase
-                .from('vendor_payments')
-                .select('vendor_id, amount')
-                .eq('month', month);
+            const { data, error } = await supabase.from('vendor_payments').select('vendor_id, amount').eq('month', month);
             if (error) throw error;
             const sumMap = {};
-            (data || []).forEach(p => {
-                const id = p.vendor_id;
-                sumMap[id] = (sumMap[id] || 0) + (parseFloat(p.amount) || 0);
-            });
+            (data || []).forEach(p => { sumMap[p.vendor_id] = (sumMap[p.vendor_id] || 0) + (parseFloat(p.amount) || 0); });
             vendors.forEach(v => { v._currentTotal = sumMap[v.id] || 0; });
+        } catch (err) { vendors.forEach(v => { v._currentTotal = 0; }); }
+    }
+
+    async function loadDepositTotalsForAll() {
+        try {
+            const { data, error } = await supabase.from('vendor_deposit_payments').select('vendor_id, amount');
+            if (error) throw error;
+            const sumMap = {};
+            (data || []).forEach(p => { sumMap[p.vendor_id] = (sumMap[p.vendor_id] || 0) + (parseFloat(p.amount) || 0); });
+            vendors.forEach(v => { v._depositPaid = sumMap[v.id] || 0; });
+        } catch (err) { vendors.forEach(v => { v._depositPaid = 0; }); }
+    }
+
+    /**
+     * Load ALL rental payments for ALL vendors — needed to compute
+     * unpaid-month count for card badges.
+     */
+    async function loadAllRentalPaymentsForAll() {
+        try {
+            const { data, error } = await supabase.from('vendor_payments').select('vendor_id, month, amount');
+            if (error) throw error;
+            const grouped = {};
+            (data || []).forEach(p => {
+                if (!grouped[p.vendor_id]) grouped[p.vendor_id] = {};
+                if (!grouped[p.vendor_id][p.month]) grouped[p.vendor_id][p.month] = 0;
+                grouped[p.vendor_id][p.month] += parseFloat(p.amount) || 0;
+            });
+            vendors.forEach(v => { v._allRentalPayments = grouped[v.id] || {}; });
         } catch (err) {
-            console.warn('Current month rental totals fetch failed:', err.message);
-            vendors.forEach(v => { v._currentTotal = 0; });
+            console.warn('All rental payments fetch failed:', err.message);
+            vendors.forEach(v => { v._allRentalPayments = {}; });
         }
     }
 
-    async function loadCurrentMonthDepositTotalsForAll() {
-        try {
-            const { data, error } = await supabase
-                .from('vendor_deposit_payments')
-                .select('vendor_id, amount');
-            if (error) throw error;
-            const sumMap = {};
-            (data || []).forEach(p => {
-                const id = p.vendor_id;
-                sumMap[id] = (sumMap[id] || 0) + (parseFloat(p.amount) || 0);
-            });
-            vendors.forEach(v => { v._depositPaid = sumMap[v.id] || 0; });
-        } catch (err) {
-            console.warn('Deposit totals fetch failed:', err.message);
-            vendors.forEach(v => { v._depositPaid = 0; });
-        }
+    /**
+     * Count unpaid / partial months for a vendor based on the same window
+     * used in the modal.
+     */
+    function countOverdueMonthsForVendor(vendor) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const months = getRentalMonthWindow(vendor);
+        const payments = vendor._allRentalPayments || {};
+        const currentMonthStr = getCurrentMonthString();
+        let unpaid = 0, partial = 0;
+        months.forEach(monthStr => {
+            if (monthStr > currentMonthStr) return;   // skip future
+            const paid = payments[monthStr] || 0;
+            const status = computeStatus(paid, rental);
+            if (status === 'unpaid') unpaid++;
+            else if (status === 'partial') partial++;
+        });
+        return { unpaid, partial };
     }
 
     // ==================== RENDER DASHBOARD ====================
-    function renderDashboard() {
+    async function renderDashboard() {
         if (!vendors.length) {
             dashboardContainer.innerHTML = `<div class="empty-state">🏪 No vendors yet. Click "Add Vendor" to get started.</div>`;
             return;
         }
+
+        // Load rental history for ALL vendors to compute overdue badges
+        await loadAllRentalPaymentsForAll();
 
         const floorSortIndex = {};
         floors.forEach(f => { floorSortIndex[f.name] = f.sort_order; });
@@ -1225,8 +1389,7 @@
                 else if (rentalStatus === 'partial') rentalBadge = `⚠️ Rent · ${totalPaid.toFixed(2)} / ${rental.toFixed(2)}`;
                 else                            rentalBadge = `❌ Rent · 0 / ${rental.toFixed(2)}`;
 
-                let depositBadge;
-                let depositClass;
+                let depositBadge, depositClass;
                 if (depositRequired <= 0) {
                     depositBadge = `💰 No deposit set`;
                     depositClass = 'tenancy-not-set';
@@ -1241,7 +1404,6 @@
                     depositClass = 'deposit-unpaid';
                 }
 
-                // Tenancy badge
                 const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
                 let tenancyBadge, tenancyClass;
                 if (tenancyInfo.status === 'not-set') {
@@ -1251,11 +1413,25 @@
                     tenancyBadge = `⏰ Tenancy expired (${formatDate(vendor.tenancy_end)})`;
                     tenancyClass = 'tenancy-expired';
                 } else if (tenancyInfo.status === 'expiring') {
-                    tenancyBadge = `⏳ Tenancy expires ${formatDate(vendor.tenancy_end)} · ${tenancyInfo.label}`;
+                    tenancyBadge = `⏳ Expires ${formatDate(vendor.tenancy_end)} · ${tenancyInfo.label}`;
                     tenancyClass = 'tenancy-expiring';
                 } else {
                     tenancyBadge = `📅 ${formatDate(vendor.tenancy_start)} → ${formatDate(vendor.tenancy_end)}`;
                     tenancyClass = 'tenancy-active';
+                }
+
+                // Overdue rental months badge
+                const overdue = countOverdueMonthsForVendor(vendor);
+                let overdueBadgeHtml = '';
+                if (overdue.unpaid > 0 || overdue.partial > 0) {
+                    let parts = [];
+                    if (overdue.unpaid > 0) parts.push(`${overdue.unpaid} unpaid`);
+                    if (overdue.partial > 0) parts.push(`${overdue.partial} partial`);
+                    overdueBadgeHtml = `
+                        <div class="payment-status-badge overdue-rent-badge">
+                            🔴 ${parts.join(' · ')} month${(overdue.unpaid + overdue.partial) !== 1 ? 's' : ''}
+                        </div>
+                    `;
                 }
 
                 html += `
@@ -1271,6 +1447,7 @@
                             <div class="payment-status-badge">${rentalBadge}</div>
                             <div class="payment-status-badge deposit ${depositClass}">${depositBadge}</div>
                             <div class="payment-status-badge tenancy ${tenancyClass}">${tenancyBadge}</div>
+                            ${overdueBadgeHtml}
                         </div>
                     </div>
                 `;
@@ -1306,7 +1483,6 @@
         document.getElementById('editTenancyEnd').value = vendor.tenancy_end || '';
         document.getElementById('editNotes').value = vendor.notes || '';
 
-        // Update tenancy preview immediately
         updateTenancyPreviewInModal();
 
         await fetchFloors();
@@ -1314,11 +1490,14 @@
 
         await Promise.all([
             fetchVendorPayments(vendor.id),
-            fetchVendorDeposits(vendor.id)
+            fetchVendorDeposits(vendor.id),
+            fetchDepositInvoice(vendor.id)
         ]);
 
         renderPaymentHistory(vendor);
+        renderRentalMonthsGrid(vendor);
         renderDepositHistory(vendor);
+        renderDepositInvoiceStatus();
 
         vendorModal.classList.add('active');
     }
@@ -1326,34 +1505,33 @@
     async function fetchVendorPayments(vendorId) {
         try {
             const { data, error } = await supabase
-                .from('vendor_payments')
-                .select('*')
-                .eq('vendor_id', vendorId)
-                .order('month', { ascending: false })
-                .order('date_paid', { ascending: true });
+                .from('vendor_payments').select('*').eq('vendor_id', vendorId)
+                .order('month', { ascending: false }).order('date_paid', { ascending: true });
             if (error) throw error;
             currentVendorPayments = data || [];
             return currentVendorPayments;
-        } catch (err) {
-            console.error('Error fetching payments:', err);
-            return [];
-        }
+        } catch (err) { return []; }
     }
 
     async function fetchVendorDeposits(vendorId) {
         try {
             const { data, error } = await supabase
-                .from('vendor_deposit_payments')
-                .select('*')
-                .eq('vendor_id', vendorId)
+                .from('vendor_deposit_payments').select('*').eq('vendor_id', vendorId)
                 .order('date_paid', { ascending: true });
             if (error) throw error;
             currentVendorDeposits = data || [];
             return currentVendorDeposits;
-        } catch (err) {
-            console.error('Error fetching deposits:', err);
-            return [];
-        }
+        } catch (err) { return []; }
+    }
+
+    async function fetchDepositInvoice(vendorId) {
+        try {
+            const { data, error } = await supabase
+                .from('vendor_deposit_invoices').select('*').eq('vendor_id', vendorId).maybeSingle();
+            if (error && error.code !== 'PGRST116') throw error;
+            currentDepositInvoice = data || null;
+            return currentDepositInvoice;
+        } catch (err) { currentDepositInvoice = null; return null; }
     }
 
     // ==================== RENDER RENTAL HISTORY ====================
@@ -1376,17 +1554,14 @@
             for (const month of months) {
                 const { total, entries } = grouped[month];
                 const status = computeStatus(total, rental);
-                const monthLabel = getMonthLabel(month);
-
                 html += `
                     <tr class="month-summary-row">
-                        <td colspan="2"><strong>📅 ${monthLabel}</strong></td>
+                        <td colspan="2"><strong>📅 ${getMonthLabel(month)}</strong></td>
                         <td><strong>RM ${total.toFixed(2)} / ${rental.toFixed(2)}</strong></td>
                         <td><span class="status-pill ${getStatusPillClass(status)}">${getStatusText(status)}</span></td>
                         <td></td>
                     </tr>
                 `;
-
                 for (const pay of entries) {
                     const datePaid = pay.date_paid ? new Date(pay.date_paid).toLocaleDateString() : '—';
                     const amt = parseFloat(pay.amount) || 0;
@@ -1426,13 +1601,9 @@
         const depositPaidInput = document.getElementById('editDepositPaid');
 
         const depositRequired = parseFloat(vendor.deposit) || 0;
-        const totalDeposit = currentVendorDeposits.reduce(
-            (sum, p) => sum + (parseFloat(p.amount) || 0), 0
-        );
+        const totalDeposit = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
 
-        if (depositPaidInput) {
-            depositPaidInput.value = `RM ${totalDeposit.toFixed(2)}`;
-        }
+        if (depositPaidInput) depositPaidInput.value = `RM ${totalDeposit.toFixed(2)}`;
 
         if (!currentVendorDeposits.length) {
             tbody.innerHTML = '';
@@ -1472,6 +1643,29 @@
         document.getElementById('depositNote').value = '';
     }
 
+    // ==================== DEPOSIT INVOICE STATUS ====================
+    function renderDepositInvoiceStatus() {
+        const badge = document.getElementById('depositInvoiceBadge');
+        const info = document.getElementById('depositInvoiceInfo');
+        const issueBtn = document.getElementById('issueDepositInvoiceBtn');
+        const viewBtn = document.getElementById('viewDepositInvoiceBtn');
+        if (!badge || !info || !issueBtn || !viewBtn) return;
+
+        if (currentDepositInvoice) {
+            badge.className = 'deposit-invoice-badge deposit-badge-issued';
+            badge.textContent = '✅ Issued';
+            info.innerHTML = `Invoice <strong>${escapeHtml(currentDepositInvoice.invoice_no)}</strong> issued on ${formatDate(currentDepositInvoice.issue_date)}.`;
+            issueBtn.style.display = 'none';
+            viewBtn.style.display = 'inline-flex';
+        } else {
+            badge.className = 'deposit-invoice-badge deposit-badge-none';
+            badge.textContent = 'Not Issued';
+            info.textContent = 'No deposit invoice has been issued yet. Once issued, it cannot be re-issued (but can be reprinted).';
+            issueBtn.style.display = 'inline-flex';
+            viewBtn.style.display = 'none';
+        }
+    }
+
     // ==================== DELETE HANDLERS ====================
     window.deletePayment = async function(paymentId) {
         if (!confirm('Delete this rental instalment?')) return;
@@ -1482,12 +1676,11 @@
             if (selectedVendor) {
                 await fetchVendorPayments(selectedVendor.id);
                 renderPaymentHistory(selectedVendor);
+                renderRentalMonthsGrid(selectedVendor);
             }
             await loadCurrentMonthTotalsForAll();
-            renderDashboard();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        }
+            await renderDashboard();
+        } catch (err) { showToast('Error: ' + err.message, true); }
     };
 
     window.deleteDeposit = async function(depositId) {
@@ -1500,11 +1693,9 @@
                 await fetchVendorDeposits(selectedVendor.id);
                 renderDepositHistory(selectedVendor);
             }
-            await loadCurrentMonthDepositTotalsForAll();
-            renderDashboard();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        }
+            await loadDepositTotalsForAll();
+            await renderDashboard();
+        } catch (err) { showToast('Error: ' + err.message, true); }
     };
 
     // ==================== SAVE VENDOR ====================
@@ -1517,17 +1708,13 @@
 
         const tenancyStart = document.getElementById('editTenancyStart').value || null;
         const tenancyEnd   = document.getElementById('editTenancyEnd').value   || null;
-
-        // Sanity: if both set, end must be after start
         if (tenancyStart && tenancyEnd && new Date(tenancyEnd) <= new Date(tenancyStart)) {
-            showToast('Tenancy end date must be after start date', true);
-            return;
+            showToast('Tenancy end date must be after start date', true); return;
         }
 
         savingVendor = true;
         const btn = document.getElementById('saveVendorBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Saving...';
+        btn.disabled = true; btn.textContent = '⏳ Saving...';
 
         const updates = {
             name: document.getElementById('editVendorName').value.trim(),
@@ -1546,9 +1733,7 @@
 
         if (!updates.name || !updates.unit) {
             showToast('Name and Unit are required', true);
-            savingVendor = false;
-            btn.disabled = false;
-            btn.textContent = '💾 Save Changes';
+            savingVendor = false; btn.disabled = false; btn.textContent = '💾 Save Changes';
             return;
         }
 
@@ -1566,17 +1751,15 @@
             document.getElementById('vendorModalSubtitle').textContent = `${updates.floor} · Unit ${updates.unit}`;
 
             renderPaymentHistory(selectedVendor);
+            renderRentalMonthsGrid(selectedVendor);
             renderDepositHistory(selectedVendor);
             updateTenancyPreviewInModal();
             await loadCurrentMonthTotalsForAll();
-            await loadCurrentMonthDepositTotalsForAll();
-            renderDashboard();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        } finally {
-            savingVendor = false;
-            btn.disabled = false;
-            btn.textContent = '💾 Save Changes';
+            await loadDepositTotalsForAll();
+            await renderDashboard();
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally {
+            savingVendor = false; btn.disabled = false; btn.textContent = '💾 Save Changes';
         }
     }
 
@@ -1587,6 +1770,7 @@
         try {
             await supabase.from('vendor_payments').delete().eq('vendor_id', selectedVendor.id);
             await supabase.from('vendor_deposit_payments').delete().eq('vendor_id', selectedVendor.id);
+            await supabase.from('vendor_deposit_invoices').delete().eq('vendor_id', selectedVendor.id);
             const { error } = await supabase.from('vendors').delete().eq('id', selectedVendor.id);
             if (error) throw error;
             showToast('Vendor deleted');
@@ -1594,10 +1778,9 @@
             selectedVendor = null;
             currentVendorPayments = [];
             currentVendorDeposits = [];
+            currentDepositInvoice = null;
             await fetchVendors();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        }
+        } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
     // ==================== ADD RENTAL PAYMENT ====================
@@ -1615,8 +1798,7 @@
 
         savingPayment = true;
         const btn = document.getElementById('addPaymentBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Adding...';
+        btn.disabled = true; btn.textContent = '⏳ Adding...';
 
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
         const grouped = groupPaymentsByMonth(currentVendorPayments);
@@ -1625,31 +1807,26 @@
         const newStatus = computeStatus(newTotal, rental);
 
         try {
-            const { error } = await supabase
-                .from('vendor_payments')
-                .insert([{
-                    vendor_id: selectedVendor.id,
-                    month: month,
-                    amount: amount,
-                    status: newStatus,
-                    date_paid: datePaid || null,
-                    note: note || null
-                }]);
+            const { error } = await supabase.from('vendor_payments').insert([{
+                vendor_id: selectedVendor.id,
+                month: month,
+                amount: amount,
+                status: newStatus,
+                date_paid: datePaid || null,
+                note: note || null
+            }]);
             if (error) throw error;
 
-            showToast(`Rental instalment RM ${amount.toFixed(2)} added — total RM ${newTotal.toFixed(2)} / ${rental.toFixed(2)} → ${newStatus.toUpperCase()}`);
+            showToast(`Rental RM ${amount.toFixed(2)} added for ${getMonthLabel(month)} — total RM ${newTotal.toFixed(2)} → ${newStatus.toUpperCase()}`);
 
             await fetchVendorPayments(selectedVendor.id);
             renderPaymentHistory(selectedVendor);
+            renderRentalMonthsGrid(selectedVendor);
             await loadCurrentMonthTotalsForAll();
-            renderDashboard();
-        } catch (err) {
-            console.error('Add payment error:', err);
-            showToast('Error: ' + err.message, true);
-        } finally {
-            savingPayment = false;
-            btn.disabled = false;
-            btn.textContent = '💵 Add Rental Instalment';
+            await renderDashboard();
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally {
+            savingPayment = false; btn.disabled = false; btn.textContent = '💵 Add Rental Instalment';
         }
     }
 
@@ -1667,42 +1844,33 @@
 
         savingDeposit = true;
         const btn = document.getElementById('addDepositBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Adding...';
+        btn.disabled = true; btn.textContent = '⏳ Adding...';
 
         const depositRequired = parseFloat(selectedVendor.deposit) || 0;
-        const previousTotal = currentVendorDeposits.reduce(
-            (sum, p) => sum + (parseFloat(p.amount) || 0), 0
-        );
+        const previousTotal = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
         const newTotal = previousTotal + amount;
         const newStatus = computeStatus(newTotal, depositRequired);
 
         try {
-            const { error } = await supabase
-                .from('vendor_deposit_payments')
-                .insert([{
-                    vendor_id: selectedVendor.id,
-                    month: month,
-                    amount: amount,
-                    status: newStatus,
-                    date_paid: datePaid || null,
-                    note: note || null
-                }]);
+            const { error } = await supabase.from('vendor_deposit_payments').insert([{
+                vendor_id: selectedVendor.id,
+                month: month,
+                amount: amount,
+                status: newStatus,
+                date_paid: datePaid || null,
+                note: note || null
+            }]);
             if (error) throw error;
 
-            showToast(`Deposit instalment RM ${amount.toFixed(2)} added — total RM ${newTotal.toFixed(2)} / ${depositRequired.toFixed(2)} → ${newStatus.toUpperCase()}`);
+            showToast(`Deposit RM ${amount.toFixed(2)} added — total RM ${newTotal.toFixed(2)} / ${depositRequired.toFixed(2)} → ${newStatus.toUpperCase()}`);
 
             await fetchVendorDeposits(selectedVendor.id);
             renderDepositHistory(selectedVendor);
-            await loadCurrentMonthDepositTotalsForAll();
-            renderDashboard();
-        } catch (err) {
-            console.error('Add deposit error:', err);
-            showToast('Error: ' + err.message, true);
-        } finally {
-            savingDeposit = false;
-            btn.disabled = false;
-            btn.textContent = '💵 Add Deposit Instalment';
+            await loadDepositTotalsForAll();
+            await renderDashboard();
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally {
+            savingDeposit = false; btn.disabled = false; btn.textContent = '💵 Add Deposit Instalment';
         }
     }
 
@@ -1724,27 +1892,16 @@
         if (!floorValue) { showToast('Please select a floor', true); return; }
         if (!unit) { showToast('Unit number is required', true); return; }
         if (tenancyStart && tenancyEnd && new Date(tenancyEnd) <= new Date(tenancyStart)) {
-            showToast('Tenancy end date must be after start date', true);
-            return;
+            showToast('Tenancy end date must be after start date', true); return;
         }
 
         try {
-            const { error } = await supabase
-                .from('vendors')
-                .insert([{
-                    name,
-                    vendor_type: vendorType,
-                    floor: floorValue,
-                    unit,
-                    contact_person: contact,
-                    phone,
-                    email,
-                    monthly_rental: rental,
-                    deposit,
-                    deposit_paid: 0,
-                    tenancy_start: tenancyStart,
-                    tenancy_end: tenancyEnd
-                }]);
+            const { error } = await supabase.from('vendors').insert([{
+                name, vendor_type: vendorType, floor: floorValue, unit,
+                contact_person: contact, phone, email,
+                monthly_rental: rental, deposit, deposit_paid: 0,
+                tenancy_start: tenancyStart, tenancy_end: tenancyEnd
+            }]);
             if (error) throw error;
             showToast('Vendor created');
             addVendorModal.classList.remove('active');
@@ -1753,19 +1910,17 @@
             document.getElementById('addVendorType').value = 'Selling';
             populateFloorDropdown('addFloor', '');
             await fetchVendors();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        }
+        } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
-    // ==================== ISSUE INVOICE ====================
+    // ==================== RENTAL INVOICE ====================
     async function openInvoiceModal() {
         if (!selectedVendor) return;
         if (!companySettings) await fetchCompanySettings();
+        currentInvoiceMode = 'rental';
 
         const month = document.getElementById('paymentMonth').value || getCurrentMonthString();
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
-
         const grouped = groupPaymentsByMonth(currentVendorPayments);
         const monthData = grouped[month] || { total: 0, entries: [] };
         const amountPaid = monthData.total;
@@ -1779,42 +1934,22 @@
         const dueDate = `${y}-${String(m + 1).padStart(2,'0')}-07`;
 
         try {
-            const { data: existing } = await supabase
-                .from('vendor_invoices')
-                .select('id')
-                .eq('invoice_no', invoiceNo)
-                .maybeSingle();
-
+            const { data: existing } = await supabase.from('vendor_invoices').select('id').eq('invoice_no', invoiceNo).maybeSingle();
             const payload = {
-                invoice_no: invoiceNo,
-                vendor_id: selectedVendor.id,
-                vendor_name: selectedVendor.name,
-                vendor_unit: selectedVendor.unit,
-                vendor_floor: selectedVendor.floor,
-                month,
-                rental_amount: rental,
-                amount_paid: amountPaid,
-                balance,
-                status,
-                issue_date: issueDate,
-                due_date: dueDate,
+                invoice_no: invoiceNo, vendor_id: selectedVendor.id,
+                vendor_name: selectedVendor.name, vendor_unit: selectedVendor.unit, vendor_floor: selectedVendor.floor,
+                month, rental_amount: rental, amount_paid: amountPaid, balance, status,
+                issue_date: issueDate, due_date: dueDate,
                 notes: document.getElementById('editNotes').value.trim()
             };
-
-            if (existing) {
-                await supabase.from('vendor_invoices').update(payload).eq('id', existing.id);
-            } else {
-                await supabase.from('vendor_invoices').insert([payload]);
-            }
-        } catch (err) {
-            console.warn('Invoice save failed:', err.message);
-        }
+            if (existing) await supabase.from('vendor_invoices').update(payload).eq('id', existing.id);
+            else await supabase.from('vendor_invoices').insert([payload]);
+        } catch (err) { console.warn('Invoice save failed:', err.message); }
 
         const cs = companySettings || {};
         const vType = selectedVendor.vendor_type || 'Selling';
         const typeEmoji = getVendorTypeEmoji(vType);
 
-        // Rental instalments
         let instalmentRows = '';
         if (monthData.entries.length > 0) {
             instalmentRows = monthData.entries.map(p => `
@@ -1828,30 +1963,18 @@
             `).join('');
         }
 
-        // Deposit summary
         const depositRequired = parseFloat(selectedVendor.deposit) || 0;
-        const totalDepositPaid = currentVendorDeposits.reduce(
-            (sum, p) => sum + (parseFloat(p.amount) || 0), 0
-        );
-
+        const totalDepositPaid = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
         let depositSection = '';
         if (depositRequired > 0) {
             const depStatus = computeStatus(totalDepositPaid, depositRequired);
             depositSection = `
                 <div class="invoice-section-title">Security Deposit</div>
                 <table class="invoice-table">
-                    <thead>
-                        <tr><th>Description</th><th style="text-align:right;">Amount (RM)</th></tr>
-                    </thead>
+                    <thead><tr><th>Description</th><th style="text-align:right;">Amount (RM)</th></tr></thead>
                     <tbody>
-                        <tr>
-                            <td>Deposit Required</td>
-                            <td style="text-align:right;">${depositRequired.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <td>Deposit Paid to Date</td>
-                            <td style="text-align:right; color:#16a34a;">− ${totalDepositPaid.toFixed(2)}</td>
-                        </tr>
+                        <tr><td>Deposit Required</td><td style="text-align:right;">${depositRequired.toFixed(2)}</td></tr>
+                        <tr><td>Deposit Paid to Date</td><td style="text-align:right; color:#16a34a;">− ${totalDepositPaid.toFixed(2)}</td></tr>
                     </tbody>
                 </table>
                 <div style="text-align:right; margin-top:8px; font-size:0.9rem;">
@@ -1862,7 +1985,6 @@
             `;
         }
 
-        // Tenancy info
         const tenancyInfo = computeTenancyInfo(selectedVendor.tenancy_start, selectedVendor.tenancy_end);
         let tenancyLine = '';
         if (tenancyInfo.status !== 'not-set') {
@@ -1875,6 +1997,7 @@
             `;
         }
 
+        document.getElementById('invoiceModalTitle').textContent = '🧾 Rental Invoice Preview';
         document.getElementById('invoicePreviewContent').innerHTML = `
             <div class="invoice-header-row">
                 <div>
@@ -1907,9 +2030,7 @@
 
             <div class="invoice-section-title">Charges</div>
             <table class="invoice-table">
-                <thead>
-                    <tr><th>Description</th><th style="text-align:right;">Amount (RM)</th></tr>
-                </thead>
+                <thead><tr><th>Description</th><th style="text-align:right;">Amount (RM)</th></tr></thead>
                 <tbody>
                     <tr>
                         <td>Monthly Rental — ${escapeHtml(getMonthLabel(month))}</td>
@@ -1947,6 +2068,236 @@
         invoiceModal.classList.add('active');
     }
 
+    // ==================== DEPOSIT INVOICE (ONE-TIME) ====================
+    async function issueDepositInvoice() {
+        if (!selectedVendor) return;
+        if (issuingDepositInvoice) return;
+
+        // Guard: already issued?
+        if (currentDepositInvoice) {
+            showToast('Deposit invoice already issued. Use "View / Reprint" instead.', true);
+            return;
+        }
+
+        // Guard: must be issued while balance outstanding > 0 OR paid > 0
+        const depositRequired = parseFloat(selectedVendor.deposit) || 0;
+        const totalDepositPaid = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
+        if (depositRequired <= 0) {
+            showToast('Deposit Required must be greater than 0', true);
+            return;
+        }
+        if (totalDepositPaid <= 0) {
+            showToast('Record at least one deposit instalment before issuing the invoice', true);
+            return;
+        }
+
+        const confirmed = await showConfirmModal(
+            '🧾 Issue Deposit Invoice',
+            `<div style="text-align:left;">
+                <p>You are about to issue the <strong>one-time</strong> deposit invoice for <strong>${escapeHtml(selectedVendor.name)}</strong>.</p>
+                <p style="margin-top:10px;">Deposit Required: <strong>RM ${depositRequired.toFixed(2)}</strong><br>
+                   Deposit Paid: <strong>RM ${totalDepositPaid.toFixed(2)}</strong><br>
+                   Balance: <strong>RM ${Math.max(0, depositRequired - totalDepositPaid).toFixed(2)}</strong></p>
+                <p style="margin-top:12px; color:#b45309;"><strong>⚠️ Once issued, it cannot be re-issued. You can still reprint it later.</strong></p>
+            </div>`
+        );
+        if (!confirmed) return;
+
+        issuingDepositInvoice = true;
+        const btn = document.getElementById('issueDepositInvoiceBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Issuing...';
+
+        try {
+            if (!companySettings) await fetchCompanySettings();
+
+            const month = getCurrentMonthString();
+            const shortId = selectedVendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
+            const invoiceNo = `DEP-${month.replace('-','')}-${shortId}`;
+            const issueDate = new Date().toISOString().split('T')[0];
+            const balance = Math.max(0, depositRequired - totalDepositPaid);
+            const status = computeStatus(totalDepositPaid, depositRequired);
+
+            const payload = {
+                invoice_no: invoiceNo,
+                vendor_id: selectedVendor.id,
+                vendor_name: selectedVendor.name,
+                vendor_unit: selectedVendor.unit,
+                vendor_floor: selectedVendor.floor,
+                deposit_required: depositRequired,
+                deposit_paid: totalDepositPaid,
+                balance,
+                status,
+                issue_date: issueDate,
+                notes: document.getElementById('editNotes').value.trim()
+            };
+
+            const { data, error } = await supabase.from('vendor_deposit_invoices').insert([payload]).select().single();
+            if (error) {
+                if (error.code === '23505') {
+                    throw new Error('A deposit invoice has already been issued for this vendor.');
+                }
+                throw error;
+            }
+
+            currentDepositInvoice = data;
+            showToast('Deposit invoice issued successfully');
+            renderDepositInvoiceStatus();
+
+            // Show the preview immediately
+            renderDepositInvoicePreview(data);
+            invoiceModal.classList.add('active');
+
+        } catch (err) {
+            showToast('Error: ' + err.message, true);
+        } finally {
+            issuingDepositInvoice = false;
+            btn.disabled = false;
+            btn.textContent = '🧾 Issue Deposit Invoice';
+        }
+    }
+
+    function renderDepositInvoicePreview(depositInvoiceRecord) {
+        if (!selectedVendor) return;
+        if (!companySettings) return;
+        currentInvoiceMode = 'deposit';
+
+        const cs = companySettings || {};
+        const vType = selectedVendor.vendor_type || 'Selling';
+        const typeEmoji = getVendorTypeEmoji(vType);
+        const depositRequired = parseFloat(depositInvoiceRecord.deposit_required) || 0;
+        const depositPaid = parseFloat(depositInvoiceRecord.deposit_paid) || 0;
+        const balance = parseFloat(depositInvoiceRecord.balance) || 0;
+        const status = depositInvoiceRecord.status || computeStatus(depositPaid, depositRequired);
+
+        // Build instalment list
+        let instalmentRows = '';
+        if (currentVendorDeposits.length > 0) {
+            instalmentRows = currentVendorDeposits.map(d => `
+                <tr>
+                    <td style="padding-left:16px; color:#64748b;">
+                        ${d.date_paid ? new Date(d.date_paid).toLocaleDateString() : '—'}
+                        ${d.note ? `<span style="color:#94a3b8;"> — ${escapeHtml(d.note)}</span>` : ''}
+                    </td>
+                    <td style="text-align:right; color:#16a34a;">+ ${(parseFloat(d.amount)||0).toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
+
+        const tenancyInfo = computeTenancyInfo(selectedVendor.tenancy_start, selectedVendor.tenancy_end);
+        let tenancyLine = '';
+        if (tenancyInfo.status !== 'not-set') {
+            tenancyLine = `
+                <div style="margin-top:4px; color:#475569;">
+                    📅 Tenancy: <strong>${formatDate(selectedVendor.tenancy_start)}</strong>
+                    → <strong>${formatDate(selectedVendor.tenancy_end)}</strong>
+                    <span style="color:#64748b;">(${escapeHtml(tenancyInfo.durationText)})</span>
+                </div>
+            `;
+        }
+
+        document.getElementById('invoiceModalTitle').textContent = '🧾 Deposit Invoice Preview';
+        document.getElementById('invoicePreviewContent').innerHTML = `
+            <div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:0.85rem; color:#92400e;">
+                <strong>⚠️ One-time deposit invoice</strong> — this invoice can be reprinted but not re-issued.
+            </div>
+
+            <div class="invoice-header-row">
+                <div>
+                    ${cs.company_logo_url ? `<img src="${escapeHtml(cs.company_logo_url)}" style="max-height:60px;margin-bottom:8px;" onerror="this.style.display='none'">` : ''}
+                    <h2>${escapeHtml(cs.company_name || 'YOUR COMPANY')}</h2>
+                    <div style="white-space:pre-line; color:#475569;">${escapeHtml(cs.company_address || '')}</div>
+                    ${cs.company_phone ? `<div style="color:#475569;">📞 ${escapeHtml(cs.company_phone)}</div>` : ''}
+                    ${cs.company_email ? `<div style="color:#475569;">✉️ ${escapeHtml(cs.company_email)}</div>` : ''}
+                    ${cs.company_ssm ? `<div style="color:#475569;">SSM: ${escapeHtml(cs.company_ssm)}</div>` : ''}
+                </div>
+                <div style="text-align:right;">
+                    <h2 style="color:#b45309;">DEPOSIT INVOICE</h2>
+                    <div><strong>${escapeHtml(depositInvoiceRecord.invoice_no)}</strong></div>
+                    <div>Issue: ${formatDate(depositInvoiceRecord.issue_date)}</div>
+                    <div style="margin-top:8px;"><span class="status-pill ${getStatusPillClass(status)}">${getStatusText(status)}</span></div>
+                </div>
+            </div>
+
+            <div class="invoice-section-title">Billed To</div>
+            <div style="line-height:1.6;">
+                <strong>${escapeHtml(selectedVendor.name)}</strong>
+                <span class="vendor-type-pill ${getVendorTypePillClass(vType)}" style="margin-left:8px;">${typeEmoji} ${escapeHtml(vType)}</span><br>
+                ${escapeHtml(selectedVendor.floor)} · Unit ${escapeHtml(selectedVendor.unit)}<br>
+                ${selectedVendor.contact_person ? `Attn: ${escapeHtml(selectedVendor.contact_person)}<br>` : ''}
+                ${selectedVendor.phone ? `📞 ${escapeHtml(selectedVendor.phone)}<br>` : ''}
+                ${selectedVendor.email ? `✉️ ${escapeHtml(selectedVendor.email)}` : ''}
+                ${tenancyLine}
+            </div>
+
+            <div class="invoice-section-title">Security Deposit</div>
+            <table class="invoice-table">
+                <thead><tr><th>Description</th><th style="text-align:right;">Amount (RM)</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td>Security Deposit Required</td>
+                        <td style="text-align:right;">${depositRequired.toFixed(2)}</td>
+                    </tr>
+                    ${instalmentRows ? `
+                        <tr><td colspan="2" style="padding-top:12px; color:#64748b; font-size:0.8rem; text-transform:uppercase;">Deposit Instalments Received</td></tr>
+                        ${instalmentRows}
+                        <tr>
+                            <td style="padding-top:12px;"><strong>Total Deposit Paid</strong></td>
+                            <td style="text-align:right; padding-top:12px; color:#16a34a;"><strong>− ${depositPaid.toFixed(2)}</strong></td>
+                        </tr>
+                    ` : ''}
+                </tbody>
+            </table>
+            <div class="invoice-total">Deposit Balance Due: RM ${balance.toFixed(2)}</div>
+
+            ${cs.bank_details ? `
+                <div class="invoice-section-title">Payment Details</div>
+                <div style="white-space:pre-line; color:#475569;">${escapeHtml(cs.bank_details)}</div>
+            ` : ''}
+
+            ${selectedVendor.notes ? `
+                <div class="invoice-section-title">Notes</div>
+                <div style="white-space:pre-line; color:#475569;">${escapeHtml(selectedVendor.notes)}</div>
+            ` : ''}
+
+            <div style="margin-top:32px; font-size:0.75rem; color:#94a3b8; text-align:center;">
+                Thank you for your business · This is a computer-generated deposit invoice.
+            </div>
+        `;
+    }
+
+    async function viewDepositInvoice() {
+        if (!currentDepositInvoice) return;
+        if (!companySettings) await fetchCompanySettings();
+        renderDepositInvoicePreview(currentDepositInvoice);
+        invoiceModal.classList.add('active');
+    }
+
+    // ==================== SIMPLE CONFIRM MODAL ====================
+    function showConfirmModal(title, messageHtml) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay active';
+            overlay.style.zIndex = '99999';
+            overlay.innerHTML = `
+                <div class="modal-container" style="max-width: 480px;">
+                    <div class="modal-title">${title}</div>
+                    <div style="color:#334155; font-size:0.95rem; line-height:1.5;">${messageHtml}</div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" id="confirmModalCancel">Cancel</button>
+                        <button class="btn btn-primary" id="confirmModalOk">Confirm</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            const cleanup = () => { overlay.remove(); };
+            overlay.querySelector('#confirmModalCancel').addEventListener('click', () => { cleanup(); resolve(false); });
+            overlay.querySelector('#confirmModalOk').addEventListener('click', () => { cleanup(); resolve(true); });
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) { cleanup(); resolve(false); } });
+        });
+    }
+
     // ==================== EVENTS ====================
     document.addEventListener('DOMContentLoaded', async () => {
         await fetchFloors();
@@ -1961,7 +2312,6 @@
         preventEnterSubmitInModal('companySettingsModal');
         preventEnterSubmitInModal('invoiceModal');
 
-        // Live tenancy preview when dates change
         document.getElementById('editTenancyStart').addEventListener('change', updateTenancyPreviewInModal);
         document.getElementById('editTenancyEnd').addEventListener('change', updateTenancyPreviewInModal);
 
@@ -2005,12 +2355,15 @@
             selectedVendor = null;
             currentVendorPayments = [];
             currentVendorDeposits = [];
+            currentDepositInvoice = null;
         });
         document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
         document.getElementById('deleteVendorBtn').addEventListener('click', deleteVendor);
         document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
         document.getElementById('addDepositBtn').addEventListener('click', addDeposit);
         document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
+        document.getElementById('issueDepositInvoiceBtn').addEventListener('click', issueDepositInvoice);
+        document.getElementById('viewDepositInvoiceBtn').addEventListener('click', viewDepositInvoice);
 
         document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
