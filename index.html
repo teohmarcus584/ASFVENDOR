@@ -9,11 +9,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f4f6fb;
-            color: #1e293b;
-            line-height: 1.4;
-            padding: 20px;
-            min-height: 100vh;
+            background: #f4f6fb; color: #1e293b; line-height: 1.4;
+            padding: 20px; min-height: 100vh;
         }
         .app-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -56,7 +53,6 @@
             position: relative; border-top: 6px solid #cbd5e1;
         }
         .vendor-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
-        /* Card colour by status */
         .vendor-card.status-paid    { border-top-color: #16a34a; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 70%); }
         .vendor-card.status-partial { border-top-color: #f59e0b; background: linear-gradient(180deg, #fffbeb 0%, #ffffff 70%); }
         .vendor-card.status-unpaid  { border-top-color: #dc2626; background: linear-gradient(180deg, #fef2f2 0%, #ffffff 70%); }
@@ -146,11 +142,15 @@
         }
         .toast-message.show { opacity: 1; }
 
-        /* Info banner inside payment form */
         .auto-status-hint {
             background: #eff6ff; color: #1e40af; font-size: 0.8rem;
             padding: 8px 14px; border-radius: 12px; margin-top: 8px;
             border-left: 3px solid #3b82f6;
+        }
+
+        /* Month summary in payment history */
+        .month-summary-row td {
+            background: #f8fafc; font-weight: 600; border-top: 2px solid #e2e8f0;
         }
 
         /* Invoice preview */
@@ -205,7 +205,6 @@
         <div class="modal-title" id="vendorModalTitle">Vendor Details</div>
         <div class="modal-subtitle" id="vendorModalSubtitle"></div>
 
-        <!-- Edit Form -->
         <div class="form-row">
             <div class="form-group">
                 <label>Vendor Name</label>
@@ -263,10 +262,10 @@
             <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Payment History</h3>
             <span id="currentMonthStatus" class="status-pill"></span>
         </div>
-        <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
+        <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 340px; overflow-y: auto;">
             <table class="payment-history-table">
                 <thead>
-                    <tr><th>Month</th><th>Amount</th><th>Status</th><th>Date Paid</th><th></th></tr>
+                    <tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr>
                 </thead>
                 <tbody id="paymentHistoryBody"></tbody>
             </table>
@@ -275,7 +274,7 @@
 
         <!-- Add Payment Form -->
         <div class="payment-form">
-            <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Payment</h4>
+            <h4 style="font-weight: 600; margin-bottom: 12px;">➕ Record Payment Instalment</h4>
             <div class="form-row">
                 <div class="form-group">
                     <label>Month</label>
@@ -292,12 +291,14 @@
                     <input type="date" id="paymentDate">
                 </div>
                 <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button class="btn btn-primary" id="addPaymentBtn" style="width: 100%; justify-content: center;">💵 Add Payment</button>
+                    <label>Note (optional)</label>
+                    <input type="text" id="paymentNote" placeholder="e.g. 1st instalment">
                 </div>
             </div>
-            <div class="auto-status-hint" id="autoStatusHint">
-                Status is auto-set: <strong>≥ Monthly Rental → Paid (green)</strong> · <strong>&lt; Rental → Partial (orange)</strong> · <strong>0 → Unpaid (red)</strong>
+            <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Instalment</button>
+            <div class="auto-status-hint">
+                Multiple instalments per month are allowed. The month's <strong>total</strong> is what determines the status:
+                <strong>Total ≥ Rental → Paid (green)</strong> · <strong>0 &lt; Total &lt; Rental → Partial (orange)</strong> · <strong>Total = 0 → Unpaid (red)</strong>
             </div>
         </div>
     </div>
@@ -361,35 +362,35 @@
         <div class="modal-subtitle">These details appear on every invoice you issue.</div>
         <div class="form-group">
             <label>Company Name</label>
-            <input type="text" id="csCompanyName" placeholder="e.g. ABC Properties Sdn Bhd">
+            <input type="text" id="csCompanyName">
         </div>
         <div class="form-group">
             <label>Address</label>
-            <textarea id="csAddress" rows="2" placeholder="Full business address"></textarea>
+            <textarea id="csAddress" rows="2"></textarea>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label>Phone</label>
-                <input type="text" id="csPhone" placeholder="e.g. 03-1234 5678">
+                <input type="text" id="csPhone">
             </div>
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" id="csEmail" placeholder="billing@example.com">
+                <input type="email" id="csEmail">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label>SSM / Registration No.</label>
-                <input type="text" id="csSsm" placeholder="e.g. 1234567-X">
+                <input type="text" id="csSsm">
             </div>
             <div class="form-group">
                 <label>Logo URL (optional)</label>
-                <input type="url" id="csLogoUrl" placeholder="https://...">
+                <input type="url" id="csLogoUrl">
             </div>
         </div>
         <div class="form-group">
-            <label>Bank / Payment Details (for invoice footer)</label>
-            <textarea id="csBankDetails" rows="2" placeholder="Bank name, account no, account holder"></textarea>
+            <label>Bank / Payment Details</label>
+            <textarea id="csBankDetails" rows="2"></textarea>
         </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" id="cancelCompanySettingsBtn">Cancel</button>
@@ -415,7 +416,6 @@
 
 <script>
     // ==================== SUPABASE ====================
-    // Use `var` (not const) — matches POS behaviour, avoids "already declared"
     const SUPABASE_URL = "https://icvthtbhnxaoykzbadqh.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_RiKDSx7sDD9J9JkZ3U8JLw_8RDz3XOA";
     var supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -423,7 +423,7 @@
     // ==================== STATE ====================
     let vendors = [];
     let selectedVendor = null;
-    let currentVendorPayments = [];
+    let currentVendorPayments = [];   // ALL instalments for selected vendor (across all months)
     let companySettings = null;
 
     // ==================== DOM ====================
@@ -471,19 +471,29 @@
     }
 
     /**
-     * Auto-compute status based on amount paid vs monthly rental.
-     *   amount >= rental  → 'paid'    (green)
-     *   amount  > 0       → 'partial' (orange)
-     *   amount <= 0       → 'unpaid'  (red)
+     * Auto-compute status from the SUM of instalments vs monthly rental.
      */
-    function computeStatus(amountPaid, monthlyRental) {
-        const a = parseFloat(amountPaid) || 0;
+    function computeStatus(totalPaid, monthlyRental) {
+        const a = parseFloat(totalPaid) || 0;
         const r = parseFloat(monthlyRental) || 0;
         if (a <= 0) return 'unpaid';
         if (r > 0 && a >= r) return 'paid';
         if (r > 0 && a < r) return 'partial';
-        // Fallback: rental is 0 but amount > 0 → treat as paid
         return 'paid';
+    }
+
+    /**
+     * Group an array of payment rows by month and sum their amounts.
+     * Returns: { '2026-11': { total: 8000, entries: [...] }, ... }
+     */
+    function groupPaymentsByMonth(payments) {
+        const map = {};
+        (payments || []).forEach(p => {
+            if (!map[p.month]) map[p.month] = { total: 0, entries: [] };
+            map[p.month].total += parseFloat(p.amount) || 0;
+            map[p.month].entries.push(p);
+        });
+        return map;
     }
 
     // ==================== COMPANY SETTINGS ====================
@@ -504,13 +514,8 @@
 
     function populateCompanySettingsForm() {
         if (!companySettings) {
-            document.getElementById('csCompanyName').value = '';
-            document.getElementById('csAddress').value = '';
-            document.getElementById('csPhone').value = '';
-            document.getElementById('csEmail').value = '';
-            document.getElementById('csSsm').value = '';
-            document.getElementById('csLogoUrl').value = '';
-            document.getElementById('csBankDetails').value = '';
+            ['csCompanyName','csAddress','csPhone','csEmail','csSsm','csLogoUrl','csBankDetails']
+                .forEach(id => document.getElementById(id).value = '');
             return;
         }
         document.getElementById('csCompanyName').value = companySettings.company_name || '';
@@ -534,10 +539,7 @@
             bank_details: document.getElementById('csBankDetails').value.trim(),
             updated_at: new Date().toISOString()
         };
-        if (!payload.company_name) {
-            showToast('Company name is required', true);
-            return;
-        }
+        if (!payload.company_name) { showToast('Company name is required', true); return; }
         try {
             const { error } = await supabase
                 .from('company_settings')
@@ -561,8 +563,7 @@
                 .order('unit');
             if (error) throw error;
             vendors = data || [];
-            // Pre-load current-month payments for all vendors to colour cards
-            await loadCurrentMonthPaymentsForAll();
+            await loadCurrentMonthTotalsForAll();
             renderDashboard();
         } catch (err) {
             console.error('Error fetching vendors:', err);
@@ -571,23 +572,26 @@
     }
 
     /**
-     * Loads all current-month payments in ONE query so cards can be coloured instantly.
-     * Stores result on each vendor as `_currentPayment`.
+     * One query: fetch ALL payments for the current month for ALL vendors,
+     * sum them by vendor_id, and store on each vendor as `_currentTotal`.
      */
-    async function loadCurrentMonthPaymentsForAll() {
+    async function loadCurrentMonthTotalsForAll() {
         const month = getCurrentMonthString();
         try {
             const { data, error } = await supabase
                 .from('vendor_payments')
-                .select('vendor_id, amount, status, month')
+                .select('vendor_id, amount')
                 .eq('month', month);
             if (error) throw error;
-            const map = {};
-            (data || []).forEach(p => { map[p.vendor_id] = p; });
-            vendors.forEach(v => { v._currentPayment = map[v.id] || null; });
+            const sumMap = {};
+            (data || []).forEach(p => {
+                const id = p.vendor_id;
+                sumMap[id] = (sumMap[id] || 0) + (parseFloat(p.amount) || 0);
+            });
+            vendors.forEach(v => { v._currentTotal = sumMap[v.id] || 0; });
         } catch (err) {
-            console.warn('Current month payments fetch failed:', err.message);
-            vendors.forEach(v => { v._currentPayment = null; });
+            console.warn('Current month totals fetch failed:', err.message);
+            vendors.forEach(v => { v._currentTotal = 0; });
         }
     }
 
@@ -616,21 +620,14 @@
 
             for (const vendor of floors[floor]) {
                 const rental = parseFloat(vendor.monthly_rental) || 0;
-                const pay = vendor._currentPayment;
-                let status, amountPaid;
-                if (!pay) {
-                    status = 'unpaid';
-                    amountPaid = 0;
-                } else {
-                    amountPaid = parseFloat(pay.amount) || 0;
-                    status = computeStatus(amountPaid, rental);
-                }
-
+                const totalPaid = vendor._currentTotal || 0;
+                const status = computeStatus(totalPaid, rental);
                 const cardClass = 'status-' + status;
-                let badgeText, badgeClass;
-                if (status === 'paid')    { badgeText = `✅ Paid · RM ${amountPaid.toFixed(2)}`; badgeClass = 'status-paid'; }
-                else if (status === 'partial') { badgeText = `⚠️ Partial · RM ${amountPaid.toFixed(2)} / ${rental.toFixed(2)}`; badgeClass = 'status-partial'; }
-                else                      { badgeText = `❌ Unpaid · RM 0.00 / ${rental.toFixed(2)}`; badgeClass = 'status-unpaid'; }
+
+                let badgeText;
+                if (status === 'paid')    badgeText = `✅ Paid · RM ${totalPaid.toFixed(2)}`;
+                else if (status === 'partial') badgeText = `⚠️ Partial · RM ${totalPaid.toFixed(2)} / ${rental.toFixed(2)}`;
+                else                      badgeText = `❌ Unpaid · RM 0.00 / ${rental.toFixed(2)}`;
 
                 html += `
                     <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
@@ -685,7 +682,8 @@
                 .from('vendor_payments')
                 .select('*')
                 .eq('vendor_id', vendorId)
-                .order('month', { ascending: false });
+                .order('month', { ascending: false })
+                .order('date_paid', { ascending: true });
             if (error) throw error;
             currentVendorPayments = data || [];
             return currentVendorPayments;
@@ -696,6 +694,10 @@
     }
 
     // ==================== RENDER PAYMENT HISTORY ====================
+    /**
+     * Groups ALL instalments by month and shows a summary row per month,
+     * with individual instalments underneath.
+     */
     function renderPaymentHistory(vendor) {
         const tbody = document.getElementById('paymentHistoryBody');
         const noPaymentsMsg = document.getElementById('noPaymentsMsg');
@@ -708,54 +710,76 @@
             noPaymentsMsg.style.display = 'block';
         } else {
             noPaymentsMsg.style.display = 'none';
+
+            // Group by month
+            const grouped = groupPaymentsByMonth(currentVendorPayments);
+
+            // Sort months newest first
+            const months = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
             let html = '';
-            for (const pay of currentVendorPayments) {
-                const monthLabel = getMonthLabel(pay.month);
-                const datePaid = pay.date_paid ? new Date(pay.date_paid).toLocaleDateString() : '—';
-                const amount = parseFloat(pay.amount) || 0;
-                const status = computeStatus(amount, rental);
+            for (const month of months) {
+                const { total, entries } = grouped[month];
+                const status = computeStatus(total, rental);
+                const monthLabel = getMonthLabel(month);
+
+                // Month summary row
                 html += `
-                    <tr>
-                        <td><strong>${monthLabel}</strong></td>
-                        <td>RM ${amount.toFixed(2)}</td>
+                    <tr class="month-summary-row">
+                        <td colspan="2"><strong>📅 ${monthLabel}</strong></td>
+                        <td><strong>RM ${total.toFixed(2)} / ${rental.toFixed(2)}</strong></td>
                         <td><span class="status-pill ${getStatusPillClass(status)}">${getStatusText(status)}</span></td>
-                        <td>${datePaid}</td>
-                        <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c;" onclick="deletePayment('${pay.id}')">✕</button></td>
+                        <td></td>
                     </tr>
                 `;
+
+                // Individual instalment rows
+                for (const pay of entries) {
+                    const datePaid = pay.date_paid ? new Date(pay.date_paid).toLocaleDateString() : '—';
+                    const amt = parseFloat(pay.amount) || 0;
+                    html += `
+                        <tr>
+                            <td style="padding-left:24px; color:#64748b;">${datePaid}</td>
+                            <td style="padding-left:24px;">+ RM ${amt.toFixed(2)}${pay.note ? ` <span style="color:#94a3b8; font-size:0.8rem;">— ${escapeHtml(pay.note)}</span>` : ''}</td>
+                            <td style="color:#94a3b8;">—</td>
+                            <td></td>
+                            <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c;" onclick="deletePayment('${pay.id}')">✕</button></td>
+                        </tr>
+                    `;
+                }
             }
             tbody.innerHTML = html;
         }
 
+        // Current month status badge in header
         const currentMonth = getCurrentMonthString();
-        const currentPayment = currentVendorPayments.find(p => p.month === currentMonth);
-        if (currentPayment) {
-            const amount = parseFloat(currentPayment.amount) || 0;
-            const status = computeStatus(amount, rental);
-            statusBadge.className = `status-pill ${getStatusPillClass(status)}`;
-            statusBadge.textContent = getStatusText(status);
-        } else {
-            statusBadge.className = `status-pill pill-unpaid`;
-            statusBadge.textContent = '❌ No payment record for current month';
-        }
+        const grouped = groupPaymentsByMonth(currentVendorPayments);
+        const currentTotal = grouped[currentMonth] ? grouped[currentMonth].total : 0;
+        const currentStatus = computeStatus(currentTotal, rental);
+        statusBadge.className = `status-pill ${getStatusPillClass(currentStatus)}`;
+        statusBadge.textContent = `${getStatusText(currentStatus)} · RM ${currentTotal.toFixed(2)}`;
 
+        // Pre-fill payment form
         document.getElementById('paymentMonth').value = currentMonth;
         document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('paymentAmount').value = rental || 0;
+        // Suggest the remaining balance as default amount (nice UX)
+        const remaining = Math.max(0, rental - currentTotal);
+        document.getElementById('paymentAmount').value = remaining > 0 ? remaining.toFixed(2) : rental;
+        document.getElementById('paymentNote').value = '';
     }
 
     // ==================== DELETE PAYMENT ====================
     window.deletePayment = async function(paymentId) {
-        if (!confirm('Delete this payment record?')) return;
+        if (!confirm('Delete this instalment?')) return;
         try {
             const { error } = await supabase.from('vendor_payments').delete().eq('id', paymentId);
             if (error) throw error;
-            showToast('Payment deleted');
+            showToast('Instalment deleted');
             if (selectedVendor) {
                 await fetchVendorPayments(selectedVendor.id);
                 renderPaymentHistory(selectedVendor);
             }
-            await loadCurrentMonthPaymentsForAll();
+            await loadCurrentMonthTotalsForAll();
             renderDashboard();
         } catch (err) {
             showToast('Error: ' + err.message, true);
@@ -814,56 +838,54 @@
         }
     }
 
-    // ==================== ADD PAYMENT (auto-status) ====================
+    // ==================== ADD PAYMENT (INSTALMENT) ====================
+    /**
+     * Always INSERT a new row. Never overwrites. Each "Add" = new instalment.
+     */
     async function addPayment() {
         if (!selectedVendor) return;
         const month = document.getElementById('paymentMonth').value;
         const amount = parseFloat(document.getElementById('paymentAmount').value);
         const datePaid = document.getElementById('paymentDate').value;
+        const note = document.getElementById('paymentNote').value.trim();
 
         if (!month) { showToast('Please select a month', true); return; }
-        if (isNaN(amount) || amount < 0) { showToast('Please enter a valid amount', true); return; }
+        if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid amount (> 0)', true); return; }
 
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
-        const status = computeStatus(amount, rental);
+        const grouped = groupPaymentsByMonth(currentVendorPayments);
+        const alreadyPaid = grouped[month] ? grouped[month].total : 0;
+        const newTotal = alreadyPaid + amount;
+        const newStatus = computeStatus(newTotal, rental);
 
-        const existing = currentVendorPayments.find(p => p.month === month);
-        if (existing) {
-            if (!confirm(`A payment record for ${getMonthLabel(month)} already exists. Update it?`)) return;
-            try {
-                const { error } = await supabase
-                    .from('vendor_payments')
-                    .update({ amount, status, date_paid: datePaid || null })
-                    .eq('id', existing.id);
-                if (error) throw error;
-                showToast(`Payment updated — status: ${status.toUpperCase()}`);
-            } catch (err) {
-                showToast('Error: ' + err.message, true);
-                return;
-            }
-        } else {
-            try {
-                const { error } = await supabase
-                    .from('vendor_payments')
-                    .insert([{
-                        vendor_id: selectedVendor.id,
-                        month: month,
-                        amount: amount,
-                        status: status,
-                        date_paid: datePaid || null
-                    }]);
-                if (error) throw error;
-                showToast(`Payment recorded — status: ${status.toUpperCase()}`);
-            } catch (err) {
-                showToast('Error: ' + err.message, true);
-                return;
-            }
+        try {
+            // Insert new instalment — DO NOT update existing rows
+            const { error } = await supabase
+                .from('vendor_payments')
+                .insert([{
+                    vendor_id: selectedVendor.id,
+                    month: month,
+                    amount: amount,
+                    status: newStatus,   // informational; UI recomputes from sum
+                    date_paid: datePaid || null,
+                    note: note || null
+                }]);
+            if (error) throw error;
+
+            let msg = `Instalment of RM ${amount.toFixed(2)} added for ${getMonthLabel(month)}.`;
+            msg += ` Month total: RM ${newTotal.toFixed(2)} / ${rental.toFixed(2)} → ${newStatus.toUpperCase()}`;
+            showToast(msg);
+
+            // Refresh everything
+            await fetchVendorPayments(selectedVendor.id);
+            renderPaymentHistory(selectedVendor);
+            await loadCurrentMonthTotalsForAll();
+            renderDashboard();
+
+        } catch (err) {
+            console.error('Add payment error:', err);
+            showToast('Error: ' + err.message, true);
         }
-
-        await fetchVendorPayments(selectedVendor.id);
-        renderPaymentHistory(selectedVendor);
-        await loadCurrentMonthPaymentsForAll();
-        renderDashboard();
     }
 
     // ==================== ADD VENDOR ====================
@@ -902,22 +924,20 @@
         const month = document.getElementById('paymentMonth').value || getCurrentMonthString();
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
 
-        // Find the payment record for that month (if any)
-        const payment = currentVendorPayments.find(p => p.month === month);
-        const amountPaid = payment ? (parseFloat(payment.amount) || 0) : 0;
+        // Sum instalments for that month
+        const grouped = groupPaymentsByMonth(currentVendorPayments);
+        const monthData = grouped[month] || { total: 0, entries: [] };
+        const amountPaid = monthData.total;
         const balance = Math.max(0, rental - amountPaid);
         const status = computeStatus(amountPaid, rental);
 
-        // Build invoice number: INV-YYYYMM-XXXX
         const shortId = selectedVendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
         const invoiceNo = `INV-${month.replace('-','')}-${shortId}`;
-
         const issueDate = new Date().toISOString().split('T')[0];
-        // Due date = 7th of the month AFTER the invoice month
         const [y, m] = month.split('-').map(Number);
         const dueDate = `${y}-${String(m + 1).padStart(2,'0')}-07`;
 
-        // Save invoice record to DB (upsert to avoid duplicates on re-issue)
+        // Upsert invoice record
         try {
             const { data: existing } = await supabase
                 .from('vendor_invoices')
@@ -948,13 +968,23 @@
             }
         } catch (err) {
             console.warn('Invoice save failed:', err.message);
-            // Non-blocking — we still show the preview
         }
 
-        // Build preview HTML
         const cs = companySettings || {};
-        const statusPillClass = getStatusPillClass(status);
-        const statusLabel = getStatusText(status);
+
+        // Instalment breakdown for the invoice
+        let instalmentRows = '';
+        if (monthData.entries.length > 0) {
+            instalmentRows = monthData.entries.map(p => `
+                <tr>
+                    <td style="padding-left:16px; color:#64748b;">
+                        ${p.date_paid ? new Date(p.date_paid).toLocaleDateString() : '—'}
+                        ${p.note ? `<span style="color:#94a3b8;"> — ${escapeHtml(p.note)}</span>` : ''}
+                    </td>
+                    <td style="text-align:right; color:#16a34a;">+ ${(parseFloat(p.amount)||0).toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
 
         document.getElementById('invoicePreviewContent').innerHTML = `
             <div class="invoice-header-row">
@@ -971,7 +1001,7 @@
                     <div><strong>${escapeHtml(invoiceNo)}</strong></div>
                     <div>Issue: ${issueDate}</div>
                     <div>Due: ${dueDate}</div>
-                    <div style="margin-top:8px;"><span class="status-pill ${statusPillClass}">${statusLabel}</span></div>
+                    <div style="margin-top:8px;"><span class="status-pill ${getStatusPillClass(status)}">${getStatusText(status)}</span></div>
                 </div>
             </div>
 
@@ -994,10 +1024,14 @@
                         <td>Monthly Rental — ${escapeHtml(getMonthLabel(month))}</td>
                         <td style="text-align:right;">${rental.toFixed(2)}</td>
                     </tr>
-                    <tr>
-                        <td>Amount Paid</td>
-                        <td style="text-align:right; color:#16a34a;">− ${amountPaid.toFixed(2)}</td>
-                    </tr>
+                    ${instalmentRows ? `
+                        <tr><td colspan="2" style="padding-top:12px; color:#64748b; font-size:0.8rem; text-transform:uppercase;">Instalments Received</td></tr>
+                        ${instalmentRows}
+                        <tr>
+                            <td style="padding-top:12px;"><strong>Total Paid</strong></td>
+                            <td style="text-align:right; padding-top:12px; color:#16a34a;"><strong>− ${amountPaid.toFixed(2)}</strong></td>
+                        </tr>
+                    ` : ''}
                 </tbody>
             </table>
             <div class="invoice-total">Balance Due: RM ${balance.toFixed(2)}</div>
@@ -1025,25 +1059,20 @@
         await fetchCompanySettings();
         await fetchVendors();
 
-        // Header buttons
         document.getElementById('refreshBtn').addEventListener('click', async () => {
             await fetchVendors();
             showToast('Refreshed');
         });
-        document.getElementById('addVendorBtn').addEventListener('click', () => {
-            addVendorModal.classList.add('active');
-        });
+        document.getElementById('addVendorBtn').addEventListener('click', () => addVendorModal.classList.add('active'));
         document.getElementById('companySettingsBtn').addEventListener('click', () => {
             populateCompanySettingsForm();
             companySettingsModal.classList.add('active');
         });
 
-        // Add vendor modal
         document.getElementById('closeAddVendorModal').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('cancelAddVendorBtn').addEventListener('click', () => addVendorModal.classList.remove('active'));
         document.getElementById('confirmAddVendorBtn').addEventListener('click', createVendor);
 
-        // Vendor modal
         document.getElementById('closeVendorModal').addEventListener('click', () => {
             vendorModal.classList.remove('active');
             selectedVendor = null;
@@ -1054,19 +1083,14 @@
         document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
         document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
 
-        // Company settings modal
         document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
         document.getElementById('saveCompanySettingsBtn').addEventListener('click', saveCompanySettings);
 
-        // Invoice modal
         document.getElementById('closeInvoiceModal').addEventListener('click', () => invoiceModal.classList.remove('active'));
         document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
-        document.getElementById('printInvoiceBtn').addEventListener('click', () => {
-            window.print();
-        });
+        document.getElementById('printInvoiceBtn').addEventListener('click', () => window.print());
 
-        // Close on overlay click
         [vendorModal, addVendorModal, companySettingsModal, invoiceModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
