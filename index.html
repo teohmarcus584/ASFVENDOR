@@ -192,6 +192,17 @@
         .rental-month-tile.month-future { background: #f8fafc; border-color: #cbd5e1; opacity: 0.7; }
         .rental-month-tile.month-future .month-amount { color: #94a3b8; }
 
+        /* Early-paid future month: keep green/orange but add a subtle "early" marker */
+        .rental-month-tile.early-paid::after {
+            content: '⬆️';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.6rem;
+            opacity: 0.7;
+        }
+        .rental-month-tile { position: relative; }
+
         .rental-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 0.75rem; color: #64748b; }
         .rental-legend span { display: inline-flex; align-items: center; gap: 4px; }
         .rental-legend .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
@@ -260,7 +271,6 @@
         .invoice-table th { background: #f8fafc; font-weight: 600; }
         .invoice-total { font-size: 1.2rem; font-weight: 800; color: #0f172a; text-align: right; margin-top: 12px; }
 
-        /* Deposit invoice count badge (replaces single issued badge) */
         .deposit-invoice-count-badge {
             display: inline-block; padding: 4px 12px; border-radius: 20px;
             font-size: 0.72rem; font-weight: 700;
@@ -270,7 +280,6 @@
             background: #f1f5f9; color: #64748b;
         }
 
-        /* Deposit invoice history list */
         .deposit-invoice-history {
             margin-top: 12px;
             border-top: 1px solid #e2e8f0;
@@ -285,9 +294,7 @@
         .deposit-invoice-history-item .inv-no {
             font-family: monospace; font-weight: 700; color: #b45309;
         }
-        .deposit-invoice-history-item .inv-date {
-            color: #64748b; font-size: 0.75rem;
-        }
+        .deposit-invoice-history-item .inv-date { color: #64748b; font-size: 0.75rem; }
         .deposit-invoice-history-item .inv-actions button {
             background: none; border: none; cursor: pointer;
             font-size: 0.8rem; padding: 4px 8px; border-radius: 6px;
@@ -421,6 +428,7 @@
             <span><span class="legend-dot legend-partial"></span> Partial</span>
             <span><span class="legend-dot legend-unpaid"></span> Unpaid</span>
             <span><span class="legend-dot legend-future"></span> Future / Not yet due</span>
+            <span>⬆️ Early payment</span>
         </div>
 
         <div class="divider"></div>
@@ -467,7 +475,6 @@
             </div>
         </div>
 
-        <!-- Deposit invoice history -->
         <div id="depositInvoiceHistoryWrap" class="deposit-invoice-history" style="display:none;">
             <div style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 8px;">📜 Deposit Invoice History</div>
             <div id="depositInvoiceHistoryList"></div>
@@ -605,7 +612,7 @@
     let selectedVendor = null;
     let currentVendorPayments = [];
     let currentVendorDeposits = [];
-    let currentDepositInvoices = [];   // ← array of deposit invoices for selected vendor
+    let currentDepositInvoices = [];
     let companySettings = null;
 
     let savingVendor = false, savingPayment = false, savingDeposit = false;
@@ -826,21 +833,53 @@
             const paidAmount = grouped[monthStr] ? grouped[monthStr].total : 0;
             const status = computeStatus(paidAmount, rental);
             const isFuture = monthStr > currentMonthStr;
+            const hasPayment = paidAmount > 0;
 
+            // =========================================================
+            // PRIORITY ORDER:
+            //   1. If a payment exists → show paid / partial, even if future
+            //   2. Else if future → grey (not yet due)
+            //   3. Else → red (unpaid past month)
+            // =========================================================
             let tileClass = '', icon = '', amountText = '';
-            if (isFuture) {
-                tileClass = 'month-future'; icon = '⏳'; amountText = `Due ${rental.toFixed(0)}`;
-            } else if (status === 'paid') {
-                tileClass = 'month-paid'; icon = '✅'; amountText = `RM ${paidAmount.toFixed(0)}`; paidCount++;
-            } else if (status === 'partial') {
-                tileClass = 'month-partial'; icon = '⚠️'; amountText = `RM ${paidAmount.toFixed(0)} / ${rental.toFixed(0)}`; partialCount++;
+            let earlyBadge = false;
+
+            if (hasPayment) {
+                if (status === 'paid') {
+                    tileClass = 'month-paid';
+                    icon = '✅';
+                    amountText = `RM ${paidAmount.toFixed(0)}`;
+                    if (!isFuture) paidCount++;
+                    if (isFuture) earlyBadge = true;
+                } else {
+                    // partial
+                    tileClass = 'month-partial';
+                    icon = '⚠️';
+                    amountText = `RM ${paidAmount.toFixed(0)} / ${rental.toFixed(0)}`;
+                    if (!isFuture) partialCount++;
+                    if (isFuture) earlyBadge = true;
+                }
+            } else if (isFuture) {
+                tileClass = 'month-future';
+                icon = '⏳';
+                amountText = `Due ${rental.toFixed(0)}`;
             } else {
-                tileClass = 'month-unpaid'; icon = '❌'; amountText = 'Unpaid'; unpaidCount++;
+                tileClass = 'month-unpaid';
+                icon = '❌';
+                amountText = 'Unpaid';
+                unpaidCount++;
             }
 
-            const title = `${getMonthLabel(monthStr)} — ${status.toUpperCase()} (paid: RM ${paidAmount.toFixed(2)}, rental: RM ${rental.toFixed(2)})`;
+            const titleParts = [getMonthLabel(monthStr)];
+            titleParts.push(status.toUpperCase());
+            titleParts.push(`paid: RM ${paidAmount.toFixed(2)}`);
+            titleParts.push(`rental: RM ${rental.toFixed(2)}`);
+            if (isFuture && hasPayment) titleParts.push('(early payment)');
+            else if (isFuture) titleParts.push('(not yet due)');
+            const title = titleParts.join(' — ');
+
             html += `
-                <div class="rental-month-tile ${tileClass}" data-month="${monthStr}" title="${escapeHtml(title)}">
+                <div class="rental-month-tile ${tileClass}${earlyBadge ? ' early-paid' : ''}" data-month="${monthStr}" title="${escapeHtml(title)}">
                     <div class="month-icon">${icon}</div>
                     <div class="month-name">${monthShort}</div>
                     <div class="month-year">${y}</div>
@@ -854,10 +893,9 @@
         gridEl.querySelectorAll('.rental-month-tile').forEach(tile => {
             tile.addEventListener('click', () => {
                 const monthStr = tile.dataset.month;
-                if (monthStr > currentMonthStr) showToast('That month is not yet due', false);
+                const alreadyPaid = grouped[monthStr] ? grouped[monthStr].total : 0;
                 document.getElementById('paymentMonth').value = monthStr;
                 document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-                const alreadyPaid = grouped[monthStr] ? grouped[monthStr].total : 0;
                 const remaining = Math.max(0, rental - alreadyPaid);
                 document.getElementById('paymentAmount').value = remaining.toFixed(2);
                 document.getElementById('paymentNote').value = '';
@@ -1126,7 +1164,7 @@
         const currentMonthStr = getCurrentMonthString();
         let unpaid = 0, partial = 0;
         months.forEach(monthStr => {
-            if (monthStr > currentMonthStr) return;
+            if (monthStr > currentMonthStr) return;   // future months are NOT overdue
             const paid = payments[monthStr] || 0;
             const status = computeStatus(paid, rental);
             if (status === 'unpaid') unpaid++;
@@ -1878,7 +1916,7 @@
         invoiceModal.classList.add('active');
     }
 
-    // ==================== GENERATE DEPOSIT INVOICE (no restriction) ====================
+    // ==================== GENERATE DEPOSIT INVOICE ====================
     async function generateDepositInvoice() {
         if (!selectedVendor || generatingDepositInvoice) return;
 
@@ -1902,7 +1940,6 @@
             const month = getCurrentMonthString();
             const timestamp = now.getTime().toString().slice(-6);
             const shortId = selectedVendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
-            // Multiple invoices → include timestamp to guarantee uniqueness
             const invoiceNo = `DEP-${month.replace('-','')}-${shortId}-${timestamp}`;
             const issueDate = now.toISOString().split('T')[0];
             const balance = Math.max(0, depositRequired - totalDepositPaid);
