@@ -171,7 +171,7 @@
         .rental-month-tile {
             background: white; border: 2px solid #e2e8f0; border-radius: 12px;
             padding: 10px 6px; text-align: center; cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s ease; position: relative;
         }
         .rental-month-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .rental-month-tile .month-name { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
@@ -192,7 +192,6 @@
         .rental-month-tile.month-future { background: #f8fafc; border-color: #cbd5e1; opacity: 0.7; }
         .rental-month-tile.month-future .month-amount { color: #94a3b8; }
 
-        /* Early-paid future month: keep green/orange but add a subtle "early" marker */
         .rental-month-tile.early-paid::after {
             content: '⬆️';
             position: absolute;
@@ -201,7 +200,6 @@
             font-size: 0.6rem;
             opacity: 0.7;
         }
-        .rental-month-tile { position: relative; }
 
         .rental-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 0.75rem; color: #64748b; }
         .rental-legend span { display: inline-flex; align-items: center; gap: 4px; }
@@ -276,9 +274,7 @@
             font-size: 0.72rem; font-weight: 700;
             background: #fef3c7; color: #92400e;
         }
-        .deposit-invoice-count-badge.zero {
-            background: #f1f5f9; color: #64748b;
-        }
+        .deposit-invoice-count-badge.zero { background: #f1f5f9; color: #64748b; }
 
         .deposit-invoice-history {
             margin-top: 12px;
@@ -291,9 +287,7 @@
             border: 1px solid #e2e8f0; margin-bottom: 6px;
             font-size: 0.82rem;
         }
-        .deposit-invoice-history-item .inv-no {
-            font-family: monospace; font-weight: 700; color: #b45309;
-        }
+        .deposit-invoice-history-item .inv-no { font-family: monospace; font-weight: 700; color: #b45309; }
         .deposit-invoice-history-item .inv-date { color: #64748b; font-size: 0.75rem; }
         .deposit-invoice-history-item .inv-actions button {
             background: none; border: none; cursor: pointer;
@@ -852,7 +846,6 @@
                     if (!isFuture) paidCount++;
                     if (isFuture) earlyBadge = true;
                 } else {
-                    // partial
                     tileClass = 'month-partial';
                     icon = '⚠️';
                     amountText = `RM ${paidAmount.toFixed(0)} / ${rental.toFixed(0)}`;
@@ -916,6 +909,123 @@
             overdueSummaryEl.classList.add('all-clear');
             overdueSummaryEl.innerHTML = `<span class="overdue-icon">✅</span><span>All due months are fully paid (${paidCount} month${paidCount !== 1 ? 's' : ''})</span>`;
         }
+    }
+
+    // ==================== COMPUTE VENDOR CARD STATUS ====================
+    /**
+     * Returns { status: 'paid'|'partial'|'unpaid', paidAmount, requiredAmount, reason }
+     *
+     * Tenancy-aware logic:
+     *   - If tenancy start/end are set, the "month to evaluate" is the tenancy start month.
+     *     Any default (unpaid/partial) in the tenancy range up to today counts as red.
+     *   - Deposit unpaid or partial → card turns red regardless of rent.
+     *   - Otherwise, if the tenancy-start month is paid and no defaults, card turns green.
+     *   - If no tenancy, fall back to current-month rule.
+     */
+    function computeVendorCardStatus(vendor) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const depositRequired = parseFloat(vendor.deposit) || 0;
+        const depositPaid = vendor._depositPaid || 0;
+        const depositStatus = computeStatus(depositPaid, depositRequired);
+        const payments = vendor._allRentalPayments || {};
+        const currentMonthStr = getCurrentMonthString();
+        const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
+
+        // ---- DEPOSIT OVERRIDE (highest priority) ----
+        if (depositRequired > 0 && depositStatus !== 'paid') {
+            return {
+                status: 'unpaid',
+                reason: depositStatus === 'partial' ? 'Deposit partially paid' : 'Deposit unpaid',
+                paidAmount: depositPaid,
+                requiredAmount: depositRequired,
+                dueMonths: 0,
+                paidMonths: 0
+            };
+        }
+
+        // ---- TENANCY-AWARE RENTAL LOGIC ----
+        if (tenancyInfo.status !== 'not-set' && tenancyInfo.start && tenancyInfo.end) {
+            const months = getRentalMonthWindow(vendor);
+            // Only consider months that have already started (monthStr <= currentMonthStr OR the tenancy-start month)
+            // Also always include the tenancy-start month itself, even if it's in the future,
+            // because advance rental is expected to be paid.
+            const startMonthStr = months[0];
+            const monthsToCheck = months.filter(m => m <= currentMonthStr || m === startMonthStr);
+
+            let unpaidMonths = 0;
+            let partialMonths = 0;
+            let paidMonths = 0;
+            let firstUnpaid = null;
+            let totalPaidInWindow = 0;
+
+            monthsToCheck.forEach(monthStr => {
+                const paid = payments[monthStr] || 0;
+                totalPaidInWindow += paid;
+                const s = computeStatus(paid, rental);
+                if (s === 'paid') paidMonths++;
+                else if (s === 'partial') { partialMonths++; if (!firstUnpaid) firstUnpaid = monthStr; }
+                else { unpaidMonths++; if (!firstUnpaid) firstUnpaid = monthStr; }
+            });
+
+            // Tenancy-start month check (highest priority after deposit)
+            const startMonthPaid = payments[startMonthStr] || 0;
+            const startMonthStatus = computeStatus(startMonthPaid, rental);
+
+            if (startMonthStatus === 'unpaid') {
+                return {
+                    status: 'unpaid',
+                    reason: `Tenancy start month (${getMonthLabel(startMonthStr)}) not paid`,
+                    paidAmount: startMonthPaid,
+                    requiredAmount: rental,
+                    dueMonths: monthsToCheck.length,
+                    paidMonths: paidMonths
+                };
+            }
+
+            if (unpaidMonths > 0) {
+                return {
+                    status: 'unpaid',
+                    reason: `${unpaidMonths} month${unpaidMonths !== 1 ? 's' : ''} unpaid${firstUnpaid ? ` (from ${getMonthLabel(firstUnpaid)})` : ''}`,
+                    paidAmount: totalPaidInWindow,
+                    requiredAmount: rental * monthsToCheck.length,
+                    dueMonths: monthsToCheck.length,
+                    paidMonths: paidMonths
+                };
+            }
+
+            if (partialMonths > 0 || startMonthStatus === 'partial') {
+                return {
+                    status: 'partial',
+                    reason: `${partialMonths > 0 ? partialMonths + ' partial month(s)' : 'Start month partially paid'}`,
+                    paidAmount: totalPaidInWindow,
+                    requiredAmount: rental * monthsToCheck.length,
+                    dueMonths: monthsToCheck.length,
+                    paidMonths: paidMonths
+                };
+            }
+
+            // Everything paid in the checked window (including start month)
+            return {
+                status: 'paid',
+                reason: `All due months paid (${paidMonths})`,
+                paidAmount: totalPaidInWindow,
+                requiredAmount: rental * monthsToCheck.length,
+                dueMonths: monthsToCheck.length,
+                paidMonths: paidMonths
+            };
+        }
+
+        // ---- FALLBACK: NO TENANCY → use current calendar month ----
+        const currentPaid = payments[currentMonthStr] || vendor._currentTotal || 0;
+        const currentStatus = computeStatus(currentPaid, rental);
+        return {
+            status: currentStatus,
+            reason: `Current month (${getMonthLabel(currentMonthStr)})`,
+            paidAmount: currentPaid,
+            requiredAmount: rental,
+            dueMonths: 1,
+            paidMonths: currentStatus === 'paid' ? 1 : 0
+        };
     }
 
     // ==================== FLOORS ====================
@@ -1157,22 +1267,6 @@
         } catch (err) { vendors.forEach(v => { v._allRentalPayments = {}; }); }
     }
 
-    function countOverdueMonthsForVendor(vendor) {
-        const rental = parseFloat(vendor.monthly_rental) || 0;
-        const months = getRentalMonthWindow(vendor);
-        const payments = vendor._allRentalPayments || {};
-        const currentMonthStr = getCurrentMonthString();
-        let unpaid = 0, partial = 0;
-        months.forEach(monthStr => {
-            if (monthStr > currentMonthStr) return;   // future months are NOT overdue
-            const paid = payments[monthStr] || 0;
-            const status = computeStatus(paid, rental);
-            if (status === 'unpaid') unpaid++;
-            else if (status === 'partial') partial++;
-        });
-        return { unpaid, partial };
-    }
-
     // ==================== RENDER DASHBOARD ====================
     async function renderDashboard() {
         if (!vendors.length) {
@@ -1204,22 +1298,27 @@
 
             for (const vendor of groups[floor]) {
                 const rental = parseFloat(vendor.monthly_rental) || 0;
-                const totalPaid = vendor._currentTotal || 0;
-                const rentalStatus = computeStatus(totalPaid, rental);
-                const cardClass = 'status-' + rentalStatus;
-
                 const depositRequired = parseFloat(vendor.deposit) || 0;
                 const depositPaid = vendor._depositPaid || 0;
                 const depositStatus = computeStatus(depositPaid, depositRequired);
+
+                // ==== NEW: tenancy-aware card status ====
+                const cardStatus = computeVendorCardStatus(vendor);
+                const cardClass = 'status-' + cardStatus.status;
 
                 const vType = vendor.vendor_type || 'Selling';
                 const typeClass = getVendorTypePillClass(vType);
                 const typeEmoji = getVendorTypeEmoji(vType);
 
+                // Rental badge text now reflects the real reason
                 let rentalBadge;
-                if (rentalStatus === 'paid')    rentalBadge = `✅ Rent · RM ${totalPaid.toFixed(2)}`;
-                else if (rentalStatus === 'partial') rentalBadge = `⚠️ Rent · ${totalPaid.toFixed(2)} / ${rental.toFixed(2)}`;
-                else                            rentalBadge = `❌ Rent · 0 / ${rental.toFixed(2)}`;
+                if (cardStatus.status === 'paid') {
+                    rentalBadge = `✅ Rent · ${escapeHtml(cardStatus.reason)}`;
+                } else if (cardStatus.status === 'partial') {
+                    rentalBadge = `⚠️ Rent · ${escapeHtml(cardStatus.reason)}`;
+                } else {
+                    rentalBadge = `❌ Rent · ${escapeHtml(cardStatus.reason)}`;
+                }
 
                 let depositBadgeText, depositClass;
                 if (depositRequired <= 0) {
@@ -1248,15 +1347,12 @@
                     tenancyBadge = `📅 ${formatDate(vendor.tenancy_start)} → ${formatDate(vendor.tenancy_end)}`; tenancyClass = 'tenancy-active';
                 }
 
-                const overdue = countOverdueMonthsForVendor(vendor);
+                // Overdue badge only for red cards (tenancy-aware count is already in the reason)
                 let overdueBadgeHtml = '';
-                if (overdue.unpaid > 0 || overdue.partial > 0) {
-                    let parts = [];
-                    if (overdue.unpaid > 0) parts.push(`${overdue.unpaid} unpaid`);
-                    if (overdue.partial > 0) parts.push(`${overdue.partial} partial`);
+                if (cardStatus.status === 'unpaid') {
                     overdueBadgeHtml = `
                         <div class="payment-status-badge overdue-rent-badge">
-                            🔴 ${parts.join(' · ')} month${(overdue.unpaid + overdue.partial) !== 1 ? 's' : ''}
+                            🔴 ${escapeHtml(cardStatus.reason)}
                         </div>
                     `;
                 }
@@ -1355,9 +1451,7 @@
     async function fetchDepositInvoices(vendorId) {
         try {
             const { data, error } = await supabase.from('vendor_deposit_invoices')
-                .select('*')
-                .eq('vendor_id', vendorId)
-                .order('created_at', { ascending: false });
+                .select('*').eq('vendor_id', vendorId).order('created_at', { ascending: false });
             if (error) throw error;
             currentDepositInvoices = data || [];
             return currentDepositInvoices;
