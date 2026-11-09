@@ -15,8 +15,22 @@
         .app-header {
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
-            background: white; padding: 16px 24px; border-radius: 32px;
+            background: white; padding: 14px 24px; border-radius: 32px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+        }
+        .app-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .dashboard-logo {
+            height: 56px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+            border-radius: 12px;
+            display: none;      /* shown only when logo_url is set */
         }
         .app-header h1 { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
         .btn {
@@ -269,6 +283,40 @@
         .invoice-table th { background: #f8fafc; font-weight: 600; }
         .invoice-total { font-size: 1.2rem; font-weight: 800; color: #0f172a; text-align: right; margin-top: 12px; }
 
+        /* Invoice logo: bigger */
+        .invoice-logo-big {
+            display: block;
+            max-width: 200px;
+            max-height: 120px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            margin-bottom: 12px;
+        }
+
+        /* Invoice month picker */
+        .invoice-month-picker {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+        }
+        .invoice-month-picker label {
+            font-weight: 600; font-size: 0.9rem; color: #1e40af; display: block; margin-bottom: 8px;
+        }
+        .invoice-month-picker select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 2px solid #93c5fd;
+            font-size: 0.95rem;
+            background: white;
+        }
+        .invoice-month-picker .hint {
+            font-size: 0.75rem; color: #64748b; margin-top: 6px;
+        }
+
         .deposit-invoice-count-badge {
             display: inline-block; padding: 4px 12px; border-radius: 20px;
             font-size: 0.72rem; font-weight: 700;
@@ -323,6 +371,8 @@
             .modal-container { padding: 20px; }
             .vendor-grid { grid-template-columns: 1fr 1fr; }
             .rental-months-grid { grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); }
+            .dashboard-logo { height: 40px; max-width: 140px; }
+            .invoice-logo-big { max-width: 140px; max-height: 90px; }
         }
 
         @media print {
@@ -338,7 +388,12 @@
 <body>
 
 <div class="app-header">
-    <h1>🏢 Vendor Management</h1>
+    <div class="app-header-left">
+        <!-- Dashboard logo — populated from company_settings.company_logo_url -->
+        <img id="dashboardLogo" class="dashboard-logo" alt="Company Logo"
+             onerror="this.style.display='none'">
+        <h1>🏢 Vendor Management</h1>
+    </div>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="btn btn-secondary" id="manageFloorsBtn">🏗️ Manage Floors</button>
         <button class="btn btn-secondary" id="companySettingsBtn">🏢 Company Details</button>
@@ -453,7 +508,6 @@
 
         <div class="divider"></div>
 
-        <!-- DEPOSIT SECTION -->
         <div class="flex-between">
             <h3 style="font-size: 1.25rem; font-weight: 700;">💰 Deposit History</h3>
             <span id="depositStatusPill" class="status-pill"></span>
@@ -699,6 +753,20 @@
         });
     }
 
+    // ==================== DASHBOARD LOGO ====================
+    function applyDashboardLogo() {
+        const logoEl = document.getElementById('dashboardLogo');
+        if (!logoEl) return;
+        const url = companySettings && companySettings.company_logo_url;
+        if (url && url.trim()) {
+            logoEl.src = url.trim();
+            logoEl.style.display = 'block';
+        } else {
+            logoEl.removeAttribute('src');
+            logoEl.style.display = 'none';
+        }
+    }
+
     // ==================== FLOOR / UNIT SORTING ====================
     function floorRank(floorName) {
         if (!floorName) return 10000;
@@ -829,37 +897,24 @@
             const isFuture = monthStr > currentMonthStr;
             const hasPayment = paidAmount > 0;
 
-            // =========================================================
-            // PRIORITY ORDER:
-            //   1. If a payment exists → show paid / partial, even if future
-            //   2. Else if future → grey (not yet due)
-            //   3. Else → red (unpaid past month)
-            // =========================================================
             let tileClass = '', icon = '', amountText = '';
             let earlyBadge = false;
 
             if (hasPayment) {
                 if (status === 'paid') {
-                    tileClass = 'month-paid';
-                    icon = '✅';
-                    amountText = `RM ${paidAmount.toFixed(0)}`;
+                    tileClass = 'month-paid'; icon = '✅'; amountText = `RM ${paidAmount.toFixed(0)}`;
                     if (!isFuture) paidCount++;
                     if (isFuture) earlyBadge = true;
                 } else {
-                    tileClass = 'month-partial';
-                    icon = '⚠️';
+                    tileClass = 'month-partial'; icon = '⚠️';
                     amountText = `RM ${paidAmount.toFixed(0)} / ${rental.toFixed(0)}`;
                     if (!isFuture) partialCount++;
                     if (isFuture) earlyBadge = true;
                 }
             } else if (isFuture) {
-                tileClass = 'month-future';
-                icon = '⏳';
-                amountText = `Due ${rental.toFixed(0)}`;
+                tileClass = 'month-future'; icon = '⏳'; amountText = `Due ${rental.toFixed(0)}`;
             } else {
-                tileClass = 'month-unpaid';
-                icon = '❌';
-                amountText = 'Unpaid';
+                tileClass = 'month-unpaid'; icon = '❌'; amountText = 'Unpaid';
                 unpaidCount++;
             }
 
@@ -911,17 +966,7 @@
         }
     }
 
-    // ==================== COMPUTE VENDOR CARD STATUS ====================
-    /**
-     * Returns { status: 'paid'|'partial'|'unpaid', paidAmount, requiredAmount, reason }
-     *
-     * Tenancy-aware logic:
-     *   - If tenancy start/end are set, the "month to evaluate" is the tenancy start month.
-     *     Any default (unpaid/partial) in the tenancy range up to today counts as red.
-     *   - Deposit unpaid or partial → card turns red regardless of rent.
-     *   - Otherwise, if the tenancy-start month is paid and no defaults, card turns green.
-     *   - If no tenancy, fall back to current-month rule.
-     */
+    // ==================== CARD STATUS (tenancy aware) ====================
     function computeVendorCardStatus(vendor) {
         const rental = parseFloat(vendor.monthly_rental) || 0;
         const depositRequired = parseFloat(vendor.deposit) || 0;
@@ -931,7 +976,6 @@
         const currentMonthStr = getCurrentMonthString();
         const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
 
-        // ---- DEPOSIT OVERRIDE (highest priority) ----
         if (depositRequired > 0 && depositStatus !== 'paid') {
             return {
                 status: 'unpaid',
@@ -943,18 +987,12 @@
             };
         }
 
-        // ---- TENANCY-AWARE RENTAL LOGIC ----
         if (tenancyInfo.status !== 'not-set' && tenancyInfo.start && tenancyInfo.end) {
             const months = getRentalMonthWindow(vendor);
-            // Only consider months that have already started (monthStr <= currentMonthStr OR the tenancy-start month)
-            // Also always include the tenancy-start month itself, even if it's in the future,
-            // because advance rental is expected to be paid.
             const startMonthStr = months[0];
             const monthsToCheck = months.filter(m => m <= currentMonthStr || m === startMonthStr);
 
-            let unpaidMonths = 0;
-            let partialMonths = 0;
-            let paidMonths = 0;
+            let unpaidMonths = 0, partialMonths = 0, paidMonths = 0;
             let firstUnpaid = null;
             let totalPaidInWindow = 0;
 
@@ -967,7 +1005,6 @@
                 else { unpaidMonths++; if (!firstUnpaid) firstUnpaid = monthStr; }
             });
 
-            // Tenancy-start month check (highest priority after deposit)
             const startMonthPaid = payments[startMonthStr] || 0;
             const startMonthStatus = computeStatus(startMonthPaid, rental);
 
@@ -1004,7 +1041,6 @@
                 };
             }
 
-            // Everything paid in the checked window (including start month)
             return {
                 status: 'paid',
                 reason: `All due months paid (${paidMonths})`,
@@ -1015,7 +1051,6 @@
             };
         }
 
-        // ---- FALLBACK: NO TENANCY → use current calendar month ----
         const currentPaid = payments[currentMonthStr] || vendor._currentTotal || 0;
         const currentStatus = computeStatus(currentPaid, rental);
         return {
@@ -1169,6 +1204,7 @@
             if (error) throw error;
             companySettings = data || null;
         } catch (err) { companySettings = null; }
+        applyDashboardLogo();
     }
 
     function populateCompanySettingsForm() {
@@ -1210,6 +1246,7 @@
             const { error } = await supabase.from('company_settings').upsert(payload, { onConflict: 'id' });
             if (error) throw error;
             companySettings = payload;
+            applyDashboardLogo();
             showToast('Company details saved');
             companySettingsModal.classList.remove('active');
         } catch (err) { showToast('Error: ' + err.message, true); }
@@ -1297,12 +1334,10 @@
             html += `<div class="vendor-grid">`;
 
             for (const vendor of groups[floor]) {
-                const rental = parseFloat(vendor.monthly_rental) || 0;
                 const depositRequired = parseFloat(vendor.deposit) || 0;
                 const depositPaid = vendor._depositPaid || 0;
                 const depositStatus = computeStatus(depositPaid, depositRequired);
 
-                // ==== NEW: tenancy-aware card status ====
                 const cardStatus = computeVendorCardStatus(vendor);
                 const cardClass = 'status-' + cardStatus.status;
 
@@ -1310,7 +1345,6 @@
                 const typeClass = getVendorTypePillClass(vType);
                 const typeEmoji = getVendorTypeEmoji(vType);
 
-                // Rental badge text now reflects the real reason
                 let rentalBadge;
                 if (cardStatus.status === 'paid') {
                     rentalBadge = `✅ Rent · ${escapeHtml(cardStatus.reason)}`;
@@ -1347,7 +1381,6 @@
                     tenancyBadge = `📅 ${formatDate(vendor.tenancy_start)} → ${formatDate(vendor.tenancy_end)}`; tenancyClass = 'tenancy-active';
                 }
 
-                // Overdue badge only for red cards (tenancy-aware count is already in the reason)
                 let overdueBadgeHtml = '';
                 if (cardStatus.status === 'unpaid') {
                     overdueBadgeHtml = `
@@ -1857,41 +1890,153 @@
         } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
-    // ==================== RENTAL INVOICE ====================
+    // ==================== RENTAL INVOICE (month picker) ====================
+    /**
+     * Suggests a default month for the invoice:
+     *   1. First month in the tenancy window that has 0 or partial payment.
+     *   2. The tenancy-start month if it's still unpaid.
+     *   3. Current calendar month.
+     *   4. First month of the tenancy window (or last 12 months) if no tenancy.
+     */
+    function suggestInvoiceMonth(vendor) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const payments = {};
+        (currentVendorPayments || []).forEach(p => {
+            if (!payments[p.month]) payments[p.month] = 0;
+            payments[p.month] += parseFloat(p.amount) || 0;
+        });
+
+        const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
+        const window = getRentalMonthWindow(vendor);
+        const currentMonthStr = getCurrentMonthString();
+
+        // 1. Tenancy-start month if unpaid
+        if (tenancyInfo.status !== 'not-set' && window.length > 0) {
+            const startMonthStr = window[0];
+            const startPaid = payments[startMonthStr] || 0;
+            if (computeStatus(startPaid, rental) !== 'paid') return startMonthStr;
+        }
+
+        // 2. First under-paid month within the tenancy window that is due
+        for (const m of window) {
+            if (m > currentMonthStr && m !== window[0]) continue; // skip future (except start month)
+            const paid = payments[m] || 0;
+            if (computeStatus(paid, rental) !== 'paid') return m;
+        }
+
+        // 3. Current calendar month
+        if (payments[currentMonthStr]) return currentMonthStr;
+
+        // 4. First month of the window
+        return window[0] || currentMonthStr;
+    }
+
+    /**
+     * Build a <select> of invoice months from the tenancy window.
+     */
+    function buildInvoiceMonthOptions(vendor, selectedMonth) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const payments = {};
+        (currentVendorPayments || []).forEach(p => {
+            if (!payments[p.month]) payments[p.month] = 0;
+            payments[p.month] += parseFloat(p.amount) || 0;
+        });
+
+        const window = getRentalMonthWindow(vendor);
+        if (!window.length) return `<option value="${getCurrentMonthString()}">${getMonthLabel(getCurrentMonthString())}</option>`;
+
+        return window.map(monthStr => {
+            const paid = payments[monthStr] || 0;
+            const status = computeStatus(paid, rental);
+            const label = getMonthLabel(monthStr);
+            let suffix = '';
+            if (status === 'paid') suffix = ' — Paid';
+            else if (status === 'partial') suffix = ` — Partial (RM ${paid.toFixed(0)}/${rental.toFixed(0)})`;
+            else suffix = ' — Unpaid';
+            const sel = monthStr === selectedMonth ? ' selected' : '';
+            return `<option value="${monthStr}"${sel}>${escapeHtml(label)}${escapeHtml(suffix)}</option>`;
+        }).join('');
+    }
+
     async function openInvoiceModal() {
         if (!selectedVendor) return;
         if (!companySettings) await fetchCompanySettings();
 
-        const month = document.getElementById('paymentMonth').value || getCurrentMonthString();
+        // Default month = first unpaid / partially paid month in tenancy window
+        const defaultMonth = suggestInvoiceMonth(selectedVendor);
+
+        // Render the picker + preview container
+        const cs = companySettings || {};
+        const vType = selectedVendor.vendor_type || 'Selling';
+        const typeEmoji = getVendorTypeEmoji(vType);
+        const tenancyInfo = computeTenancyInfo(selectedVendor.tenancy_start, selectedVendor.tenancy_end);
+        let tenancyLine = '';
+        if (tenancyInfo.status !== 'not-set') {
+            tenancyLine = `
+                <div style="margin-top:4px; color:#475569;">
+                    📅 Tenancy: <strong>${formatDate(selectedVendor.tenancy_start)}</strong>
+                    → <strong>${formatDate(selectedVendor.tenancy_end)}</strong>
+                    <span style="color:#64748b;">(${escapeHtml(tenancyInfo.durationText)})</span>
+                </div>
+            `;
+        }
+
+        // Build the invoice preview using defaultMonth
         const rental = parseFloat(selectedVendor.monthly_rental) || 0;
+        const grouped = groupPaymentsByMonth(currentVendorPayments);
+
+        document.getElementById('invoiceModalTitle').textContent = '🧾 Rental Invoice Preview';
+
+        // Pre-render with default month
+        renderInvoicePreviewIntoModal(selectedVendor, defaultMonth);
+
+        // After render, wire up the month picker inside the invoice modal
+        const picker = document.getElementById('invoiceMonthPicker');
+        if (picker) {
+            picker.addEventListener('change', function() {
+                renderInvoicePreviewIntoModal(selectedVendor, this.value);
+            });
+        }
+
+        invoiceModal.classList.add('active');
+    }
+
+    /**
+     * Actually build the invoice HTML for a given month.
+     */
+    function renderInvoicePreviewIntoModal(vendor, month) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
         const grouped = groupPaymentsByMonth(currentVendorPayments);
         const monthData = grouped[month] || { total: 0, entries: [] };
         const amountPaid = monthData.total;
         const balance = Math.max(0, rental - amountPaid);
         const status = computeStatus(amountPaid, rental);
 
-        const shortId = selectedVendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
+        const cs = companySettings || {};
+        const vType = vendor.vendor_type || 'Selling';
+        const typeEmoji = getVendorTypeEmoji(vType);
+
+        const shortId = vendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
         const invoiceNo = `INV-${month.replace('-','')}-${shortId}`;
         const issueDate = new Date().toISOString().split('T')[0];
         const [y, m] = month.split('-').map(Number);
         const dueDate = `${y}-${String(m + 1).padStart(2,'0')}-07`;
 
-        try {
-            const { data: existing } = await supabase.from('vendor_invoices').select('id').eq('invoice_no', invoiceNo).maybeSingle();
-            const payload = {
-                invoice_no: invoiceNo, vendor_id: selectedVendor.id,
-                vendor_name: selectedVendor.name, vendor_unit: selectedVendor.unit, vendor_floor: selectedVendor.floor,
-                month, rental_amount: rental, amount_paid: amountPaid, balance, status,
-                issue_date: issueDate, due_date: dueDate,
-                notes: document.getElementById('editNotes').value.trim()
-            };
-            if (existing) await supabase.from('vendor_invoices').update(payload).eq('id', existing.id);
-            else await supabase.from('vendor_invoices').insert([payload]);
-        } catch (err) { console.warn('Invoice save failed:', err.message); }
-
-        const cs = companySettings || {};
-        const vType = selectedVendor.vendor_type || 'Selling';
-        const typeEmoji = getVendorTypeEmoji(vType);
+        // Persist the invoice in the DB in the background (don't block rendering)
+        (async () => {
+            try {
+                const { data: existing } = await supabase.from('vendor_invoices').select('id').eq('invoice_no', invoiceNo).maybeSingle();
+                const payload = {
+                    invoice_no: invoiceNo, vendor_id: vendor.id,
+                    vendor_name: vendor.name, vendor_unit: vendor.unit, vendor_floor: vendor.floor,
+                    month, rental_amount: rental, amount_paid: amountPaid, balance, status,
+                    issue_date: issueDate, due_date: dueDate,
+                    notes: document.getElementById('editNotes').value.trim()
+                };
+                if (existing) await supabase.from('vendor_invoices').update(payload).eq('id', existing.id);
+                else await supabase.from('vendor_invoices').insert([payload]);
+            } catch (err) { console.warn('Invoice save failed:', err.message); }
+        })();
 
         let instalmentRows = '';
         if (monthData.entries.length > 0) {
@@ -1906,7 +2051,7 @@
             `).join('');
         }
 
-        const depositRequired = parseFloat(selectedVendor.deposit) || 0;
+        const depositRequired = parseFloat(vendor.deposit) || 0;
         const totalDepositPaid = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
         let depositSection = '';
         if (depositRequired > 0) {
@@ -1928,23 +2073,30 @@
             `;
         }
 
-        const tenancyInfo = computeTenancyInfo(selectedVendor.tenancy_start, selectedVendor.tenancy_end);
+        const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
         let tenancyLine = '';
         if (tenancyInfo.status !== 'not-set') {
             tenancyLine = `
                 <div style="margin-top:4px; color:#475569;">
-                    📅 Tenancy: <strong>${formatDate(selectedVendor.tenancy_start)}</strong>
-                    → <strong>${formatDate(selectedVendor.tenancy_end)}</strong>
+                    📅 Tenancy: <strong>${formatDate(vendor.tenancy_start)}</strong>
+                    → <strong>${formatDate(vendor.tenancy_end)}</strong>
                     <span style="color:#64748b;">(${escapeHtml(tenancyInfo.durationText)})</span>
                 </div>
             `;
         }
 
-        document.getElementById('invoiceModalTitle').textContent = '🧾 Rental Invoice Preview';
         document.getElementById('invoicePreviewContent').innerHTML = `
+            <div class="invoice-month-picker no-print">
+                <label>📅 Select month to invoice</label>
+                <select id="invoiceMonthPicker">
+                    ${buildInvoiceMonthOptions(vendor, month)}
+                </select>
+                <div class="hint">Default: first unpaid or partially-paid month in the tenancy window. Currently: <strong>${escapeHtml(getMonthLabel(month))}</strong></div>
+            </div>
+
             <div class="invoice-header-row">
                 <div>
-                    ${cs.company_logo_url ? `<img src="${escapeHtml(cs.company_logo_url)}" style="max-height:60px;margin-bottom:8px;" onerror="this.style.display='none'">` : ''}
+                    ${cs.company_logo_url ? `<img src="${escapeHtml(cs.company_logo_url)}" class="invoice-logo-big" alt="Logo" onerror="this.style.display='none'">` : ''}
                     <h2>${escapeHtml(cs.company_name || 'YOUR COMPANY')}</h2>
                     <div style="white-space:pre-line; color:#475569;">${escapeHtml(cs.company_address || '')}</div>
                     ${cs.company_phone ? `<div style="color:#475569;">📞 ${escapeHtml(cs.company_phone)}</div>` : ''}
@@ -1962,12 +2114,12 @@
 
             <div class="invoice-section-title">Billed To</div>
             <div style="line-height:1.6;">
-                <strong>${escapeHtml(selectedVendor.name)}</strong>
+                <strong>${escapeHtml(vendor.name)}</strong>
                 <span class="vendor-type-pill ${getVendorTypePillClass(vType)}" style="margin-left:8px;">${typeEmoji} ${escapeHtml(vType)}</span><br>
-                ${escapeHtml(selectedVendor.floor)} · Unit ${escapeHtml(selectedVendor.unit)}<br>
-                ${selectedVendor.contact_person ? `Attn: ${escapeHtml(selectedVendor.contact_person)}<br>` : ''}
-                ${selectedVendor.phone ? `📞 ${escapeHtml(selectedVendor.phone)}<br>` : ''}
-                ${selectedVendor.email ? `✉️ ${escapeHtml(selectedVendor.email)}` : ''}
+                ${escapeHtml(vendor.floor)} · Unit ${escapeHtml(vendor.unit)}<br>
+                ${vendor.contact_person ? `Attn: ${escapeHtml(vendor.contact_person)}<br>` : ''}
+                ${vendor.phone ? `📞 ${escapeHtml(vendor.phone)}<br>` : ''}
+                ${vendor.email ? `✉️ ${escapeHtml(vendor.email)}` : ''}
                 ${tenancyLine}
             </div>
 
@@ -1998,16 +2150,23 @@
                 <div style="white-space:pre-line; color:#475569;">${escapeHtml(cs.bank_details)}</div>
             ` : ''}
 
-            ${selectedVendor.notes ? `
+            ${vendor.notes ? `
                 <div class="invoice-section-title">Notes</div>
-                <div style="white-space:pre-line; color:#475569;">${escapeHtml(selectedVendor.notes)}</div>
+                <div style="white-space:pre-line; color:#475569;">${escapeHtml(vendor.notes)}</div>
             ` : ''}
 
             <div style="margin-top:32px; font-size:0.75rem; color:#94a3b8; text-align:center;">
                 Thank you for your business · This is a computer-generated invoice.
             </div>
         `;
-        invoiceModal.classList.add('active');
+
+        // Re-wire the picker after re-render
+        const picker = document.getElementById('invoiceMonthPicker');
+        if (picker) {
+            picker.addEventListener('change', function() {
+                renderInvoicePreviewIntoModal(vendor, this.value);
+            });
+        }
     }
 
     // ==================== GENERATE DEPOSIT INVOICE ====================
@@ -2109,7 +2268,7 @@
         document.getElementById('invoicePreviewContent').innerHTML = `
             <div class="invoice-header-row">
                 <div>
-                    ${cs.company_logo_url ? `<img src="${escapeHtml(cs.company_logo_url)}" style="max-height:60px;margin-bottom:8px;" onerror="this.style.display='none'">` : ''}
+                    ${cs.company_logo_url ? `<img src="${escapeHtml(cs.company_logo_url)}" class="invoice-logo-big" alt="Logo" onerror="this.style.display='none'">` : ''}
                     <h2>${escapeHtml(cs.company_name || 'YOUR COMPANY')}</h2>
                     <div style="white-space:pre-line; color:#475569;">${escapeHtml(cs.company_address || '')}</div>
                     ${cs.company_phone ? `<div style="color:#475569;">📞 ${escapeHtml(cs.company_phone)}</div>` : ''}
