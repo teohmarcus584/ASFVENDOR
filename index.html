@@ -19,17 +19,13 @@
             box-shadow: 0 6px 18px rgba(0,0,0,0.04);
         }
         .app-header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-        .dashboard-logo {
-            height: 56px; width: auto; max-width: 200px;
-            object-fit: contain; border-radius: 12px; display: none;
-        }
+        .dashboard-logo { height: 56px; width: auto; max-width: 200px; object-fit: contain; border-radius: 12px; display: none; }
         .app-header h1 { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
         .btn {
             border: none; border-radius: 40px; padding: 10px 22px;
             font-size: 0.95rem; font-weight: 600; cursor: pointer;
             transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px;
-            background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-            border: 1px solid #e2e8f0;
+            background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;
         }
         .btn-primary { background: #2c7a4b; color: white; border: none; box-shadow: 0 4px 12px rgba(44,122,75,0.25); }
         .btn-primary:hover { background: #1f5e3a; transform: translateY(-1px); }
@@ -91,22 +87,19 @@
 
         .vendor-type-pill {
             display: inline-block; font-size: 0.7rem; font-weight: 700;
-            padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
-            letter-spacing: 0.3px;
+            padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; letter-spacing: 0.3px;
         }
         .type-selling  { background: #dbeafe; color: #1e40af; }
         .type-category { background: #ede9fe; color: #6d28d9; }
         .type-fnb      { background: #fee2e2; color: #991b1b; }
 
         .vendor-card .badge-stack {
-            display: flex; flex-direction: column; gap: 6px;
-            margin-top: 12px;
+            display: flex; flex-direction: column; gap: 6px; margin-top: 12px;
         }
         .vendor-card .payment-status-badge {
             font-size: 0.78rem; font-weight: 700;
             padding: 6px 12px; border-radius: 20px;
-            display: inline-flex; align-items: center; gap: 6px;
-            align-self: flex-start;
+            display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
         }
         .vendor-card .payment-status-badge.tenancy { font-size: 0.7rem; padding: 5px 11px; }
         .status-paid    .payment-status-badge { background: #dcfce7; color: #166534; }
@@ -196,8 +189,7 @@
         .rental-month-tile.month-future { background: #f8fafc; border-color: #cbd5e1; opacity: 0.7; }
         .rental-month-tile.month-future .month-amount { color: #94a3b8; }
         .rental-month-tile.early-paid::after {
-            content: '⬆️'; position: absolute; top: 2px; right: 4px;
-            font-size: 0.6rem; opacity: 0.7;
+            content: '⬆️'; position: absolute; top: 2px; right: 4px; font-size: 0.6rem; opacity: 0.7;
         }
 
         .rental-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 0.75rem; color: #64748b; }
@@ -248,170 +240,154 @@
             padding: 8px 14px; border-radius: 12px; margin-top: 8px;
             border-left: 3px solid #3b82f6;
         }
-        .auto-status-hint.deposit-hint {
-            background: #fefce8; color: #854d0e;
-            border-left-color: #f59e0b;
-        }
+        .auto-status-hint.deposit-hint { background: #fefce8; color: #854d0e; border-left-color: #f59e0b; }
 
         .month-summary-row td { background: #f8fafc; font-weight: 600; border-top: 2px solid #e2e8f0; }
 
-        /* ==================== PROFESSIONAL INVOICE ==================== */
-        .invoice-preview {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            font-size: 0.9rem;
-            max-height: 65vh;
-            overflow-y: auto;
-            margin: 16px 0;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        /* Invoice header bar (brand coloured) */
-        .inv-header-bar {
-            background: linear-gradient(135deg, #2c7a4b 0%, #1f5e3a 100%);
-            padding: 28px 32px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 24px;
-            flex-wrap: wrap;
-            border-radius: 20px 20px 0 0;
-        }
-        .inv-header-left {
+        /* ==================== PAYMENT ATTACHMENT UI ==================== */
+        .attachment-row {
             display: flex;
             align-items: center;
-            gap: 18px;
-            flex-wrap: wrap;
-            flex: 1;
-            min-width: 200px;
-        }
-        .inv-logo {
-            max-width: 130px;
-            max-height: 90px;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            border-radius: 10px;
+            gap: 10px;
+            padding: 10px 14px;
             background: white;
-            padding: 6px;
+            border-radius: 12px;
+            border: 1.5px dashed #cbd5e1;
+            margin-top: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .attachment-row:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .attachment-row.has-file {
+            border-style: solid;
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .attachment-row .att-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .attachment-row .att-text {
+            flex: 1;
+            font-size: 0.85rem;
+            color: #475569;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .attachment-row.has-file .att-text {
+            color: #166534;
+            font-weight: 600;
+        }
+        .attachment-row .att-clear {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .attachment-row .att-clear:hover { background: #fecaca; }
+        .attachment-preview-img {
+            max-width: 60px;
+            max-height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        input[type="file"].hidden-file-input {
+            display: none;
+        }
+
+        /* Attachment chip in payment history */
+        .att-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .att-chip:hover { background: #bfdbfe; }
+        .att-thumb {
+            width: 48px;
+            height: 36px;
+            border-radius: 6px;
+            object-fit: cover;
+            margin-top: 4px;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Invoice */
+        .invoice-preview {
+            background: #ffffff; border-radius: 20px; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.9rem; max-height: 65vh; overflow-y: auto;
+            margin: 16px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;
+        }
+        .inv-header-bar {
+            background: linear-gradient(135deg, #2c7a4b 0%, #1f5e3a 100%);
+            padding: 28px 32px; color: white;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            gap: 24px; flex-wrap: wrap; border-radius: 20px 20px 0 0;
+        }
+        .inv-header-left { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; flex: 1; min-width: 200px; }
+        .inv-logo {
+            max-width: 130px; max-height: 90px; width: auto; height: auto;
+            object-fit: contain; border-radius: 10px; background: white; padding: 6px;
         }
         .inv-brand-text { min-width: 160px; }
         .inv-brand-name { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 6px; }
         .inv-brand-sub { font-size: 0.78rem; opacity: 0.9; line-height: 1.5; }
-        .inv-header-right {
-            text-align: right;
-            min-width: 200px;
-        }
-        .inv-title {
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
-            line-height: 1;
-            opacity: 0.95;
-        }
+        .inv-header-right { text-align: right; min-width: 200px; }
+        .inv-title { font-size: 2.2rem; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px; line-height: 1; opacity: 0.95; }
         .inv-invoice-no {
-            font-family: 'Courier New', monospace;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            background: rgba(255,255,255,0.15);
-            padding: 6px 12px;
-            border-radius: 8px;
-            display: inline-block;
-            margin-bottom: 8px;
+            font-family: 'Courier New', monospace; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.03em;
+            background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; display: inline-block; margin-bottom: 8px;
         }
-        .inv-dates {
-            font-size: 0.78rem;
-            line-height: 1.7;
-            opacity: 0.9;
-        }
+        .inv-dates { font-size: 0.78rem; line-height: 1.7; opacity: 0.9; }
         .inv-dates strong { opacity: 1; font-weight: 600; }
-
-        /* Body padding */
         .inv-body { padding: 28px 32px; }
-
-        /* Billed-to / From two-column section */
-        .inv-address-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
+        .inv-address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
         .inv-address-block { line-height: 1.6; }
         .inv-address-label {
-            font-size: 0.68rem;
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: #64748b;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid #e2e8f0;
+            font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+            color: #64748b; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0;
         }
         .inv-address-name { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
         .inv-address-line { font-size: 0.82rem; color: #475569; margin-top: 2px; }
-
-        /* Status ribbon */
-        .inv-status-ribbon {
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        .inv-status-ribbon { margin-bottom: 20px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .inv-status-ribbon .inv-status-pill {
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
+            padding: 6px 16px; border-radius: 40px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
         }
-
-        /* Tenancy strip */
         .inv-tenancy-strip {
-            background: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-bottom: 20px;
-            font-size: 0.82rem;
-            color: #1e40af;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 10px;
+            padding: 10px 14px; margin-bottom: 20px; font-size: 0.82rem; color: #1e40af;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
         }
         .inv-tenancy-strip strong { font-weight: 700; }
-
-        /* Items table */
-        .inv-items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 4px;
-            font-size: 0.88rem;
-        }
+        .inv-items-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 0.88rem; }
         .inv-items-table thead th {
-            background: #f8fafc;
-            padding: 12px 14px;
-            text-align: left;
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #64748b;
-            border-bottom: 2px solid #e2e8f0;
+            background: #f8fafc; padding: 12px 14px; text-align: left;
+            font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+            color: #64748b; border-bottom: 2px solid #e2e8f0;
         }
         .inv-items-table thead th.right { text-align: right; }
-        .inv-items-table tbody td {
-            padding: 14px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: top;
-        }
+        .inv-items-table tbody td { padding: 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
         .inv-items-table tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
         .inv-items-table tbody td.muted { color: #64748b; font-size: 0.82rem; }
         .inv-items-table tbody tr:nth-child(even) { background: #fafbfc; }
@@ -422,204 +398,68 @@
         .inv-items-table tr.instalment-row td.muted { color: #16a34a; font-weight: 600; }
         .inv-items-table tr.paid-total td { border-top: 1px dashed #cbd5e1; }
         .inv-items-table tr.paid-total td.label { font-weight: 700; color: #334155; }
-
-        /* Total box */
-        .inv-total-box {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
-        }
+        .inv-total-box { margin-top: 20px; display: flex; justify-content: flex-end; }
         .inv-total-box-inner {
-            min-width: 280px;
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 2px solid #16a34a;
-            border-radius: 14px;
-            padding: 16px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+            min-width: 280px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #16a34a; border-radius: 14px; padding: 16px 20px;
+            display: flex; flex-direction: column; gap: 6px;
         }
-        .inv-total-label {
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: #166534;
-        }
-        .inv-total-amount {
-            font-size: 1.9rem;
-            font-weight: 800;
-            color: #14532d;
-            letter-spacing: -0.02em;
-            font-variant-numeric: tabular-nums;
-        }
-        .inv-total-box.paid .inv-total-box-inner {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border-color: #16a34a;
-        }
-        .inv-total-box.paid .inv-total-amount { color: #14532d; }
-        .inv-total-box.unpaid .inv-total-box-inner {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border-color: #dc2626;
-        }
+        .inv-total-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #166534; }
+        .inv-total-amount { font-size: 1.9rem; font-weight: 800; color: #14532d; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+        .inv-total-box.unpaid .inv-total-box-inner { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #dc2626; }
         .inv-total-box.unpaid .inv-total-label { color: #991b1b; }
         .inv-total-box.unpaid .inv-total-amount { color: #7f1d1d; }
-
-        /* Deposit card */
-        .inv-deposit-card {
-            margin-top: 20px;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            border-radius: 14px;
-            padding: 16px 18px;
-        }
-        .inv-deposit-card-title {
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: #92400e;
-            margin-bottom: 10px;
-        }
-        .inv-deposit-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            padding: 4px 0;
-            color: #78350f;
-        }
-        .inv-deposit-row.total {
-            border-top: 1px solid #fde68a;
-            margin-top: 6px;
-            padding-top: 10px;
-            font-weight: 700;
-            color: #713f12;
-        }
-
-        /* Payment details box */
-        .inv-info-card {
-            margin-top: 20px;
-            background: #f8fafc;
-            border-left: 4px solid #2c7a4b;
-            border-radius: 10px;
-            padding: 14px 18px;
-        }
-        .inv-info-card-label {
-            font-size: 0.68rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: #64748b;
-            margin-bottom: 6px;
-        }
-        .inv-info-card-content {
-            font-size: 0.85rem;
-            color: #334155;
-            white-space: pre-line;
-            line-height: 1.6;
-        }
-
-        /* Footer */
+        .inv-deposit-card { margin-top: 20px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 16px 18px; }
+        .inv-deposit-card-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+        .inv-deposit-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; color: #78350f; }
+        .inv-deposit-row.total { border-top: 1px solid #fde68a; margin-top: 6px; padding-top: 10px; font-weight: 700; color: #713f12; }
+        .inv-info-card { margin-top: 20px; background: #f8fafc; border-left: 4px solid #2c7a4b; border-radius: 10px; padding: 14px 18px; }
+        .inv-info-card-label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; margin-bottom: 6px; }
+        .inv-info-card-content { font-size: 0.85rem; color: #334155; white-space: pre-line; line-height: 1.6; }
         .inv-footer {
-            margin-top: 32px;
-            padding-top: 20px;
-            border-top: 2px dashed #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 20px;
-            flex-wrap: wrap;
+            margin-top: 32px; padding-top: 20px; border-top: 2px dashed #e2e8f0;
+            display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap;
         }
-        .inv-footer-left {
-            flex: 1;
-            min-width: 200px;
-        }
-        .inv-footer-thanks {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #2c7a4b;
-            margin-bottom: 4px;
-        }
-        .inv-footer-terms {
-            font-size: 0.72rem;
-            color: #94a3b8;
-            line-height: 1.5;
-        }
-        .inv-footer-signature {
-            text-align: center;
-            min-width: 180px;
-        }
-        .inv-signature-line {
-            border-top: 1px solid #94a3b8;
-            margin-bottom: 6px;
-            height: 40px;
-        }
-        .inv-signature-label {
-            font-size: 0.72rem;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-        .inv-footer-system {
-            font-size: 0.65rem;
-            color: #cbd5e1;
-            text-align: right;
-            min-width: 150px;
-        }
+        .inv-footer-left { flex: 1; min-width: 200px; }
+        .inv-footer-thanks { font-size: 0.95rem; font-weight: 700; color: #2c7a4b; margin-bottom: 4px; }
+        .inv-footer-terms { font-size: 0.72rem; color: #94a3b8; line-height: 1.5; }
+        .inv-footer-signature { text-align: center; min-width: 180px; }
+        .inv-signature-line { border-top: 1px solid #94a3b8; margin-bottom: 6px; height: 40px; }
+        .inv-signature-label { font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+        .inv-footer-system { font-size: 0.65rem; color: #cbd5e1; text-align: right; min-width: 150px; }
 
         .deposit-invoice-count-badge {
             display: inline-block; padding: 4px 12px; border-radius: 20px;
-            font-size: 0.72rem; font-weight: 700;
-            background: #fef3c7; color: #92400e;
+            font-size: 0.72rem; font-weight: 700; background: #fef3c7; color: #92400e;
         }
         .deposit-invoice-count-badge.zero { background: #f1f5f9; color: #64748b; }
-
-        .deposit-invoice-history {
-            margin-top: 12px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 12px;
-        }
+        .deposit-invoice-history { margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
         .deposit-invoice-history-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 8px 12px; background: white; border-radius: 10px;
-            border: 1px solid #e2e8f0; margin-bottom: 6px;
-            font-size: 0.82rem;
+            border: 1px solid #e2e8f0; margin-bottom: 6px; font-size: 0.82rem;
         }
         .deposit-invoice-history-item .inv-no { font-family: monospace; font-weight: 700; color: #b45309; }
         .deposit-invoice-history-item .inv-date { color: #64748b; font-size: 0.75rem; }
         .deposit-invoice-history-item .inv-actions button {
             background: none; border: none; cursor: pointer;
-            font-size: 0.8rem; padding: 4px 8px; border-radius: 6px;
-            transition: all 0.2s;
+            font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; transition: all 0.2s;
         }
         .deposit-invoice-history-item .view-btn { color: #3b82f6; }
         .deposit-invoice-history-item .view-btn:hover { background: #eff6ff; }
         .deposit-invoice-history-item .delete-btn { color: #dc2626; }
         .deposit-invoice-history-item .delete-btn:hover { background: #fee2e2; }
 
-        /* Month picker */
         .invoice-month-picker {
-            background: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
+            background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 12px;
+            padding: 14px 16px; margin-bottom: 16px;
         }
-        .invoice-month-picker label {
-            font-weight: 600; font-size: 0.9rem; color: #1e40af; display: block; margin-bottom: 8px;
-        }
+        .invoice-month-picker label { font-weight: 600; font-size: 0.9rem; color: #1e40af; display: block; margin-bottom: 8px; }
         .invoice-month-picker select {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 2px solid #93c5fd;
-            font-size: 0.95rem;
-            background: white;
+            width: 100%; padding: 10px 14px; border-radius: 12px;
+            border: 2px solid #93c5fd; font-size: 0.95rem; background: white;
         }
-        .invoice-month-picker .hint {
-            font-size: 0.75rem; color: #64748b; margin-top: 6px;
-        }
+        .invoice-month-picker .hint { font-size: 0.75rem; color: #64748b; margin-top: 6px; }
 
         .floor-row {
             display: flex; align-items: center; gap: 8px;
@@ -656,37 +496,14 @@
         @media print {
             body * { visibility: hidden; }
             #invoiceModal, #invoiceModal * { visibility: visible; }
-            #invoiceModal {
-                position: absolute; left: 0; top: 0; width: 100%; height: auto;
-                background: white; backdrop-filter: none; padding: 0;
-            }
-            #invoiceModal .modal-container {
-                box-shadow: none; max-height: none; border-radius: 0; padding: 0; max-width: 100%;
-            }
+            #invoiceModal { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; backdrop-filter: none; padding: 0; }
+            #invoiceModal .modal-container { box-shadow: none; max-height: none; border-radius: 0; padding: 0; max-width: 100%; }
             #invoiceModal .no-print { display: none !important; }
-            .invoice-preview {
-                border: none; max-height: none; overflow: visible; padding: 0;
-                box-shadow: none; border-radius: 0;
-            }
-            .inv-header-bar {
-                border-radius: 0;
-                background: #2c7a4b !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .inv-total-box-inner {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .inv-deposit-card, .inv-tenancy-strip, .inv-status-pill, .inv-info-card {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .inv-items-table tbody tr:nth-child(even) {
-                background: #fafbfc !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+            .invoice-preview { border: none; max-height: none; overflow: visible; padding: 0; box-shadow: none; border-radius: 0; }
+            .inv-header-bar { border-radius: 0; background: #2c7a4b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .inv-total-box-inner { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .inv-deposit-card, .inv-tenancy-strip, .inv-status-pill, .inv-info-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .inv-items-table tbody tr:nth-child(even) { background: #fafbfc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -734,6 +551,16 @@
         <div class="form-row">
             <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
             <div class="form-group"><label>Unit Number</label><input type="text" id="editUnit"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>SSM / Company Registration No.</label>
+                <input type="text" id="editSsm" placeholder="e.g. 1234567-X">
+            </div>
+            <div class="form-group">
+                <label>NRIC / ID Number</label>
+                <input type="text" id="editNric" placeholder="e.g. 880101-14-5678">
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group"><label>Floor</label><select id="editFloor"></select></div>
@@ -788,7 +615,7 @@
         <div class="flex-between">
             <h3 style="font-size: 1.25rem; font-weight: 700;">📋 Rental Payment History</h3>
         </div>
-        <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 340px; overflow-y: auto;">
+        <div id="paymentHistoryContainer" style="margin-top: 16px; max-height: 400px; overflow-y: auto;">
             <table class="payment-history-table">
                 <thead><tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr></thead>
                 <tbody id="paymentHistoryBody"></tbody>
@@ -806,6 +633,18 @@
                 <div class="form-group"><label>Date Paid</label><input type="date" id="paymentDate"></div>
                 <div class="form-group"><label>Note (optional)</label><input type="text" id="paymentNote" placeholder="e.g. 1st instalment"></div>
             </div>
+
+            <!-- Payment attachment (rental) -->
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Payment Document (optional)</label>
+                <input type="file" id="paymentFileInput" class="hidden-file-input" accept="image/*,.pdf">
+                <div class="attachment-row" id="paymentAttachRow" onclick="document.getElementById('paymentFileInput').click();">
+                    <span class="att-icon">📎</span>
+                    <span class="att-text" id="paymentAttachText">Click to attach receipt / bank slip / PDF</span>
+                    <button type="button" class="att-clear" id="paymentAttachClear" style="display:none;" onclick="event.stopPropagation(); clearPaymentAttachment();">✕ Clear</button>
+                </div>
+            </div>
+
             <button class="btn btn-primary" id="addPaymentBtn" style="margin-top: 6px;">💵 Add Rental Instalment</button>
         </div>
 
@@ -831,7 +670,7 @@
             <div id="depositInvoiceHistoryList"></div>
         </div>
 
-        <div id="depositHistoryContainer" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
+        <div id="depositHistoryContainer" style="margin-top: 16px; max-height: 340px; overflow-y: auto;">
             <table class="payment-history-table">
                 <thead><tr><th>Date Paid</th><th>Instalment</th><th>Running Total</th><th>Status</th><th></th></tr></thead>
                 <tbody id="depositHistoryBody"></tbody>
@@ -849,6 +688,18 @@
                 <div class="form-group"><label>Date Paid</label><input type="date" id="depositDate"></div>
                 <div class="form-group"><label>Note (optional)</label><input type="text" id="depositNote" placeholder="e.g. Security deposit"></div>
             </div>
+
+            <!-- Payment attachment (deposit) -->
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Payment Document (optional)</label>
+                <input type="file" id="depositFileInput" class="hidden-file-input" accept="image/*,.pdf">
+                <div class="attachment-row" id="depositAttachRow" onclick="document.getElementById('depositFileInput').click();">
+                    <span class="att-icon">📎</span>
+                    <span class="att-text" id="depositAttachText">Click to attach receipt / bank slip / PDF</span>
+                    <button type="button" class="att-clear" id="depositAttachClear" style="display:none;" onclick="event.stopPropagation(); clearDepositAttachment();">✕ Clear</button>
+                </div>
+            </div>
+
             <button class="btn btn-deposit" id="addDepositBtn" style="margin-top: 6px;">💵 Add Deposit Instalment</button>
             <div class="auto-status-hint deposit-hint">
                 Deposit uses the same rule as rent. Total ≥ Required → 🟢 · Partial → 🟠 · Zero → 🔴
@@ -859,7 +710,7 @@
 
 <!-- ============ ADD VENDOR MODAL ============ -->
 <div class="modal-overlay" id="addVendorModal">
-    <div class="modal-container" style="max-width: 620px;">
+    <div class="modal-container" style="max-width: 660px;">
         <button class="modal-close" id="closeAddVendorModal">&times;</button>
         <div class="modal-title">➕ Add New Vendor</div>
         <div class="form-group"><label>Vendor Name *</label><input type="text" id="addVendorName"></div>
@@ -881,6 +732,10 @@
         <div class="form-row">
             <div class="form-group"><label>Phone</label><input type="text" id="addPhone"></div>
             <div class="form-group"><label>Email</label><input type="email" id="addEmail"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>SSM / Company Registration No.</label><input type="text" id="addSsm" placeholder="e.g. 1234567-X"></div>
+            <div class="form-group"><label>NRIC / ID Number</label><input type="text" id="addNric" placeholder="e.g. 880101-14-5678"></div>
         </div>
         <div class="form-row">
             <div class="form-group"><label>Monthly Rental (RM)</label><input type="number" id="addRental" step="0.01" min="0"></div>
@@ -965,6 +820,10 @@
     let currentVendorDeposits = [];
     let currentDepositInvoices = [];
     let companySettings = null;
+
+    // File uploads (pending, not yet saved)
+    let pendingRentalFile = null;
+    let pendingDepositFile = null;
 
     let savingVendor = false, savingPayment = false, savingDeposit = false;
     let savingCompany = false, generatingDepositInvoice = false;
@@ -1448,6 +1307,117 @@
         if (editFloorSelect && selectedVendor) populateFloorDropdown('editFloor', selectedVendor.floor || '');
     }
 
+    // ==================== ATTACHMENT UI ====================
+    function setupAttachmentUI(fileInputId, rowId, textId, clearId, setter, clearer) {
+        const input = document.getElementById(fileInputId);
+        const row = document.getElementById(rowId);
+        const text = document.getElementById(textId);
+        const clearBtn = document.getElementById(clearId);
+
+        if (!input || !row) return;
+
+        input.addEventListener('change', () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            const maxSize = 8 * 1024 * 1024; // 8MB
+            if (file.size > maxSize) {
+                showToast('File too large. Max 8 MB.', true);
+                input.value = '';
+                return;
+            }
+
+            setter(file);
+            row.classList.add('has-file');
+            text.textContent = `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+            clearBtn.style.display = 'inline-block';
+
+            // Replace icon/text with image preview for images
+            const oldPreview = row.querySelector('.attachment-preview-img');
+            if (oldPreview) oldPreview.remove();
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.className = 'attachment-preview-img';
+                img.src = URL.createObjectURL(file);
+                row.insertBefore(img, text);
+            }
+        });
+    }
+
+    window.clearPaymentAttachment = function() {
+        pendingRentalFile = null;
+        const input = document.getElementById('paymentFileInput');
+        if (input) input.value = '';
+        const row = document.getElementById('paymentAttachRow');
+        const text = document.getElementById('paymentAttachText');
+        const clearBtn = document.getElementById('paymentAttachClear');
+        const preview = row && row.querySelector('.attachment-preview-img');
+        if (preview) preview.remove();
+        if (row) row.classList.remove('has-file');
+        if (text) text.textContent = 'Click to attach receipt / bank slip / PDF';
+        if (clearBtn) clearBtn.style.display = 'none';
+    };
+
+    window.clearDepositAttachment = function() {
+        pendingDepositFile = null;
+        const input = document.getElementById('depositFileInput');
+        if (input) input.value = '';
+        const row = document.getElementById('depositAttachRow');
+        const text = document.getElementById('depositAttachText');
+        const clearBtn = document.getElementById('depositAttachClear');
+        const preview = row && row.querySelector('.attachment-preview-img');
+        if (preview) preview.remove();
+        if (row) row.classList.remove('has-file');
+        if (text) text.textContent = 'Click to attach receipt / bank slip / PDF';
+        if (clearBtn) clearBtn.style.display = 'none';
+    };
+
+    /**
+     * Upload a file to Supabase Storage and return the public URL, or null on failure.
+     */
+    async function uploadPaymentFile(file, prefix) {
+        if (!file) return null;
+        try {
+            const ext = file.name.split('.').pop() || 'bin';
+            const fileName = `${prefix}/${Date.now()}_${Math.random().toString(36).substring(2, 10)}.${ext}`;
+            const { data, error } = await supabase
+                .storage
+                .from('payment-docs')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false,
+                    contentType: file.type
+                });
+
+            if (error) throw error;
+
+            const { data: urlData } = supabase
+                .storage
+                .from('payment-docs')
+                .getPublicUrl(fileName);
+
+            return urlData.publicUrl;
+        } catch (err) {
+            console.error('Upload failed:', err);
+            showToast('⚠️ File upload failed: ' + err.message, true);
+            return null;
+        }
+    }
+
+    async function deletePaymentFileByUrl(url) {
+        if (!url) return;
+        try {
+            const marker = '/payment-docs/';
+            const idx = url.indexOf(marker);
+            if (idx === -1) return;
+            const path = url.substring(idx + marker.length);
+            await supabase.storage.from('payment-docs').remove([path]);
+        } catch (err) {
+            console.warn('Could not delete attachment:', err.message);
+        }
+    }
+
+    // ==================== COMPANY SETTINGS ====================
     async function fetchCompanySettings() {
         try {
             const { data, error } = await supabase.from('company_settings').select('*').eq('id', 1).maybeSingle();
@@ -1503,6 +1473,7 @@
         finally { savingCompany = false; btn.disabled = false; btn.textContent = '💾 Save Company Details'; }
     }
 
+    // ==================== FETCH ====================
     async function fetchVendors() {
         try {
             const { data, error } = await supabase.from('vendors').select('*');
@@ -1659,6 +1630,8 @@
         document.getElementById('editPhone').value = vendor.phone || '';
         document.getElementById('editEmail').value = vendor.email || '';
         document.getElementById('editUnit').value = vendor.unit || '';
+        document.getElementById('editSsm').value = vendor.ssm_company_number || '';
+        document.getElementById('editNric').value = vendor.nric_number || '';
         document.getElementById('editRental').value = vendor.monthly_rental || 0;
         document.getElementById('editDeposit').value = vendor.deposit || 0;
         document.getElementById('editTenancyStart').value = vendor.tenancy_start || '';
@@ -1675,6 +1648,9 @@
             fetchVendorDeposits(vendor.id),
             fetchDepositInvoices(vendor.id)
         ]);
+
+        clearPaymentAttachment();
+        clearDepositAttachment();
 
         renderPaymentHistory(vendor);
         renderRentalMonthsGrid(vendor);
@@ -1716,6 +1692,29 @@
         }
     }
 
+    /**
+     * Render an attachment chip in the payment history.
+     */
+    function renderAttachmentCell(attachmentUrl) {
+        if (!attachmentUrl) return '';
+        const url = attachmentUrl;
+        const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(url);
+        if (isImage) {
+            return `
+                <div style="margin-top:6px;">
+                    <a href="${escapeHtml(url)}" target="_blank" rel="noopener">
+                        <img src="${escapeHtml(url)}" class="att-thumb" alt="Receipt">
+                    </a>
+                </div>
+            `;
+        }
+        return `
+            <div style="margin-top:6px;">
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="att-chip">📎 View document</a>
+            </div>
+        `;
+    }
+
     function renderPaymentHistory(vendor) {
         const tbody = document.getElementById('paymentHistoryBody');
         const noPaymentsMsg = document.getElementById('noPaymentsMsg');
@@ -1744,10 +1743,15 @@
                 for (const pay of entries) {
                     const datePaid = pay.date_paid ? new Date(pay.date_paid).toLocaleDateString() : '—';
                     const amt = parseFloat(pay.amount) || 0;
+                    const attCell = renderAttachmentCell(pay.attachment_url);
                     html += `
                         <tr>
                             <td style="padding-left:24px; color:#64748b;">${datePaid}</td>
-                            <td style="padding-left:24px;">+ RM ${amt.toFixed(2)}${pay.note ? ` <span style="color:#94a3b8; font-size:0.8rem;">— ${escapeHtml(pay.note)}</span>` : ''}</td>
+                            <td style="padding-left:24px;">
+                                + RM ${amt.toFixed(2)}
+                                ${pay.note ? `<span style="color:#94a3b8; font-size:0.8rem;"> — ${escapeHtml(pay.note)}</span>` : ''}
+                                ${attCell}
+                            </td>
                             <td style="color:#94a3b8;">—</td>
                             <td></td>
                             <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c;" onclick="deletePayment('${pay.id}')">✕</button></td>
@@ -1793,10 +1797,15 @@
                 const amt = parseFloat(dep.amount) || 0;
                 runningTotal += amt;
                 const status = computeStatus(runningTotal, depositRequired);
+                const attCell = renderAttachmentCell(dep.attachment_url);
                 html += `
                     <tr>
                         <td style="color:#64748b;">${datePaid}</td>
-                        <td>+ RM ${amt.toFixed(2)}${dep.note ? ` <span style="color:#94a3b8; font-size:0.8rem;">— ${escapeHtml(dep.note)}</span>` : ''}</td>
+                        <td>
+                            + RM ${amt.toFixed(2)}
+                            ${dep.note ? `<span style="color:#94a3b8; font-size:0.8rem;"> — ${escapeHtml(dep.note)}</span>` : ''}
+                            ${attCell}
+                        </td>
                         <td style="color:#0f172a; font-weight:600;">RM ${runningTotal.toFixed(2)}</td>
                         <td><span class="status-pill ${getStatusPillClass(status)}">${getStatusText(status)}</span></td>
                         <td><button class="btn btn-small" style="background:transparent; border:none; color:#b91c1c;" onclick="deleteDeposit('${dep.id}')">✕</button></td>
@@ -1885,8 +1894,12 @@
     }
 
     window.deletePayment = async function(paymentId) {
-        if (!confirm('Delete this rental instalment?')) return;
+        if (!confirm('Delete this rental instalment? (Attachment will also be removed)')) return;
         try {
+            const existing = currentVendorPayments.find(p => p.id === paymentId);
+            if (existing && existing.attachment_url) {
+                await deletePaymentFileByUrl(existing.attachment_url);
+            }
             const { error } = await supabase.from('vendor_payments').delete().eq('id', paymentId);
             if (error) throw error;
             showToast('Rental instalment deleted');
@@ -1901,8 +1914,12 @@
     };
 
     window.deleteDeposit = async function(depositId) {
-        if (!confirm('Delete this deposit instalment?')) return;
+        if (!confirm('Delete this deposit instalment? (Attachment will also be removed)')) return;
         try {
+            const existing = currentVendorDeposits.find(p => p.id === depositId);
+            if (existing && existing.attachment_url) {
+                await deletePaymentFileByUrl(existing.attachment_url);
+            }
             const { error } = await supabase.from('vendor_deposit_payments').delete().eq('id', depositId);
             if (error) throw error;
             showToast('Deposit instalment deleted');
@@ -1936,6 +1953,8 @@
             contact_person: document.getElementById('editContactPerson').value.trim(),
             phone: document.getElementById('editPhone').value.trim(),
             email: document.getElementById('editEmail').value.trim(),
+            ssm_company_number: document.getElementById('editSsm').value.trim() || null,
+            nric_number: document.getElementById('editNric').value.trim() || null,
             floor: floorValue,
             unit: document.getElementById('editUnit').value.trim(),
             monthly_rental: parseFloat(document.getElementById('editRental').value) || 0,
@@ -1977,6 +1996,13 @@
         if (!selectedVendor) return;
         if (!confirm(`Delete vendor "${selectedVendor.name}" and ALL records?`)) return;
         try {
+            // Clean up attachments first
+            for (const p of currentVendorPayments) {
+                if (p.attachment_url) await deletePaymentFileByUrl(p.attachment_url);
+            }
+            for (const p of currentVendorDeposits) {
+                if (p.attachment_url) await deletePaymentFileByUrl(p.attachment_url);
+            }
             await supabase.from('vendor_payments').delete().eq('vendor_id', selectedVendor.id);
             await supabase.from('vendor_deposit_payments').delete().eq('vendor_id', selectedVendor.id);
             await supabase.from('vendor_deposit_invoices').delete().eq('vendor_id', selectedVendor.id);
@@ -2012,12 +2038,24 @@
         const newStatus = computeStatus(newTotal, rental);
 
         try {
+            // 1. Upload attachment if any
+            let attachmentUrl = null;
+            if (pendingRentalFile) {
+                btn.textContent = '⏳ Uploading file...';
+                attachmentUrl = await uploadPaymentFile(pendingRentalFile, `rental/${selectedVendor.id}`);
+            }
+
+            // 2. Insert payment row
+            btn.textContent = '⏳ Saving...';
             const { error } = await supabase.from('vendor_payments').insert([{
                 vendor_id: selectedVendor.id, month, amount, status: newStatus,
-                date_paid: datePaid || null, note: note || null
+                date_paid: datePaid || null, note: note || null,
+                attachment_url: attachmentUrl
             }]);
             if (error) throw error;
+
             showToast(`Rental RM ${amount.toFixed(2)} added for ${getMonthLabel(month)} — total RM ${newTotal.toFixed(2)} → ${newStatus.toUpperCase()}`);
+            clearPaymentAttachment();
             await fetchVendorPayments(selectedVendor.id);
             renderPaymentHistory(selectedVendor);
             renderRentalMonthsGrid(selectedVendor);
@@ -2045,12 +2083,22 @@
         const newStatus = computeStatus(newTotal, depositRequired);
 
         try {
+            let attachmentUrl = null;
+            if (pendingDepositFile) {
+                btn.textContent = '⏳ Uploading file...';
+                attachmentUrl = await uploadPaymentFile(pendingDepositFile, `deposit/${selectedVendor.id}`);
+            }
+
+            btn.textContent = '⏳ Saving...';
             const { error } = await supabase.from('vendor_deposit_payments').insert([{
                 vendor_id: selectedVendor.id, month, amount, status: newStatus,
-                date_paid: datePaid || null, note: note || null
+                date_paid: datePaid || null, note: note || null,
+                attachment_url: attachmentUrl
             }]);
             if (error) throw error;
+
             showToast(`Deposit RM ${amount.toFixed(2)} added — total RM ${newTotal.toFixed(2)} / ${depositRequired.toFixed(2)} → ${newStatus.toUpperCase()}`);
+            clearDepositAttachment();
             await fetchVendorDeposits(selectedVendor.id);
             renderDepositHistory(selectedVendor);
             await loadDepositTotalsForAll();
@@ -2067,6 +2115,8 @@
         const contact = document.getElementById('addContactPerson').value.trim();
         const phone = document.getElementById('addPhone').value.trim();
         const email = document.getElementById('addEmail').value.trim();
+        const ssm = document.getElementById('addSsm').value.trim() || null;
+        const nric = document.getElementById('addNric').value.trim() || null;
         const rental = parseFloat(document.getElementById('addRental').value) || 0;
         const deposit = parseFloat(document.getElementById('addDeposit').value) || 0;
         const tenancyStart = document.getElementById('addTenancyStart').value || null;
@@ -2083,13 +2133,14 @@
             const { error } = await supabase.from('vendors').insert([{
                 name, vendor_type: vendorType, floor: floorValue, unit,
                 contact_person: contact, phone, email,
+                ssm_company_number: ssm, nric_number: nric,
                 monthly_rental: rental, deposit, deposit_paid: 0,
                 tenancy_start: tenancyStart, tenancy_end: tenancyEnd
             }]);
             if (error) throw error;
             showToast('Vendor created');
             addVendorModal.classList.remove('active');
-            ['addVendorName','addUnit','addContactPerson','addPhone','addEmail','addRental','addDeposit','addTenancyStart','addTenancyEnd']
+            ['addVendorName','addUnit','addContactPerson','addPhone','addEmail','addSsm','addNric','addRental','addDeposit','addTenancyStart','addTenancyEnd']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('addVendorType').value = 'Selling';
             populateFloorDropdown('addFloor', '');
@@ -2097,7 +2148,7 @@
         } catch (err) { showToast('Error: ' + err.message, true); }
     }
 
-    // ==================== PROFESSIONAL INVOICE RENDERING ====================
+    // ==================== INVOICE ====================
     function suggestInvoiceMonth(vendor) {
         const rental = parseFloat(vendor.monthly_rental) || 0;
         const payments = {};
@@ -2154,9 +2205,6 @@
         invoiceModal.classList.add('active');
     }
 
-    /**
-     * PROFESSIONAL INVOICE LAYOUT
-     */
     function renderInvoicePreviewIntoModal(vendor, month) {
         const rental = parseFloat(vendor.monthly_rental) || 0;
         const grouped = groupPaymentsByMonth(currentVendorPayments);
@@ -2175,7 +2223,6 @@
         const [y, m] = month.split('-').map(Number);
         const dueDate = `${y}-${String(m + 1).padStart(2,'0')}-07`;
 
-        // Persist (non-blocking)
         (async () => {
             try {
                 const { data: existing } = await supabase.from('vendor_invoices').select('id').eq('invoice_no', invoiceNo).maybeSingle();
@@ -2191,7 +2238,6 @@
             } catch (err) { console.warn('Invoice save failed:', err.message); }
         })();
 
-        // ============ ITEMS TABLE ROWS ============
         let instalmentRows = '';
         if (monthData.entries.length > 0) {
             monthData.entries.forEach(p => {
@@ -2209,7 +2255,6 @@
             });
         }
 
-        // ============ DEPOSIT SECTION ============
         const depositRequired = parseFloat(vendor.deposit) || 0;
         const totalDepositPaid = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
         let depositSection = '';
@@ -2224,23 +2269,13 @@
             depositSection = `
                 <div class="inv-deposit-card">
                     <div class="inv-deposit-card-title">🛡️ Security Deposit ${depStatusPill}</div>
-                    <div class="inv-deposit-row">
-                        <span>Deposit Required</span>
-                        <strong>RM ${depositRequired.toFixed(2)}</strong>
-                    </div>
-                    <div class="inv-deposit-row">
-                        <span>Deposit Paid to Date</span>
-                        <strong style="color:#16a34a;">− RM ${totalDepositPaid.toFixed(2)}</strong>
-                    </div>
-                    <div class="inv-deposit-row total">
-                        <span>Deposit Balance</span>
-                        <strong>RM ${depBalance.toFixed(2)}</strong>
-                    </div>
+                    <div class="inv-deposit-row"><span>Deposit Required</span><strong>RM ${depositRequired.toFixed(2)}</strong></div>
+                    <div class="inv-deposit-row"><span>Deposit Paid to Date</span><strong style="color:#16a34a;">− RM ${totalDepositPaid.toFixed(2)}</strong></div>
+                    <div class="inv-deposit-row total"><span>Deposit Balance</span><strong>RM ${depBalance.toFixed(2)}</strong></div>
                 </div>
             `;
         }
 
-        // ============ TENANCY STRIP ============
         const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
         let tenancyStrip = '';
         if (tenancyInfo.status !== 'not-set') {
@@ -2252,23 +2287,23 @@
             `;
         }
 
-        // ============ STATUS PILL ============
         let statusPillClass = 'pill-unpaid';
         let statusPillLabel = '❌ UNPAID';
         if (status === 'paid') { statusPillClass = 'pill-paid'; statusPillLabel = '✅ PAID IN FULL'; }
         else if (status === 'partial') { statusPillClass = 'pill-partial'; statusPillLabel = '⚠️ PARTIALLY PAID'; }
 
-        // ============ TOTAL BOX CLASS ============
         const totalBoxClass = status === 'paid' ? 'paid' : 'unpaid';
 
-        // ============ LOGO ============
+        // SSM + NRIC lines for Billed To
+        let vendorIdLines = '';
+        if (vendor.ssm_company_number) vendorIdLines += `<div class="inv-address-line">SSM: ${escapeHtml(vendor.ssm_company_number)}</div>`;
+        if (vendor.nric_number) vendorIdLines += `<div class="inv-address-line">NRIC: ${escapeHtml(vendor.nric_number)}</div>`;
+
         const logoHtml = cs.company_logo_url
             ? `<img src="${escapeHtml(cs.company_logo_url)}" class="inv-logo" alt="Logo" onerror="this.style.display='none'">`
             : '';
 
-        // ============ RENDER ============
         document.getElementById('invoicePreviewContent').innerHTML = `
-            <!-- Month picker (screen only) -->
             <div class="invoice-month-picker no-print" style="margin: 16px 20px 0;">
                 <label>📅 Select month to invoice</label>
                 <select id="invoiceMonthPicker">
@@ -2277,7 +2312,6 @@
                 <div class="hint">Current: <strong>${escapeHtml(getMonthLabel(month))}</strong></div>
             </div>
 
-            <!-- BRAND HEADER BAR -->
             <div class="inv-header-bar">
                 <div class="inv-header-left">
                     ${logoHtml}
@@ -2302,15 +2336,11 @@
                 </div>
             </div>
 
-            <!-- BODY -->
             <div class="inv-body">
-
-                <!-- STATUS RIBBON -->
                 <div class="inv-status-ribbon">
                     <span class="inv-status-pill ${statusPillClass}">${statusPillLabel}</span>
                 </div>
 
-                <!-- BILLED TO / FROM -->
                 <div class="inv-address-grid">
                     <div class="inv-address-block">
                         <div class="inv-address-label">Billed To</div>
@@ -2319,7 +2349,8 @@
                             ${escapeHtml(vendor.floor)} · Unit ${escapeHtml(vendor.unit)}<br>
                             ${vendor.contact_person ? 'Attn: ' + escapeHtml(vendor.contact_person) + '<br>' : ''}
                             ${vendor.phone ? '📞 ' + escapeHtml(vendor.phone) + '<br>' : ''}
-                            ${vendor.email ? '✉️ ' + escapeHtml(vendor.email) : ''}
+                            ${vendor.email ? '✉️ ' + escapeHtml(vendor.email) + '<br>' : ''}
+                            ${vendorIdLines}
                         </div>
                         <div style="margin-top:6px;">
                             <span class="vendor-type-pill ${getVendorTypePillClass(vType)}">${typeEmoji} ${escapeHtml(vType)}</span>
@@ -2337,13 +2368,9 @@
 
                 ${tenancyStrip}
 
-                <!-- ITEMS TABLE -->
                 <table class="inv-items-table">
                     <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th class="right">Amount (RM)</th>
-                        </tr>
+                        <tr><th>Description</th><th class="right">Amount (RM)</th></tr>
                     </thead>
                     <tbody>
                         <tr>
@@ -2366,7 +2393,6 @@
                     </tbody>
                 </table>
 
-                <!-- TOTAL BOX -->
                 <div class="inv-total-box ${totalBoxClass}">
                     <div class="inv-total-box-inner">
                         <div class="inv-total-label">${status === 'paid' ? 'Amount Paid' : 'Balance Due'}</div>
@@ -2390,7 +2416,6 @@
                     </div>
                 ` : ''}
 
-                <!-- FOOTER -->
                 <div class="inv-footer">
                     <div class="inv-footer-left">
                         <div class="inv-footer-thanks">Thank you for your business!</div>
@@ -2408,11 +2433,9 @@
                         Vendor Management System
                     </div>
                 </div>
-
             </div>
         `;
 
-        // Wire up the picker
         const picker = document.getElementById('invoiceMonthPicker');
         if (picker) {
             picker.addEventListener('change', function() {
@@ -2471,7 +2494,6 @@
         const balance = parseFloat(depositInvoiceRecord.balance) || 0;
         const status = depositInvoiceRecord.status || computeStatus(depositPaid, depositRequired);
 
-        // Build instalment rows
         let instalmentRows = '';
         if (currentVendorDeposits.length > 0) {
             currentVendorDeposits.forEach(d => {
@@ -2506,6 +2528,10 @@
                 </div>
             `;
         }
+
+        let vendorIdLines = '';
+        if (selectedVendor.ssm_company_number) vendorIdLines += `<div class="inv-address-line">SSM: ${escapeHtml(selectedVendor.ssm_company_number)}</div>`;
+        if (selectedVendor.nric_number) vendorIdLines += `<div class="inv-address-line">NRIC: ${escapeHtml(selectedVendor.nric_number)}</div>`;
 
         const logoHtml = cs.company_logo_url
             ? `<img src="${escapeHtml(cs.company_logo_url)}" class="inv-logo" alt="Logo" onerror="this.style.display='none'">`
@@ -2549,7 +2575,8 @@
                             ${escapeHtml(selectedVendor.floor)} · Unit ${escapeHtml(selectedVendor.unit)}<br>
                             ${selectedVendor.contact_person ? 'Attn: ' + escapeHtml(selectedVendor.contact_person) + '<br>' : ''}
                             ${selectedVendor.phone ? '📞 ' + escapeHtml(selectedVendor.phone) + '<br>' : ''}
-                            ${selectedVendor.email ? '✉️ ' + escapeHtml(selectedVendor.email) : ''}
+                            ${selectedVendor.email ? '✉️ ' + escapeHtml(selectedVendor.email) + '<br>' : ''}
+                            ${vendorIdLines}
                         </div>
                         <div style="margin-top:6px;">
                             <span class="vendor-type-pill ${getVendorTypePillClass(vType)}">${typeEmoji} ${escapeHtml(vType)}</span>
@@ -2568,10 +2595,7 @@
 
                 <table class="inv-items-table">
                     <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th class="right">Amount (RM)</th>
-                        </tr>
+                        <tr><th>Description</th><th class="right">Amount (RM)</th></tr>
                     </thead>
                     <tbody>
                         <tr>
@@ -2643,6 +2667,14 @@
 
         populateFloorDropdown('addFloor', '');
 
+        // Wire up attachment UI (both rental & deposit)
+        setupAttachmentUI('paymentFileInput', 'paymentAttachRow', 'paymentAttachText', 'paymentAttachClear',
+            f => { pendingRentalFile = f; },
+            () => { pendingRentalFile = null; });
+        setupAttachmentUI('depositFileInput', 'depositAttachRow', 'depositAttachText', 'depositAttachClear',
+            f => { pendingDepositFile = f; },
+            () => { pendingDepositFile = null; });
+
         preventEnterSubmitInModal('vendorModal');
         preventEnterSubmitInModal('addVendorModal');
         preventEnterSubmitInModal('manageFloorsModal');
@@ -2681,6 +2713,7 @@
         document.getElementById('closeVendorModal').addEventListener('click', () => {
             vendorModal.classList.remove('active');
             selectedVendor = null; currentVendorPayments = []; currentVendorDeposits = []; currentDepositInvoices = [];
+            clearPaymentAttachment(); clearDepositAttachment();
         });
         document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
         document.getElementById('deleteVendorBtn').addEventListener('click', deleteVendor);
