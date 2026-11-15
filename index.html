@@ -502,7 +502,10 @@
             </div>
             <div class="collapsible-body" id="vendorDetailsBody">
                 <div class="form-row">
-                    <div class="form-group"><label>Vendor Name</label><input type="text" id="editVendorName"></div>
+                    <div class="form-group"><label>Vendor Name (Company)</label><input type="text" id="editVendorName"></div>
+                    <div class="form-group"><label>Full Name (Person)</label><input type="text" id="editFullName" placeholder="e.g. John Tan"></div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label>Vendor Type</label>
                         <select id="editVendorType">
@@ -511,18 +514,15 @@
                             <option value="F&B">F&B</option>
                         </select>
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group"><label>Contact Person</label><input type="text" id="editContactPerson"></div>
+                </div>
+                <div class="form-row">
                     <div class="form-group"><label>Phone</label><input type="text" id="editPhone"></div>
-                </div>
-                <div class="form-row">
                     <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
-                    <div class="form-group"><label>Unit Number</label><input type="text" id="editUnit"></div>
                 </div>
                 <div class="form-row">
+                    <div class="form-group"><label>Unit Number</label><input type="text" id="editUnit"></div>
                     <div class="form-group"><label>Booth Size</label><input type="text" id="editBoothSize" placeholder="e.g. 10ft × 10ft"></div>
-                    <div class="form-group"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -682,7 +682,10 @@
     <div class="modal-container" style="max-width: 660px;">
         <button class="modal-close" id="closeAddVendorModal">&times;</button>
         <div class="modal-title">➕ Add New Vendor</div>
-        <div class="form-group"><label>Vendor Name *</label><input type="text" id="addVendorName"></div>
+        <div class="form-row">
+            <div class="form-group"><label>Vendor Name (Company) *</label><input type="text" id="addVendorName"></div>
+            <div class="form-group"><label>Full Name (Person)</label><input type="text" id="addFullName" placeholder="e.g. John Tan"></div>
+        </div>
         <div class="form-row">
             <div class="form-group">
                 <label>Vendor Type *</label>
@@ -919,9 +922,11 @@
 
     function updateVendorDetailsSummary() {
         const name = document.getElementById('editVendorName').value.trim() || '—';
+        const fullName = document.getElementById('editFullName').value.trim();
         const unit = document.getElementById('editUnit').value.trim() || '—';
         const floor = document.getElementById('editFloor').value || '—';
-        vendorDetailsSummary.textContent = `${name} · ${unit} · ${floor}`;
+        const namePart = fullName ? `${name} (${fullName})` : name;
+        vendorDetailsSummary.textContent = `${namePart} · ${unit} · ${floor}`;
     }
 
     vendorDetailsHeader.addEventListener('click', () => toggleVendorDetails());
@@ -1566,6 +1571,9 @@
                     overdueBadgeHtml = `<div class="payment-status-badge overdue-rent-badge">🔴 ${escapeHtml(cardStatus.reason)}</div>`;
                 }
 
+                const displayName = vendor.name || '—';
+                const fullNameLine = vendor.full_name ? `<span>👤 ${escapeHtml(vendor.full_name)}</span>` : '';
+
                 html += `
                     <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
                         <div class="top-row">
@@ -1575,9 +1583,9 @@
                             )}">${depositBadgeText}</span>
                         </div>
                         <span class="vendor-type-pill ${typeClass}">${typeEmoji} ${escapeHtml(vType)}</span>
-                        <div class="vendor-name">${escapeHtml(vendor.name)}</div>
+                        <div class="vendor-name">${escapeHtml(displayName)}</div>
                         <div class="vendor-meta">
-                            <span>👤 ${escapeHtml(vendor.contact_person || '—')}</span>
+                            ${fullNameLine}
                             <span>📞 ${escapeHtml(vendor.phone || '—')}</span>
                         </div>
                         <div class="badge-stack">
@@ -1603,9 +1611,12 @@
         selectedVendor = vendor;
 
         document.getElementById('vendorModalTitle').textContent = `🏪 ${vendor.name}`;
-        document.getElementById('vendorModalSubtitle').textContent = `${vendor.floor} · Unit ${vendor.unit}`;
+        const subtitleParts = [vendor.floor, 'Unit ' + vendor.unit];
+        if (vendor.full_name) subtitleParts.push(vendor.full_name);
+        document.getElementById('vendorModalSubtitle').textContent = subtitleParts.join(' · ');
 
         document.getElementById('editVendorName').value = vendor.name || '';
+        document.getElementById('editFullName').value = vendor.full_name || '';
         document.getElementById('editVendorType').value = vendor.vendor_type || 'Selling';
         document.getElementById('editContactPerson').value = vendor.contact_person || '';
         document.getElementById('editPhone').value = vendor.phone || '';
@@ -1909,13 +1920,13 @@
         const companyEmail = cs.company_email || '—';
 
         const vendorName = vendor.name || '____________________';
+        const vendorFullName = vendor.full_name || '';
         const vendorUnit = vendor.unit || '____________________';
         const vendorFloor = vendor.floor || '____________________';
         const vendorPhone = vendor.phone || '____________________';
         const vendorEmail = vendor.email || '____________________';
         const vendorSsm = vendor.ssm_company_number || '';
         const vendorNric = vendor.nric_number || '';
-        const vendorRegNo = vendorSsm || vendorNric || '____________________';
         const vendorBrand = vendor.name || '____________________';
 
         const rental = parseFloat(vendor.monthly_rental) || 0;
@@ -1980,7 +1991,7 @@
     table.details td.label-cell { width: 38%; font-weight: bold; background: #f5f5f5; }
     .sig-block-title { font-weight: bold; text-decoration: underline; margin-bottom: 6pt; font-size: 11.5pt; }
     .sig-row { margin: 6pt 0; font-size: 11pt; }
-    .sig-row .sig-label { font-weight: 600; display: inline-block; min-width: 90pt; }
+    .sig-row .sig-label { font-weight: 600; display: inline-block; min-width: 110pt; }
     .page-break { page-break-before: always; }
     .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 11pt; }
     .schedule-table th { background: #e8e8e8; border: 1px solid #000; padding: 8pt; text-align: left; font-size: 11.5pt; }
@@ -2013,11 +2024,13 @@
 
 <p class="party-label">VENDOR DETAILS</p>
 <div class="party-block">
-    <p><span class="label">Full Name / Company Name:</span> ${escapeHtml(vendorName)}</p>
-    <p><span class="label">NRIC / Company Registration No.:</span> ${escapeHtml(vendorRegNo)}</p>
+    <p><span class="label">Full Name:</span> ${escapeHtml(vendorFullName || '____________________')}</p>
+    <p><span class="label">Company Name:</span> ${escapeHtml(vendorName)}</p>
+    <p><span class="label">NRIC:</span> ${escapeHtml(vendorNric || '____________________')}</p>
+    <p><span class="label">Company Registration No.:</span> ${escapeHtml(vendorSsm || '____________________')}</p>
+    <p><span class="label">Business / Brand Name:</span> ${escapeHtml(vendorBrand)}</p>
     <p><span class="label">Contact Number:</span> ${escapeHtml(vendorPhone)}</p>
     <p><span class="label">Email Address:</span> ${escapeHtml(vendorEmail)}</p>
-    <p><span class="label">Business / Brand Name:</span> ${escapeHtml(vendorBrand)}</p>
     <p><span class="label">Address:</span> Unit ${escapeHtml(vendorUnit)}, ${escapeHtml(vendorFloor)}</p>
 </div>
 <p style="margin: 6pt 0;">Hereinafter referred to as the <strong>"Vendor"</strong>.</p>
@@ -2160,9 +2173,10 @@
     <!-- THE VENDOR -->
     <div style="margin-top: 60pt;">
         <div class="sig-block-title">THE VENDOR</div>
-        <div class="sig-row"><span class="sig-label">Name:</span><span style="border-bottom:1px solid #000; display:inline-block; min-width:260pt;">&nbsp;${escapeHtml(vendorName)}</span></div>
-        <div class="sig-row"><span class="sig-label">NRIC:</span><span style="border-bottom:1px solid #000; display:inline-block; min-width:260pt;">&nbsp;${escapeHtml(vendorRegNo)}</span></div>
-        <div class="sig-row"><span class="sig-label">Business Name:</span><span style="border-bottom:1px solid #000; display:inline-block; min-width:220pt;">&nbsp;${escapeHtml(vendorBrand)}</span></div>
+        <div class="sig-row"><span class="sig-label">Name:</span><span style="border-bottom:1px solid #000; display:inline-block; min-width:260pt;">&nbsp;${escapeHtml(vendorFullName || vendorName)}</span></div>
+        <div class="sig-row"><span class="sig-label">NRIC:</span><span style="border-bottom:1px solid #000; display:inline-block; min-width:260pt;">&nbsp;${escapeHtml(vendorNric || '____________________')}</span></div>
+        <div class="sig-row"><span class="sig-label">Company Name:</span><span style="border-bottom:1px solid #000; display:inline-block; min-width:220pt;">&nbsp;${escapeHtml(vendorName)}</span></div>
+        <div class="sig-row"><span class="sig-label">Company Reg. No.:</span><span style="border-bottom:1px solid #000; display:inline-block; min-width:200pt;">&nbsp;${escapeHtml(vendorSsm || '____________________')}</span></div>
 
         <div style="height:60pt;">&nbsp;</div>
 
@@ -2258,6 +2272,7 @@
 
         const updates = {
             name: document.getElementById('editVendorName').value.trim(),
+            full_name: document.getElementById('editFullName').value.trim() || null,
             vendor_type: document.getElementById('editVendorType').value,
             contact_person: document.getElementById('editContactPerson').value.trim(),
             phone: document.getElementById('editPhone').value.trim(),
@@ -2304,7 +2319,9 @@
     // ⚠️ REPLACE THESE WITH YOUR ORIGINAL IMPLEMENTATIONS FROM THE TRUNCATED FILE
     async function addVendor() {
         // TODO: paste your original addVendor() implementation here.
-        // Remember to include: booth_size: document.getElementById('addBoothSize').value.trim() || null,
+        // Remember to include these two lines in the insert payload:
+        //   full_name: document.getElementById('addFullName').value.trim() || null,
+        //   booth_size: document.getElementById('addBoothSize').value.trim() || null,
     }
     async function addPayment() {
         // TODO: paste your original addPayment() implementation here
@@ -2342,7 +2359,7 @@
     });
     document.getElementById('addVendorBtn').addEventListener('click', async () => {
         await fetchFloors(); populateFloorDropdown('addFloor');
-        ['addVendorName','addUnit','addBoothSize','addContactPerson','addPhone','addEmail','addSsm','addNric','addRental','addDeposit','addTenancyStart','addTenancyEnd'].forEach(id => {
+        ['addVendorName','addFullName','addUnit','addBoothSize','addContactPerson','addPhone','addEmail','addSsm','addNric','addRental','addDeposit','addTenancyStart','addTenancyEnd'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         addVendorModal.classList.add('active');
