@@ -970,8 +970,8 @@
         const daysRemaining = Math.round((end - today) / 86400000);
         let percent = 0;
         if (totalDays > 0) percent = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
-        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-        const years = months / 12;
+        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+const years = months / 12;
         let durationText = `${months} month${months !== 1 ? 's' : ''}`;
         if (months >= 12 && months % 12 === 0) durationText += ` (${years} year${years !== 1 ? 's' : ''})`;
         let status, label;
@@ -1938,10 +1938,10 @@
         const endDate = endRaw && !isNaN(endRaw) ? formatDate(vendor.tenancy_end) : '__________________';
 
         let rentalPeriodText = '__________________';
-        if (startRaw && endRaw && !isNaN(startRaw) && !isNaN(endRaw)) {
-            const months = (endRaw.getFullYear() - startRaw.getFullYear()) * 12 + (endRaw.getMonth() - startRaw.getMonth());
-            rentalPeriodText = `${months} month${months !== 1 ? 's' : ''}`;
-        }
+if (startRaw && endRaw && !isNaN(startRaw) && !isNaN(endRaw)) {
+    const months = (endRaw.getFullYear() - startRaw.getFullYear()) * 12 + (endRaw.getMonth() - startRaw.getMonth()) + 1;
+    rentalPeriodText = `${months} month${months !== 1 ? 's' : ''}`;
+}
 
         const today = new Date();
         const todayDay = today.getDate();
