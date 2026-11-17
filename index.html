@@ -150,14 +150,15 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
 
+        /* ==================== COLLAPSIBLE VENDOR DETAILS ==================== */
         .collapsible-section {
             border: 1px solid #e2e8f0;
             border-radius: 16px;
             background: #f8fafc;
             margin-bottom: 20px;
             overflow: hidden;
-            transition: all 0.2s ease;
         }
+
         .collapsible-header {
             display: flex;
             justify-content: space-between;
@@ -171,6 +172,7 @@
         }
         .collapsible-header:hover { background: #f1f5f9; }
         .collapsible-header.open { border-bottom-color: #e2e8f0; }
+
         .collapsible-header-left {
             display: flex;
             align-items: center;
@@ -182,6 +184,7 @@
             font-size: 1.05rem;
             font-weight: 700;
             color: #0f172a;
+            flex-shrink: 0;
         }
         .collapsible-header-summary {
             font-size: 0.8rem;
@@ -197,6 +200,7 @@
             flex-shrink: 0;
         }
         .collapsible-header.open .collapsible-chevron { transform: rotate(180deg); }
+
         .collapsible-body {
             padding: 0;
             max-height: 0;
@@ -300,6 +304,7 @@
 
         .month-summary-row td { background: #f8fafc; font-weight: 600; border-top: 2px solid #e2e8f0; }
 
+        /* Attachment UI */
         .attachment-row {
             display: flex; align-items: center; gap: 10px;
             padding: 10px 14px; background: white; border-radius: 12px;
@@ -324,6 +329,7 @@
         .att-chip:hover { background: #bfdbfe; }
         .att-thumb { width: 48px; height: 36px; border-radius: 6px; object-fit: cover; margin-top: 4px; cursor: pointer; border: 1px solid #e2e8f0; }
 
+        /* Invoice */
         .invoice-preview {
             background: #ffffff; border-radius: 20px; padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -514,15 +520,18 @@
                             <option value="F&B">F&B</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group"><label>Contact Person</label><input type="text" id="editContactPerson"></div>
-                </div>
-                <div class="form-row">
                     <div class="form-group"><label>Phone</label><input type="text" id="editPhone"></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
                 </div>
                 <div class="form-row">
+                    <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
                     <div class="form-group"><label>Unit Number</label><input type="text" id="editUnit"></div>
+                </div>
+                <div class="form-row">
                     <div class="form-group"><label>Booth Size</label><input type="text" id="editBoothSize" placeholder="e.g. 10ft × 10ft"></div>
+                    <div class="form-group"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -890,23 +899,38 @@
     function applyDashboardLogo() {
         const logoEl = document.getElementById('dashboardLogo');
         if (!logoEl) return;
-        const url = companySettings && company_settings_url();
-        if (url) {
-            logoEl.src = url;
+        const url = companySettings && companySettings.company_logo_url;
+        if (url && url.trim()) {
+            logoEl.src = url.trim();
             logoEl.style.display = 'block';
         } else {
             logoEl.removeAttribute('src');
             logoEl.style.display = 'none';
         }
     }
-    function company_settings_url() {
-        return (companySettings && companySettings.company_logo_url) || '';
-    }
 
     // ==================== COLLAPSIBLE DETAILS ====================
     const vendorDetailsHeader = document.getElementById('vendorDetailsHeader');
     const vendorDetailsBody = document.getElementById('vendorDetailsBody');
     const vendorDetailsSummary = document.getElementById('vendorDetailsSummary');
+
+    /**
+     * Recompute whether the tenancy preview should be visible.
+     * It must be BOTH (a) inside an expanded collapsible, AND (b) have start+end dates.
+     */
+    function syncTenancyPreviewVisibility() {
+        const wrap = document.getElementById('tenancyPreviewWrap');
+        if (!wrap) return;
+        const bodyOpen = vendorDetailsBody.classList.contains('open');
+        const startVal = document.getElementById('editTenancyStart').value;
+        const endVal = document.getElementById('editTenancyEnd').value;
+
+        if (!bodyOpen || !startVal || !endVal) {
+            wrap.style.display = 'none';
+            return;
+        }
+        wrap.style.display = 'block';
+    }
 
     function toggleVendorDetails(forceState) {
         const shouldOpen = typeof forceState === 'boolean' ? forceState : !vendorDetailsBody.classList.contains('open');
@@ -918,15 +942,15 @@
             vendorDetailsBody.classList.remove('open');
         }
         localStorage.setItem('vendorDetailsExpanded', shouldOpen ? 'true' : 'false');
+        // Ensure tenancy preview matches the new collapsible state
+        syncTenancyPreviewVisibility();
     }
 
     function updateVendorDetailsSummary() {
         const name = document.getElementById('editVendorName').value.trim() || '—';
-        const fullName = document.getElementById('editFullName').value.trim();
         const unit = document.getElementById('editUnit').value.trim() || '—';
         const floor = document.getElementById('editFloor').value || '—';
-        const namePart = fullName ? `${name} (${fullName})` : name;
-        vendorDetailsSummary.textContent = `${namePart} · ${unit} · ${floor}`;
+        vendorDetailsSummary.textContent = `${name} · ${unit} · ${floor}`;
     }
 
     vendorDetailsHeader.addEventListener('click', () => toggleVendorDetails());
@@ -970,8 +994,8 @@
         const daysRemaining = Math.round((end - today) / 86400000);
         let percent = 0;
         if (totalDays > 0) percent = Math.min(100, Math.max(0, (daysElapsed / totalDays) * 100));
-        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-const years = months / 12;
+        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        const years = months / 12;
         let durationText = `${months} month${months !== 1 ? 's' : ''}`;
         if (months >= 12 && months % 12 === 0) durationText += ` (${years} year${years !== 1 ? 's' : ''})`;
         let status, label;
@@ -997,15 +1021,18 @@ const years = months / 12;
     function updateTenancyPreviewInModal() {
         const startStr = document.getElementById('editTenancyStart').value;
         const endStr = document.getElementById('editTenancyEnd').value;
-        const wrap = document.getElementById('tenancyPreviewWrap');
         const summaryEl = document.getElementById('tenancySummaryText');
         const barEl = document.getElementById('tenancyBarFill');
         const startLabel = document.getElementById('tenancyStartLabel');
         const endLabel = document.getElementById('tenancyEndLabel');
-        if (!startStr || !endStr) { wrap.style.display = 'none'; return; }
+
+        // Visibility is controlled by the collapsible state and date presence
+        syncTenancyPreviewVisibility();
+
+        if (!startStr || !endStr) return;
         const info = computeTenancyInfo(startStr, endStr);
-        if (info.status === 'not-set') { wrap.style.display = 'none'; return; }
-        wrap.style.display = 'block';
+        if (info.status === 'not-set') return;
+
         summaryEl.innerHTML = `
             <span>📅 ${escapeHtml(formatDate(startStr))} → ${escapeHtml(formatDate(endStr))}</span>
             <span style="font-weight:700;">${escapeHtml(info.durationText)}</span>
@@ -1571,9 +1598,6 @@ const years = months / 12;
                     overdueBadgeHtml = `<div class="payment-status-badge overdue-rent-badge">🔴 ${escapeHtml(cardStatus.reason)}</div>`;
                 }
 
-                const displayName = vendor.name || '—';
-                const fullNameLine = vendor.full_name ? `<span>👤 ${escapeHtml(vendor.full_name)}</span>` : '';
-
                 html += `
                     <div class="vendor-card ${cardClass}" data-vendor-id="${vendor.id}">
                         <div class="top-row">
@@ -1583,9 +1607,9 @@ const years = months / 12;
                             )}">${depositBadgeText}</span>
                         </div>
                         <span class="vendor-type-pill ${typeClass}">${typeEmoji} ${escapeHtml(vType)}</span>
-                        <div class="vendor-name">${escapeHtml(displayName)}</div>
+                        <div class="vendor-name">${escapeHtml(vendor.name)}</div>
                         <div class="vendor-meta">
-                            ${fullNameLine}
+                            ${vendor.full_name ? `<span>👤 ${escapeHtml(vendor.full_name)}</span>` : (vendor.contact_person ? `<span>👤 ${escapeHtml(vendor.contact_person)}</span>` : '')}
                             <span>📞 ${escapeHtml(vendor.phone || '—')}</span>
                         </div>
                         <div class="badge-stack">
@@ -1611,18 +1635,16 @@ const years = months / 12;
         selectedVendor = vendor;
 
         document.getElementById('vendorModalTitle').textContent = `🏪 ${vendor.name}`;
-        const subtitleParts = [vendor.floor, 'Unit ' + vendor.unit];
-        if (vendor.full_name) subtitleParts.push(vendor.full_name);
-        document.getElementById('vendorModalSubtitle').textContent = subtitleParts.join(' · ');
+        document.getElementById('vendorModalSubtitle').textContent = `${vendor.floor} · Unit ${vendor.unit}`;
 
         document.getElementById('editVendorName').value = vendor.name || '';
         document.getElementById('editFullName').value = vendor.full_name || '';
+        document.getElementById('editBoothSize').value = vendor.booth_size || '';
         document.getElementById('editVendorType').value = vendor.vendor_type || 'Selling';
         document.getElementById('editContactPerson').value = vendor.contact_person || '';
         document.getElementById('editPhone').value = vendor.phone || '';
         document.getElementById('editEmail').value = vendor.email || '';
         document.getElementById('editUnit').value = vendor.unit || '';
-        document.getElementById('editBoothSize').value = vendor.booth_size || '';
         document.getElementById('editSsm').value = vendor.ssm_company_number || '';
         document.getElementById('editNric').value = vendor.nric_number || '';
         document.getElementById('editRental').value = vendor.monthly_rental || 0;
@@ -1631,20 +1653,16 @@ const years = months / 12;
         document.getElementById('editTenancyEnd').value = vendor.tenancy_end || '';
         document.getElementById('editNotes').value = vendor.notes || '';
 
-        updateTenancyPreviewInModal();
         updateVendorDetailsSummary();
 
         await fetchFloors();
         populateFloorDropdown('editFloor', vendor.floor || '');
         updateVendorDetailsSummary();
 
+        // Set collapse state first, then update tenancy preview (which respects collapsible state)
         const wasExpanded = localStorage.getItem('vendorDetailsExpanded') === 'true';
         toggleVendorDetails(wasExpanded);
-
-        const tenancyBtn = document.getElementById('tenancyAgreementBtn');
-        if (tenancyBtn) {
-            tenancyBtn.onclick = () => downloadTenancyAgreement();
-        }
+        updateTenancyPreviewInModal();
 
         await Promise.all([
             fetchVendorPayments(vendor.id),
@@ -2254,7 +2272,6 @@ if (startRaw && endRaw && !isNaN(startRaw) && !isNaN(endRaw)) {
         showToast('Vendor Rental Agreement downloaded');
     }
 
-    // ==================== SAVE VENDOR ====================
     async function saveVendor() {
         if (!selectedVendor || savingVendor) return;
         const floorValue = document.getElementById('editFloor').value;
@@ -2299,88 +2316,734 @@ if (startRaw && endRaw && !isNaN(startRaw) && !isNaN(endRaw)) {
             const { error } = await supabase.from('vendors').update(updates).eq('id', selectedVendor.id);
             if (error) throw error;
             showToast('Vendor updated');
-
-            const idx = vendors.findIndex(v => v.id === selectedVendor.id);
-            if (idx !== -1) vendors[idx] = { ...vendors[idx], ...updates };
-            selectedVendor = { ...selectedVendor, ...updates };
-
+            const idx = vendors.findIndex(v => v.id == selectedVendor.id);
+            if (idx !== -1) {
+                vendors[idx] = { ...vendors[idx], ...updates };
+                selectedVendor = vendors[idx];
+            }
+            document.getElementById('vendorModalTitle').textContent = `🏪 ${updates.name}`;
+            document.getElementById('vendorModalSubtitle').textContent = `${updates.floor} · Unit ${updates.unit}`;
             updateVendorDetailsSummary();
+            renderPaymentHistory(selectedVendor);
+            renderRentalMonthsGrid(selectedVendor);
+            renderDepositHistory(selectedVendor);
+            updateTenancyPreviewInModal();
+            await loadCurrentMonthTotalsForAll();
+            await loadDepositTotalsForAll();
             await renderDashboard();
-        } catch (err) {
-            showToast('Error: ' + err.message, true);
-        } finally {
-            savingVendor = false;
-            btn.disabled = false;
-            btn.textContent = '💾 Save Changes';
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally { savingVendor = false; btn.disabled = false; btn.textContent = '💾 Save Changes'; }
+    }
+
+    async function deleteVendor() {
+        if (!selectedVendor) return;
+        if (!confirm(`Delete vendor "${selectedVendor.name}" and ALL records?`)) return;
+        try {
+            for (const p of currentVendorPayments) if (p.attachment_url) await deletePaymentFileByUrl(p.attachment_url);
+            for (const p of currentVendorDeposits) if (p.attachment_url) await deletePaymentFileByUrl(p.attachment_url);
+            await supabase.from('vendor_payments').delete().eq('vendor_id', selectedVendor.id);
+            await supabase.from('vendor_deposit_payments').delete().eq('vendor_id', selectedVendor.id);
+            await supabase.from('vendor_deposit_invoices').delete().eq('vendor_id', selectedVendor.id);
+            const { error } = await supabase.from('vendors').delete().eq('id', selectedVendor.id);
+            if (error) throw error;
+            showToast('Vendor deleted');
+            vendorModal.classList.remove('active');
+            selectedVendor = null;
+            currentVendorPayments = [];
+            currentVendorDeposits = [];
+            currentDepositInvoices = [];
+            await fetchVendors();
+        } catch (err) { showToast('Error: ' + err.message, true); }
+    }
+
+    async function addPayment() {
+        if (!selectedVendor || savingPayment) return;
+        const month = document.getElementById('paymentMonth').value;
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        const datePaid = document.getElementById('paymentDate').value;
+        const note = document.getElementById('paymentNote').value.trim();
+        if (!month) { showToast('Please select a month', true); return; }
+        if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid amount (> 0)', true); return; }
+
+        savingPayment = true;
+        const btn = document.getElementById('addPaymentBtn');
+        btn.disabled = true; btn.textContent = '⏳ Adding...';
+
+        const rental = parseFloat(selectedVendor.monthly_rental) || 0;
+        const grouped = groupPaymentsByMonth(currentVendorPayments);
+        const alreadyPaid = grouped[month] ? grouped[month].total : 0;
+        const newTotal = alreadyPaid + amount;
+        const newStatus = computeStatus(newTotal, rental);
+
+        try {
+            let attachmentUrl = null;
+            if (pendingRentalFile) {
+                btn.textContent = '⏳ Uploading file...';
+                attachmentUrl = await uploadPaymentFile(pendingRentalFile, `rental/${selectedVendor.id}`);
+            }
+            btn.textContent = '⏳ Saving...';
+            const { error } = await supabase.from('vendor_payments').insert([{
+                vendor_id: selectedVendor.id, month, amount, status: newStatus,
+                date_paid: datePaid || null, note: note || null,
+                attachment_url: attachmentUrl
+            }]);
+            if (error) throw error;
+            showToast(`Rental RM ${amount.toFixed(2)} added for ${getMonthLabel(month)} — total RM ${newTotal.toFixed(2)} → ${newStatus.toUpperCase()}`);
+            clearPaymentAttachment();
+            await fetchVendorPayments(selectedVendor.id);
+            renderPaymentHistory(selectedVendor);
+            renderRentalMonthsGrid(selectedVendor);
+            await loadCurrentMonthTotalsForAll();
+            await renderDashboard();
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally { savingPayment = false; btn.disabled = false; btn.textContent = '💵 Add Rental Instalment'; }
+    }
+
+    async function addDeposit() {
+        if (!selectedVendor || savingDeposit) return;
+        const month = document.getElementById('depositMonth').value || getCurrentMonthString();
+        const amount = parseFloat(document.getElementById('depositAmount').value);
+        const datePaid = document.getElementById('depositDate').value;
+        const note = document.getElementById('depositNote').value.trim();
+        if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid deposit amount (> 0)', true); return; }
+
+        savingDeposit = true;
+        const btn = document.getElementById('addDepositBtn');
+        btn.disabled = true; btn.textContent = '⏳ Adding...';
+
+        const depositRequired = parseFloat(selectedVendor.deposit) || 0;
+        const previousTotal = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+        const newTotal = previousTotal + amount;
+        const newStatus = computeStatus(newTotal, depositRequired);
+
+        try {
+            let attachmentUrl = null;
+            if (pendingDepositFile) {
+                btn.textContent = '⏳ Uploading file...';
+                attachmentUrl = await uploadPaymentFile(pendingDepositFile, `deposit/${selectedVendor.id}`);
+            }
+            btn.textContent = '⏳ Saving...';
+            const { error } = await supabase.from('vendor_deposit_payments').insert([{
+                vendor_id: selectedVendor.id, month, amount, status: newStatus,
+                date_paid: datePaid || null, note: note || null,
+                attachment_url: attachmentUrl
+            }]);
+            if (error) throw error;
+            showToast(`Deposit RM ${amount.toFixed(2)} added — total RM ${newTotal.toFixed(2)} / ${depositRequired.toFixed(2)} → ${newStatus.toUpperCase()}`);
+            clearDepositAttachment();
+            await fetchVendorDeposits(selectedVendor.id);
+            renderDepositHistory(selectedVendor);
+            await loadDepositTotalsForAll();
+            await renderDashboard();
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally { savingDeposit = false; btn.disabled = false; btn.textContent = '💵 Add Deposit Instalment'; }
+    }
+
+    async function createVendor() {
+        const name = document.getElementById('addVendorName').value.trim();
+        const fullName = document.getElementById('addFullName').value.trim() || null;
+        const boothSize = document.getElementById('addBoothSize').value.trim() || null;
+        const vendorType = document.getElementById('addVendorType').value;
+        const floorValue = document.getElementById('addFloor').value;
+        const unit = document.getElementById('addUnit').value.trim();
+        const contact = document.getElementById('addContactPerson').value.trim();
+        const phone = document.getElementById('addPhone').value.trim();
+        const email = document.getElementById('addEmail').value.trim();
+        const ssm = document.getElementById('addSsm').value.trim() || null;
+        const nric = document.getElementById('addNric').value.trim() || null;
+        const rental = parseFloat(document.getElementById('addRental').value) || 0;
+        const deposit = parseFloat(document.getElementById('addDeposit').value) || 0;
+        const tenancyStart = document.getElementById('addTenancyStart').value || null;
+        const tenancyEnd   = document.getElementById('addTenancyEnd').value   || null;
+
+        if (!name) { showToast('Vendor name is required', true); return; }
+        if (!floorValue) { showToast('Please select a floor', true); return; }
+        if (!unit) { showToast('Unit number is required', true); return; }
+        if (tenancyStart && tenancyEnd && new Date(tenancyEnd) <= new Date(tenancyStart)) {
+            showToast('Tenancy end date must be after start date', true); return;
+        }
+
+        try {
+            const { error } = await supabase.from('vendors').insert([{
+                name, full_name: fullName, booth_size: boothSize,
+                vendor_type: vendorType, floor: floorValue, unit,
+                contact_person: contact, phone, email,
+                ssm_company_number: ssm, nric_number: nric,
+                monthly_rental: rental, deposit, deposit_paid: 0,
+                tenancy_start: tenancyStart, tenancy_end: tenancyEnd
+            }]);
+            if (error) throw error;
+            showToast('Vendor created');
+            addVendorModal.classList.remove('active');
+            ['addVendorName','addFullName','addBoothSize','addUnit','addContactPerson','addPhone','addEmail','addSsm','addNric','addRental','addDeposit','addTenancyStart','addTenancyEnd']
+                .forEach(id => document.getElementById(id).value = '');
+            document.getElementById('addVendorType').value = 'Selling';
+            populateFloorDropdown('addFloor', '');
+            await fetchVendors();
+        } catch (err) { showToast('Error: ' + err.message, true); }
+    }
+
+    // ==================== INVOICE ====================
+    function suggestInvoiceMonth(vendor) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const payments = {};
+        (currentVendorPayments || []).forEach(p => {
+            if (!payments[p.month]) payments[p.month] = 0;
+            payments[p.month] += parseFloat(p.amount) || 0;
+        });
+        const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
+        const window = getRentalMonthWindow(vendor);
+        const currentMonthStr = getCurrentMonthString();
+        if (tenancyInfo.status !== 'not-set' && window.length > 0) {
+            const startMonthStr = window[0];
+            const startPaid = payments[startMonthStr] || 0;
+            if (computeStatus(startPaid, rental) !== 'paid') return startMonthStr;
+        }
+        for (const m of window) {
+            if (m > currentMonthStr && m !== window[0]) continue;
+            const paid = payments[m] || 0;
+            if (computeStatus(paid, rental) !== 'paid') return m;
+        }
+        if (payments[currentMonthStr]) return currentMonthStr;
+        return window[0] || currentMonthStr;
+    }
+
+    function buildInvoiceMonthOptions(vendor, selectedMonth) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const payments = {};
+        (currentVendorPayments || []).forEach(p => {
+            if (!payments[p.month]) payments[p.month] = 0;
+            payments[p.month] += parseFloat(p.amount) || 0;
+        });
+        const window = getRentalMonthWindow(vendor);
+        if (!window.length) return `<option value="${getCurrentMonthString()}">${getMonthLabel(getCurrentMonthString())}</option>`;
+        return window.map(monthStr => {
+            const paid = payments[monthStr] || 0;
+            const status = computeStatus(paid, rental);
+            const label = getMonthLabel(monthStr);
+            let suffix = '';
+            if (status === 'paid') suffix = ' — Paid';
+            else if (status === 'partial') suffix = ` — Partial (RM ${paid.toFixed(0)}/${rental.toFixed(0)})`;
+            else suffix = ' — Unpaid';
+            const sel = monthStr === selectedMonth ? ' selected' : '';
+            return `<option value="${monthStr}"${sel}>${escapeHtml(label)}${escapeHtml(suffix)}</option>`;
+        }).join('');
+    }
+
+    async function openInvoiceModal() {
+        if (!selectedVendor) return;
+        if (!companySettings) await fetchCompanySettings();
+        const defaultMonth = suggestInvoiceMonth(selectedVendor);
+        document.getElementById('invoiceModalTitle').textContent = '🧾 Rental Invoice Preview';
+        renderInvoicePreviewIntoModal(selectedVendor, defaultMonth);
+        invoiceModal.classList.add('active');
+    }
+
+    function renderInvoicePreviewIntoModal(vendor, month) {
+        const rental = parseFloat(vendor.monthly_rental) || 0;
+        const grouped = groupPaymentsByMonth(currentVendorPayments);
+        const monthData = grouped[month] || { total: 0, entries: [] };
+        const amountPaid = monthData.total;
+        const balance = Math.max(0, rental - amountPaid);
+        const status = computeStatus(amountPaid, rental);
+
+        const cs = companySettings || {};
+        const vType = vendor.vendor_type || 'Selling';
+        const typeEmoji = getVendorTypeEmoji(vType);
+
+        const shortId = vendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
+        const invoiceNo = `INV-${month.replace('-','')}-${shortId}`;
+        const issueDate = new Date().toISOString().split('T')[0];
+        const [y, m] = month.split('-').map(Number);
+        const dueDate = `${y}-${String(m + 1).padStart(2,'0')}-07`;
+
+        (async () => {
+            try {
+                const { data: existing } = await supabase.from('vendor_invoices').select('id').eq('invoice_no', invoiceNo).maybeSingle();
+                const payload = {
+                    invoice_no: invoiceNo, vendor_id: vendor.id,
+                    vendor_name: vendor.name, vendor_unit: vendor.unit, vendor_floor: vendor.floor,
+                    month, rental_amount: rental, amount_paid: amountPaid, balance, status,
+                    issue_date: issueDate, due_date: dueDate,
+                    notes: document.getElementById('editNotes').value.trim()
+                };
+                if (existing) await supabase.from('vendor_invoices').update(payload).eq('id', existing.id);
+                else await supabase.from('vendor_invoices').insert([payload]);
+            } catch (err) { console.warn('Invoice save failed:', err.message); }
+        })();
+
+        let instalmentRows = '';
+        if (monthData.entries.length > 0) {
+            monthData.entries.forEach(p => {
+                const amt = parseFloat(p.amount) || 0;
+                const datePaid = p.date_paid ? new Date(p.date_paid).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                instalmentRows += `
+                    <tr>
+                        <td class="muted">${escapeHtml(datePaid)}${p.note ? `<div class="item-sub">${escapeHtml(p.note)}</div>` : ''}</td>
+                        <td class="right muted">+ RM ${amt.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        const depositRequired = parseFloat(vendor.deposit) || 0;
+        const totalDepositPaid = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+        let depositSection = '';
+        if (depositRequired > 0) {
+            const depStatus = computeStatus(totalDepositPaid, depositRequired);
+            const depBalance = Math.max(0, depositRequired - totalDepositPaid);
+            let depStatusPill = '';
+            if (depStatus === 'paid') depStatusPill = `<span style="background:#dcfce7; color:#166534; padding:2px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">✅ Paid</span>`;
+            else if (depStatus === 'partial') depStatusPill = `<span style="background:#fef3c7; color:#92400e; padding:2px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">⚠️ Partial</span>`;
+            else depStatusPill = `<span style="background:#fee2e2; color:#991b1b; padding:2px 10px; border-radius:12px; font-size:0.72rem; font-weight:700;">❌ Unpaid</span>`;
+            depositSection = `
+                <div class="inv-deposit-card">
+                    <div class="inv-deposit-card-title">🛡️ Security Deposit ${depStatusPill}</div>
+                    <div class="inv-deposit-row"><span>Deposit Required</span><strong>RM ${depositRequired.toFixed(2)}</strong></div>
+                    <div class="inv-deposit-row"><span>Deposit Paid to Date</span><strong style="color:#16a34a;">− RM ${totalDepositPaid.toFixed(2)}</strong></div>
+                    <div class="inv-deposit-row total"><span>Deposit Balance</span><strong>RM ${depBalance.toFixed(2)}</strong></div>
+                </div>
+            `;
+        }
+
+        const tenancyInfo = computeTenancyInfo(vendor.tenancy_start, vendor.tenancy_end);
+        let tenancyStrip = '';
+        if (tenancyInfo.status !== 'not-set') {
+            tenancyStrip = `
+                <div class="inv-tenancy-strip">
+                    <span>📅</span>
+                    <span><strong>Tenancy Period:</strong> ${formatDate(vendor.tenancy_start)} → ${formatDate(vendor.tenancy_end)} <span style="opacity:0.7;">(${escapeHtml(tenancyInfo.durationText)})</span></span>
+                </div>
+            `;
+        }
+
+        let statusPillClass = 'pill-unpaid';
+        let statusPillLabel = '❌ UNPAID';
+        if (status === 'paid') { statusPillClass = 'pill-paid'; statusPillLabel = '✅ PAID IN FULL'; }
+        else if (status === 'partial') { statusPillClass = 'pill-partial'; statusPillLabel = '⚠️ PARTIALLY PAID'; }
+
+        const totalBoxClass = status === 'paid' ? 'paid' : 'unpaid';
+
+        let vendorIdLines = '';
+        if (vendor.ssm_company_number) vendorIdLines += `<div class="inv-address-line">SSM: ${escapeHtml(vendor.ssm_company_number)}</div>`;
+        if (vendor.nric_number) vendorIdLines += `<div class="inv-address-line">NRIC: ${escapeHtml(vendor.nric_number)}</div>`;
+
+        const logoHtml = cs.company_logo_url
+            ? `<img src="${escapeHtml(cs.company_logo_url)}" class="inv-logo" alt="Logo" onerror="this.style.display='none'">`
+            : '';
+
+        document.getElementById('invoicePreviewContent').innerHTML = `
+            <div class="invoice-month-picker no-print" style="margin: 16px 20px 0;">
+                <label>📅 Select month to invoice</label>
+                <select id="invoiceMonthPicker">${buildInvoiceMonthOptions(vendor, month)}</select>
+                <div class="hint">Current: <strong>${escapeHtml(getMonthLabel(month))}</strong></div>
+            </div>
+
+            <div class="inv-header-bar">
+                <div class="inv-header-left">
+                    ${logoHtml}
+                    <div class="inv-brand-text">
+                        <div class="inv-brand-name">${escapeHtml(cs.company_name || 'YOUR COMPANY')}</div>
+                        <div class="inv-brand-sub">
+                            ${cs.company_address ? escapeHtml(cs.company_address) + '<br>' : ''}
+                            ${cs.company_phone ? '📞 ' + escapeHtml(cs.company_phone) : ''}
+                            ${cs.company_phone && cs.company_email ? ' &nbsp;·&nbsp; ' : ''}
+                            ${cs.company_email ? '✉️ ' + escapeHtml(cs.company_email) : ''}
+                            ${cs.company_ssm ? '<br>SSM: ' + escapeHtml(cs.company_ssm) : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="inv-header-right">
+                    <div class="inv-title">INVOICE</div>
+                    <div class="inv-invoice-no">${escapeHtml(invoiceNo)}</div>
+                    <div class="inv-dates">
+                        <strong>Issue Date:</strong> ${issueDate}<br>
+                        <strong>Due Date:</strong> ${dueDate}
+                    </div>
+                </div>
+            </div>
+
+            <div class="inv-body">
+                <div class="inv-status-ribbon">
+                    <span class="inv-status-pill ${statusPillClass}">${statusPillLabel}</span>
+                </div>
+
+                <div class="inv-address-grid">
+                    <div class="inv-address-block">
+                        <div class="inv-address-label">Billed To</div>
+                        <div class="inv-address-name">${escapeHtml(vendor.name)}</div>
+                        <div class="inv-address-line">
+                            ${escapeHtml(vendor.floor)} · Unit ${escapeHtml(vendor.unit)}<br>
+                            ${vendor.contact_person ? 'Attn: ' + escapeHtml(vendor.contact_person) + '<br>' : ''}
+                            ${vendor.phone ? '📞 ' + escapeHtml(vendor.phone) + '<br>' : ''}
+                            ${vendor.email ? '✉️ ' + escapeHtml(vendor.email) + '<br>' : ''}
+                            ${vendorIdLines}
+                        </div>
+                        <div style="margin-top:6px;">
+                            <span class="vendor-type-pill ${getVendorTypePillClass(vType)}">${typeEmoji} ${escapeHtml(vType)}</span>
+                        </div>
+                    </div>
+                    <div class="inv-address-block">
+                        <div class="inv-address-label">Billing Period</div>
+                        <div class="inv-address-name">${escapeHtml(getMonthLabel(month))}</div>
+                        <div class="inv-address-line">
+                            Monthly rental for this period<br>
+                            Rental rate: <strong>RM ${rental.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                ${tenancyStrip}
+
+                <table class="inv-items-table">
+                    <thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="item-title">Monthly Rental — ${escapeHtml(getMonthLabel(month))}</div><div class="item-sub">Base rental charge for the billing period</div></td>
+                            <td class="right" style="font-weight:700;">${rental.toFixed(2)}</td>
+                        </tr>
+                        ${instalmentRows ? `
+                            <tr class="subtotal-row"><td class="label" colspan="2">Instalments Received</td></tr>
+                            ${instalmentRows}
+                            <tr class="paid-total">
+                                <td class="label" style="text-align:right;">Total Paid</td>
+                                <td class="right" style="color:#16a34a; font-weight:700;">− ${amountPaid.toFixed(2)}</td>
+                            </tr>
+                        ` : ''}
+                    </tbody>
+                </table>
+
+                <div class="inv-total-box ${totalBoxClass}">
+                    <div class="inv-total-box-inner">
+                        <div class="inv-total-label">${status === 'paid' ? 'Amount Paid' : 'Balance Due'}</div>
+                        <div class="inv-total-amount">RM ${status === 'paid' ? amountPaid.toFixed(2) : balance.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                ${depositSection}
+
+                ${cs.bank_details ? `
+                    <div class="inv-info-card">
+                        <div class="inv-info-card-label">💳 Payment Details</div>
+                        <div class="inv-info-card-content">${escapeHtml(cs.bank_details)}</div>
+                    </div>
+                ` : ''}
+
+                ${vendor.notes ? `
+                    <div class="inv-info-card" style="border-left-color: #f59e0b;">
+                        <div class="inv-info-card-label">📝 Notes</div>
+                        <div class="inv-info-card-content">${escapeHtml(vendor.notes)}</div>
+                    </div>
+                ` : ''}
+
+                <div class="inv-footer">
+                    <div class="inv-footer-left">
+                        <div class="inv-footer-thanks">Thank you for your business!</div>
+                        <div class="inv-footer-terms">
+                            This is a computer-generated invoice. No signature required.<br>
+                            For any enquiry, please contact us at ${cs.company_phone ? escapeHtml(cs.company_phone) : 'our office'}.
+                        </div>
+                    </div>
+                    <div class="inv-footer-signature">
+                        <div class="inv-signature-line"></div>
+                        <div class="inv-signature-label">Authorized Signature</div>
+                    </div>
+                    <div class="inv-footer-system">
+                        Generated ${new Date().toLocaleString('en-GB')}<br>
+                        Vendor Management System
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const picker = document.getElementById('invoiceMonthPicker');
+        if (picker) {
+            picker.addEventListener('change', function() {
+                renderInvoicePreviewIntoModal(vendor, this.value);
+            });
         }
     }
 
-    // ==================== PLACEHOLDER STUBS ====================
-    // ⚠️ REPLACE THESE WITH YOUR ORIGINAL IMPLEMENTATIONS FROM THE TRUNCATED FILE
-    async function addVendor() {
-        // TODO: paste your original addVendor() implementation here.
-        // Remember to include these two lines in the insert payload:
-        //   full_name: document.getElementById('addFullName').value.trim() || null,
-        //   booth_size: document.getElementById('addBoothSize').value.trim() || null,
-    }
-    async function addPayment() {
-        // TODO: paste your original addPayment() implementation here
-    }
-    async function addDeposit() {
-        // TODO: paste your original addDeposit() implementation here
-    }
-    function renderDepositInvoicePreview(inv) {
-        // TODO: paste your original renderDepositInvoicePreview() implementation here
-    }
-    function generateDepositInvoice() {
-        // TODO: paste your original generateDepositInvoice() implementation here
-    }
-    function issueInvoice() {
-        // TODO: paste your original issueInvoice() implementation here
+    async function generateDepositInvoice() {
+        if (!selectedVendor || generatingDepositInvoice) return;
+        const depositRequired = parseFloat(selectedVendor.deposit) || 0;
+        const totalDepositPaid = currentVendorDeposits.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+        if (depositRequired <= 0) { showToast('Deposit Required must be greater than 0', true); return; }
+
+        generatingDepositInvoice = true;
+        const btn = document.getElementById('generateDepositInvoiceBtn');
+        btn.disabled = true; btn.textContent = '⏳ Generating...';
+
+        try {
+            if (!companySettings) await fetchCompanySettings();
+            const now = new Date();
+            const month = getCurrentMonthString();
+            const timestamp = now.getTime().toString().slice(-6);
+            const shortId = selectedVendor.id.replace(/-/g, '').slice(0, 6).toUpperCase();
+            const invoiceNo = `DEP-${month.replace('-','')}-${shortId}-${timestamp}`;
+            const issueDate = now.toISOString().split('T')[0];
+            const balance = Math.max(0, depositRequired - totalDepositPaid);
+            const status = computeStatus(totalDepositPaid, depositRequired);
+
+            const payload = {
+                invoice_no: invoiceNo, vendor_id: selectedVendor.id,
+                vendor_name: selectedVendor.name, vendor_unit: selectedVendor.unit, vendor_floor: selectedVendor.floor,
+                deposit_required: depositRequired, deposit_paid: totalDepositPaid, balance, status,
+                issue_date: issueDate, notes: document.getElementById('editNotes').value.trim()
+            };
+
+            const { data, error } = await supabase.from('vendor_deposit_invoices').insert([payload]).select().single();
+            if (error) throw error;
+            showToast('Deposit invoice generated successfully');
+            await fetchDepositInvoices(selectedVendor.id);
+            renderDepositInvoiceStatus();
+            renderDepositInvoicePreview(data);
+            invoiceModal.classList.add('active');
+        } catch (err) { showToast('Error: ' + err.message, true); }
+        finally { generatingDepositInvoice = false; btn.disabled = false; btn.textContent = '🧾 Generate Deposit Invoice'; }
     }
 
-    // ==================== EVENT LISTENERS ====================
-    document.getElementById('closeVendorModal').addEventListener('click', () => vendorModal.classList.remove('active'));
-    document.getElementById('closeAddVendorModal').addEventListener('click', () => addVendorModal.classList.remove('active'));
-    document.getElementById('closeManageFloorsModal').addEventListener('click', () => manageFloorsModal.classList.remove('active'));
-    document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
-    document.getElementById('closeInvoiceModal').addEventListener('click', () => invoiceModal.classList.remove('active'));
+    function renderDepositInvoicePreview(depositInvoiceRecord) {
+        if (!selectedVendor || !companySettings) return;
+        const cs = companySettings || {};
+        const vType = selectedVendor.vendor_type || 'Selling';
+        const typeEmoji = getVendorTypeEmoji(vType);
+        const depositRequired = parseFloat(depositInvoiceRecord.deposit_required) || 0;
+        const depositPaid = parseFloat(depositInvoiceRecord.deposit_paid) || 0;
+        const balance = parseFloat(depositInvoiceRecord.balance) || 0;
+        const status = depositInvoiceRecord.status || computeStatus(depositPaid, depositRequired);
 
-    document.getElementById('manageFloorsBtn').addEventListener('click', async () => {
-        await fetchFloors(); renderFloorList(); manageFloorsModal.classList.add('active');
-    });
-    document.getElementById('companySettingsBtn').addEventListener('click', async () => {
-        await fetchCompanySettings(); populateCompanySettingsForm(); companySettingsModal.classList.add('active');
-    });
-    document.getElementById('refreshBtn').addEventListener('click', async () => {
-        showToast('Refreshing...');
-        await fetchCompanySettings(); await fetchFloors(); await fetchVendors();
-        showToast('Refreshed');
-    });
-    document.getElementById('addVendorBtn').addEventListener('click', async () => {
-        await fetchFloors(); populateFloorDropdown('addFloor');
-        ['addVendorName','addFullName','addUnit','addBoothSize','addContactPerson','addPhone','addEmail','addSsm','addNric','addRental','addDeposit','addTenancyStart','addTenancyEnd'].forEach(id => {
-            const el = document.getElementById(id); if (el) el.value = '';
-        });
-        addVendorModal.classList.add('active');
-    });
+        let instalmentRows = '';
+        if (currentVendorDeposits.length > 0) {
+            currentVendorDeposits.forEach(d => {
+                const amt = parseFloat(d.amount) || 0;
+                const datePaid = d.date_paid ? new Date(d.date_paid).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                instalmentRows += `
+                    <tr>
+                        <td class="muted">${escapeHtml(datePaid)}${d.note ? `<div class="item-sub">${escapeHtml(d.note)}</div>` : ''}</td>
+                        <td class="right muted">+ RM ${amt.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        }
 
-    document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
-    document.getElementById('tenancyAgreementBtn').addEventListener('click', downloadTenancyAgreement);
-    document.getElementById('addFloorBtn').addEventListener('click', addFloor);
-    document.getElementById('saveCompanySettingsBtn').addEventListener('click', saveCompanySettings);
+        let statusPillClass = 'pill-unpaid';
+        let statusPillLabel = '❌ UNPAID';
+        if (status === 'paid') { statusPillClass = 'pill-paid'; statusPillLabel = '✅ PAID IN FULL'; }
+        else if (status === 'partial') { statusPillClass = 'pill-partial'; statusPillLabel = '⚠️ PARTIALLY PAID'; }
 
-    document.getElementById('editTenancyStart').addEventListener('change', updateTenancyPreviewInModal);
-    document.getElementById('editTenancyEnd').addEventListener('change', updateTenancyPreviewInModal);
+        const totalBoxClass = status === 'paid' ? 'paid' : 'unpaid';
 
-    ['vendorModal', 'addVendorModal', 'manageFloorsModal', 'companySettingsModal'].forEach(preventEnterSubmitInModal);
+        const tenancyInfo = computeTenancyInfo(selectedVendor.tenancy_start, selectedVendor.tenancy_end);
+        let tenancyStrip = '';
+        if (tenancyInfo.status !== 'not-set') {
+            tenancyStrip = `
+                <div class="inv-tenancy-strip">
+                    <span>📅</span>
+                    <span><strong>Tenancy Period:</strong> ${formatDate(selectedVendor.tenancy_start)} → ${formatDate(selectedVendor.tenancy_end)} <span style="opacity:0.7;">(${escapeHtml(tenancyInfo.durationText)})</span></span>
+                </div>
+            `;
+        }
 
-    // ==================== INIT ====================
-    (async function init() {
-        await fetchCompanySettings();
+        let vendorIdLines = '';
+        if (selectedVendor.ssm_company_number) vendorIdLines += `<div class="inv-address-line">SSM: ${escapeHtml(selectedVendor.ssm_company_number)}</div>`;
+        if (selectedVendor.nric_number) vendorIdLines += `<div class="inv-address-line">NRIC: ${escapeHtml(selectedVendor.nric_number)}</div>`;
+
+        const logoHtml = cs.company_logo_url
+            ? `<img src="${escapeHtml(cs.company_logo_url)}" class="inv-logo" alt="Logo" onerror="this.style.display='none'">`
+            : '';
+
+        document.getElementById('invoiceModalTitle').textContent = '🧾 Deposit Invoice Preview';
+        document.getElementById('invoicePreviewContent').innerHTML = `
+            <div class="inv-header-bar" style="background: linear-gradient(135deg, #b45309 0%, #78350f 100%);">
+                <div class="inv-header-left">
+                    ${logoHtml}
+                    <div class="inv-brand-text">
+                        <div class="inv-brand-name">${escapeHtml(cs.company_name || 'YOUR COMPANY')}</div>
+                        <div class="inv-brand-sub">
+                            ${cs.company_address ? escapeHtml(cs.company_address) + '<br>' : ''}
+                            ${cs.company_phone ? '📞 ' + escapeHtml(cs.company_phone) : ''}
+                            ${cs.company_phone && cs.company_email ? ' &nbsp;·&nbsp; ' : ''}
+                            ${cs.company_email ? '✉️ ' + escapeHtml(cs.company_email) : ''}
+                            ${cs.company_ssm ? '<br>SSM: ' + escapeHtml(cs.company_ssm) : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="inv-header-right">
+                    <div class="inv-title">DEPOSIT INVOICE</div>
+                    <div class="inv-invoice-no">${escapeHtml(depositInvoiceRecord.invoice_no)}</div>
+                    <div class="inv-dates"><strong>Issue Date:</strong> ${formatDate(depositInvoiceRecord.issue_date)}</div>
+                </div>
+            </div>
+
+            <div class="inv-body">
+                <div class="inv-status-ribbon">
+                    <span class="inv-status-pill ${statusPillClass}">${statusPillLabel}</span>
+                </div>
+
+                <div class="inv-address-grid">
+                    <div class="inv-address-block">
+                        <div class="inv-address-label">Billed To</div>
+                        <div class="inv-address-name">${escapeHtml(selectedVendor.name)}</div>
+                        <div class="inv-address-line">
+                            ${escapeHtml(selectedVendor.floor)} · Unit ${escapeHtml(selectedVendor.unit)}<br>
+                            ${selectedVendor.contact_person ? 'Attn: ' + escapeHtml(selectedVendor.contact_person) + '<br>' : ''}
+                            ${selectedVendor.phone ? '📞 ' + escapeHtml(selectedVendor.phone) + '<br>' : ''}
+                            ${selectedVendor.email ? '✉️ ' + escapeHtml(selectedVendor.email) + '<br>' : ''}
+                            ${vendorIdLines}
+                        </div>
+                        <div style="margin-top:6px;">
+                            <span class="vendor-type-pill ${getVendorTypePillClass(vType)}">${typeEmoji} ${escapeHtml(vType)}</span>
+                        </div>
+                    </div>
+                    <div class="inv-address-block">
+                        <div class="inv-address-label">Security Deposit</div>
+                        <div class="inv-address-name">One-time Deposit</div>
+                        <div class="inv-address-line">Deposit required: <strong>RM ${depositRequired.toFixed(2)}</strong></div>
+                    </div>
+                </div>
+
+                ${tenancyStrip}
+
+                <table class="inv-items-table">
+                    <thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="item-title">Security Deposit</div><div class="item-sub">Refundable deposit for tenancy</div></td>
+                            <td class="right" style="font-weight:700;">${depositRequired.toFixed(2)}</td>
+                        </tr>
+                        ${instalmentRows ? `
+                            <tr class="subtotal-row"><td class="label" colspan="2">Deposit Instalments Received</td></tr>
+                            ${instalmentRows}
+                            <tr class="paid-total">
+                                <td class="label" style="text-align:right;">Total Deposit Paid</td>
+                                <td class="right" style="color:#16a34a; font-weight:700;">− ${depositPaid.toFixed(2)}</td>
+                            </tr>
+                        ` : ''}
+                    </tbody>
+                </table>
+
+                <div class="inv-total-box ${totalBoxClass}">
+                    <div class="inv-total-box-inner">
+                        <div class="inv-total-label">${status === 'paid' ? 'Deposit Paid' : 'Deposit Balance Due'}</div>
+                        <div class="inv-total-amount">RM ${status === 'paid' ? depositPaid.toFixed(2) : balance.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                ${cs.bank_details ? `
+                    <div class="inv-info-card">
+                        <div class="inv-info-card-label">💳 Payment Details</div>
+                        <div class="inv-info-card-content">${escapeHtml(cs.bank_details)}</div>
+                    </div>
+                ` : ''}
+
+                ${selectedVendor.notes ? `
+                    <div class="inv-info-card" style="border-left-color: #f59e0b;">
+                        <div class="inv-info-card-label">📝 Notes</div>
+                        <div class="inv-info-card-content">${escapeHtml(selectedVendor.notes)}</div>
+                    </div>
+                ` : ''}
+
+                <div class="inv-footer">
+                    <div class="inv-footer-left">
+                        <div class="inv-footer-thanks">Thank you for your business!</div>
+                        <div class="inv-footer-terms">
+                            This is a computer-generated deposit invoice. No signature required.<br>
+                            For any enquiry, please contact us at ${cs.company_phone ? escapeHtml(cs.company_phone) : 'our office'}.
+                        </div>
+                    </div>
+                    <div class="inv-footer-signature">
+                        <div class="inv-signature-line"></div>
+                        <div class="inv-signature-label">Authorized Signature</div>
+                    </div>
+                    <div class="inv-footer-system">
+                        Generated ${new Date().toLocaleString('en-GB')}<br>
+                        Vendor Management System
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
         await fetchFloors();
+        await fetchCompanySettings();
         await fetchVendors();
-    })();
+
+        populateFloorDropdown('addFloor', '');
+
+        setupAttachmentUI('paymentFileInput', 'paymentAttachRow', 'paymentAttachText', 'paymentAttachClear',
+            f => { pendingRentalFile = f; });
+        setupAttachmentUI('depositFileInput', 'depositAttachRow', 'depositAttachText', 'depositAttachClear',
+            f => { pendingDepositFile = f; });
+
+        preventEnterSubmitInModal('vendorModal');
+        preventEnterSubmitInModal('addVendorModal');
+        preventEnterSubmitInModal('manageFloorsModal');
+        preventEnterSubmitInModal('companySettingsModal');
+        preventEnterSubmitInModal('invoiceModal');
+
+        document.getElementById('editTenancyStart').addEventListener('change', updateTenancyPreviewInModal);
+        document.getElementById('editTenancyEnd').addEventListener('change', updateTenancyPreviewInModal);
+
+        ['editVendorName', 'editUnit'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateVendorDetailsSummary);
+        });
+        const editFloorEl = document.getElementById('editFloor');
+        if (editFloorEl) editFloorEl.addEventListener('change', updateVendorDetailsSummary);
+
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+            await fetchFloors(); await fetchVendors(); populateFloorDropdown('addFloor', '');
+            showToast('Refreshed');
+        });
+        document.getElementById('addVendorBtn').addEventListener('click', async () => {
+            await fetchFloors(); populateFloorDropdown('addFloor', '');
+            addVendorModal.classList.add('active');
+        });
+        document.getElementById('manageFloorsBtn').addEventListener('click', async () => {
+            await fetchFloors(); renderFloorList(); manageFloorsModal.classList.add('active');
+        });
+        document.getElementById('companySettingsBtn').addEventListener('click', () => {
+            populateCompanySettingsForm(); companySettingsModal.classList.add('active');
+        });
+
+        document.getElementById('closeManageFloorsModal').addEventListener('click', () => manageFloorsModal.classList.remove('active'));
+        document.getElementById('closeManageFloorsBtn').addEventListener('click', () => manageFloorsModal.classList.remove('active'));
+        document.getElementById('addFloorBtn').addEventListener('click', addFloor);
+        document.getElementById('newFloorName').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); addFloor(); }
+        });
+
+        document.getElementById('closeAddVendorModal').addEventListener('click', () => addVendorModal.classList.remove('active'));
+        document.getElementById('cancelAddVendorBtn').addEventListener('click', () => addVendorModal.classList.remove('active'));
+        document.getElementById('confirmAddVendorBtn').addEventListener('click', createVendor);
+
+        document.getElementById('closeVendorModal').addEventListener('click', () => {
+            vendorModal.classList.remove('active');
+            selectedVendor = null; currentVendorPayments = []; currentVendorDeposits = []; currentDepositInvoices = [];
+            clearPaymentAttachment(); clearDepositAttachment();
+        });
+        document.getElementById('saveVendorBtn').addEventListener('click', saveVendor);
+        document.getElementById('tenancyAgreementBtn').addEventListener('click', downloadTenancyAgreement);
+        document.getElementById('deleteVendorBtn').addEventListener('click', deleteVendor);
+        document.getElementById('addPaymentBtn').addEventListener('click', addPayment);
+        document.getElementById('addDepositBtn').addEventListener('click', addDeposit);
+        document.getElementById('issueInvoiceBtn').addEventListener('click', openInvoiceModal);
+        document.getElementById('generateDepositInvoiceBtn').addEventListener('click', generateDepositInvoice);
+
+        document.getElementById('closeCompanySettingsModal').addEventListener('click', () => companySettingsModal.classList.remove('active'));
+        document.getElementById('cancelCompanySettingsBtn').addEventListener('click', () => companySettingsModal.classList.remove('active'));
+        document.getElementById('saveCompanySettingsBtn').addEventListener('click', saveCompanySettings);
+
+        document.getElementById('closeInvoiceModal').addEventListener('click', () => invoiceModal.classList.remove('active'));
+        document.getElementById('cancelInvoiceBtn').addEventListener('click', () => invoiceModal.classList.remove('active'));
+        document.getElementById('printInvoiceBtn').addEventListener('click', () => window.print());
+
+        [addVendorModal, manageFloorsModal, companySettingsModal, invoiceModal].forEach(modal => {
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+        });
+    });
 </script>
 </body>
 </html>
