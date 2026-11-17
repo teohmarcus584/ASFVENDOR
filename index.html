@@ -445,6 +445,52 @@
         .floor-row .floor-actions .cancel-floor-btn { color: #64748b; }
         .floor-row .floor-actions .cancel-floor-btn:hover { background: #f1f5f9; }
 
+        /* ==================== REVENUE SIDE PANEL ==================== */
+        .app-header-left.clickable { cursor: pointer; border-radius: 16px; padding: 4px 8px; margin: -4px -8px; transition: background 0.2s; }
+        .app-header-left.clickable:hover { background: #f1f5f9; }
+        .revenue-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.45);
+            backdrop-filter: blur(3px); z-index: 2500;
+            opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+        }
+        .revenue-overlay.active { opacity: 1; pointer-events: auto; }
+        .revenue-panel {
+            position: fixed; top: 0; left: 0; height: 100%; width: 400px; max-width: 92vw;
+            background: #fff; z-index: 2600; box-shadow: 20px 0 50px rgba(0,0,0,0.2);
+            transform: translateX(-105%); transition: transform 0.3s ease;
+            display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .revenue-panel.active { transform: translateX(0); }
+        .revenue-panel-header {
+            background: linear-gradient(135deg, #2c7a4b 0%, #1f5e3a 100%);
+            color: #fff; padding: 24px 24px 28px; position: relative;
+        }
+        .revenue-panel-header h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+        .revenue-panel-header .sub { font-size: 0.8rem; opacity: 0.85; }
+        .revenue-panel-close {
+            position: absolute; top: 14px; right: 16px; background: rgba(255,255,255,0.18);
+            border: none; color: #fff; font-size: 1.5rem; width: 36px; height: 36px;
+            border-radius: 50%; cursor: pointer; line-height: 1;
+        }
+        .revenue-panel-close:hover { background: rgba(255,255,255,0.3); }
+        .revenue-total-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 22px; opacity: 0.9; }
+        .revenue-total-amount { font-size: 2.3rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+        .revenue-panel-body { padding: 22px 24px 28px; display: flex; flex-direction: column; gap: 14px; }
+        .revenue-card { border-radius: 18px; padding: 16px 18px; border: 1px solid #e2e8f0; }
+        .revenue-card.rental  { background: #f0fdf4; border-color: #bbf7d0; }
+        .revenue-card.deposit { background: #fffbeb; border-color: #fde68a; }
+        .revenue-card .rc-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; }
+        .revenue-card .rc-amount { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 4px; }
+        .revenue-card.rental .rc-amount  { color: #166534; }
+        .revenue-card.deposit .rc-amount { color: #92400e; }
+        .revenue-card .rc-meta { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+        .revenue-split-bar { height: 12px; border-radius: 8px; overflow: hidden; display: flex; background: #e2e8f0; }
+        .revenue-split-bar .seg-rental { background: #16a34a; transition: width 0.4s ease; }
+        .revenue-split-bar .seg-deposit { background: #f59e0b; transition: width 0.4s ease; }
+        .revenue-split-legend { display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; margin-top: 6px; }
+        .revenue-note { font-size: 0.75rem; color: #94a3b8; text-align: center; }
+        .revenue-refresh-btn { align-self: stretch; justify-content: center; }
+
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
             .modal-container { padding: 20px; }
@@ -475,7 +521,7 @@
 <body>
 
 <div class="app-header">
-    <div class="app-header-left">
+    <div class="app-header-left clickable" id="revenueTrigger" title="Click to view total revenue collected">
         <img id="dashboardLogo" class="dashboard-logo" alt="Company Logo" onerror="this.style.display='none'">
         <h1>🏢 Vendor Management</h1>
     </div>
@@ -787,6 +833,41 @@
         </div>
     </div>
 </div>
+
+<!-- ============ REVENUE SIDE PANEL ============ -->
+<div class="revenue-overlay" id="revenueOverlay"></div>
+<aside class="revenue-panel" id="revenuePanel" aria-hidden="true">
+    <div class="revenue-panel-header">
+        <button class="revenue-panel-close" id="closeRevenuePanel" aria-label="Close">&times;</button>
+        <h2>💰 Revenue Collected</h2>
+        <div class="sub" id="revenueUpdated">All-time totals across all vendors</div>
+        <div class="revenue-total-label">Total Revenue</div>
+        <div class="revenue-total-amount" id="revTotal">RM 0.00</div>
+    </div>
+    <div class="revenue-panel-body">
+        <div class="revenue-card rental">
+            <div class="rc-label">🏪 Rental Collected</div>
+            <div class="rc-amount" id="revRental">RM 0.00</div>
+            <div class="rc-meta" id="revRentalMeta"></div>
+        </div>
+        <div class="revenue-card deposit">
+            <div class="rc-label">🛡️ Deposit Collected</div>
+            <div class="rc-amount" id="revDeposit">RM 0.00</div>
+            <div class="rc-meta" id="revDepositMeta"></div>
+        </div>
+        <div>
+            <div class="revenue-split-bar"><div class="seg-rental" id="segRental" style="width:0%"></div><div class="seg-deposit" id="segDeposit" style="width:0%"></div></div>
+            <div class="revenue-split-legend"><span id="legRental">Rental 0%</span><span id="legDeposit">Deposit 0%</span></div>
+        </div>
+        <div class="revenue-card">
+            <div class="rc-label">📅 Rental Collected This Month</div>
+            <div class="rc-amount" id="revThisMonth" style="color:#0f172a;">RM 0.00</div>
+            <div class="rc-meta" id="revThisMonthMeta"></div>
+        </div>
+        <button class="btn btn-secondary revenue-refresh-btn" id="revRefreshBtn">🔄 Refresh Totals</button>
+        <div class="revenue-note">Deposits are counted as collected cash, even though they are refundable.</div>
+    </div>
+</aside>
 
 <div class="toast-message" id="toastMessage"></div>
 
@@ -2964,6 +3045,82 @@ if (startRaw && endRaw && !isNaN(startRaw) && !isNaN(endRaw)) {
             </div>
         `;
     }
+
+    // ==================== REVENUE SIDE PANEL ====================
+    (function () {
+        const panel = document.getElementById('revenuePanel');
+        const overlay = document.getElementById('revenueOverlay');
+        const money = n => 'RM ' + (Number(n) || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Page through results so totals stay correct beyond Supabase's 1000-row default limit
+        async function fetchAllRows(table, columns) {
+            const pageSize = 1000;
+            let from = 0, all = [];
+            while (true) {
+                const { data, error } = await supabase.from(table).select(columns).range(from, from + pageSize - 1);
+                if (error) throw error;
+                all = all.concat(data || []);
+                if (!data || data.length < pageSize) break;
+                from += pageSize;
+            }
+            return all;
+        }
+
+        async function loadRevenue() {
+            const btn = document.getElementById('revRefreshBtn');
+            btn.disabled = true; btn.textContent = '⏳ Loading...';
+            try {
+                const [rentals, deposits] = await Promise.all([
+                    fetchAllRows('vendor_payments', 'vendor_id, month, amount'),
+                    fetchAllRows('vendor_deposit_payments', 'vendor_id, amount')
+                ]);
+                const sum = rows => rows.reduce((t, r) => t + (parseFloat(r.amount) || 0), 0);
+                const rentalTotal = sum(rentals);
+                const depositTotal = sum(deposits);
+                const total = rentalTotal + depositTotal;
+
+                const thisMonth = getCurrentMonthString();
+                const monthRows = rentals.filter(r => r.month === thisMonth);
+                const monthTotal = sum(monthRows);
+
+                document.getElementById('revTotal').textContent = money(total);
+                document.getElementById('revRental').textContent = money(rentalTotal);
+                document.getElementById('revDeposit').textContent = money(depositTotal);
+                document.getElementById('revRentalMeta').textContent = `${rentals.length} payment${rentals.length !== 1 ? 's' : ''} recorded`;
+                document.getElementById('revDepositMeta').textContent = `${deposits.length} payment${deposits.length !== 1 ? 's' : ''} recorded`;
+                document.getElementById('revThisMonth').textContent = money(monthTotal);
+                document.getElementById('revThisMonthMeta').textContent = `${getMonthLabel(thisMonth)} · ${monthRows.length} payment${monthRows.length !== 1 ? 's' : ''}`;
+
+                const rPct = total > 0 ? (rentalTotal / total) * 100 : 0;
+                const dPct = total > 0 ? (depositTotal / total) * 100 : 0;
+                document.getElementById('segRental').style.width = rPct.toFixed(1) + '%';
+                document.getElementById('segDeposit').style.width = dPct.toFixed(1) + '%';
+                document.getElementById('legRental').textContent = `Rental ${rPct.toFixed(1)}%`;
+                document.getElementById('legDeposit').textContent = `Deposit ${dPct.toFixed(1)}%`;
+                document.getElementById('revenueUpdated').textContent = 'All-time totals · updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            } catch (err) {
+                showToast('Could not load revenue: ' + err.message, true);
+            } finally {
+                btn.disabled = false; btn.textContent = '🔄 Refresh Totals';
+            }
+        }
+
+        function openRevenuePanel() {
+            panel.classList.add('active'); overlay.classList.add('active');
+            panel.setAttribute('aria-hidden', 'false');
+            loadRevenue();
+        }
+        function closeRevenuePanel() {
+            panel.classList.remove('active'); overlay.classList.remove('active');
+            panel.setAttribute('aria-hidden', 'true');
+        }
+
+        document.getElementById('revenueTrigger').addEventListener('click', openRevenuePanel);
+        document.getElementById('closeRevenuePanel').addEventListener('click', closeRevenuePanel);
+        overlay.addEventListener('click', closeRevenuePanel);
+        document.getElementById('revRefreshBtn').addEventListener('click', loadRevenue);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && panel.classList.contains('active')) closeRevenuePanel(); });
+    })();
 
     document.addEventListener('DOMContentLoaded', async () => {
         await fetchFloors();
