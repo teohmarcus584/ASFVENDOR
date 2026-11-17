@@ -491,6 +491,11 @@
         .revenue-note { font-size: 0.75rem; color: #94a3b8; text-align: center; }
         .revenue-refresh-btn { align-self: stretch; justify-content: center; }
 
+        .floor-prefix-badge { background: #dcfce7; color: #166534; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; font-family: monospace; }
+        .floor-prefix-badge.none { background: #f1f5f9; color: #94a3b8; font-family: inherit; font-weight: 500; }
+        .floor-row .floor-prefix-input { width: 90px; padding: 8px 10px; border-radius: 8px; border: 2px solid #3b82f6; font-size: 0.9rem; font-weight: 600; font-family: monospace; text-transform: uppercase; }
+        .unit-prefix-hint { font-size: 0.75rem; color: #166534; margin-top: 2px; }
+
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
             .modal-container { padding: 20px; }
@@ -787,9 +792,10 @@
     <div class="modal-container" style="max-width: 560px;">
         <button class="modal-close" id="closeManageFloorsModal">&times;</button>
         <div class="modal-title">🏗️ Manage Floors</div>
-        <div class="modal-subtitle">Add, rename, or delete floors. Numbers are auto-derived for sorting.</div>
+        <div class="modal-subtitle">Add, rename, or delete floors. Each floor can have a unit prefix (e.g. GB-) that is auto-added to unit numbers.</div>
         <div style="display: flex; gap: 8px; margin-bottom: 20px;">
             <input type="text" id="newFloorName" placeholder="e.g. Mezzanine, Podium, 11th…" style="flex: 1; padding: 12px 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+            <input type="text" id="newFloorPrefix" placeholder="Prefix e.g. GB-" maxlength="12" style="width: 130px; padding: 12px 14px; border-radius: 16px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: monospace; text-transform: uppercase;">
             <button class="btn btn-primary" id="addFloorBtn" style="padding: 12px 20px;">➕ Add Floor</button>
         </div>
         <div id="floorListContainer" style="max-height: 400px; overflow-y: auto;"></div>
@@ -1318,6 +1324,7 @@
         if (sortedFloors.length === 0) html += '<option value="" disabled>— No floors yet —</option>';
         select.innerHTML = html;
         select.value = selectedFloor || '';
+        select.dataset.prev = selectedFloor || '';
     }
 
     function renderFloorList() {
@@ -1338,6 +1345,7 @@
                 <div class="floor-row" data-floor-id="${f.id}">
                     <span class="floor-badge">#${idx + 1}</span>
                     <span class="floor-name">${escapeHtml(f.name)}</span>
+                    ${f.prefix ? `<span class="floor-prefix-badge">${escapeHtml(f.prefix)}</span>` : `<span class="floor-prefix-badge none">no prefix</span>`}
                     <div class="floor-actions">
                         <button class="edit-floor-btn" data-id="${f.id}" title="Rename">✏️ Edit</button>
                         <button class="delete-floor-btn" data-id="${f.id}" data-name="${escapeHtml(f.name)}" title="Delete">🗑️ Delete</button>
@@ -1358,47 +1366,85 @@
         const nameSpan = row.querySelector('.floor-name');
         const actionsDiv = row.querySelector('.floor-actions');
         nameSpan.outerHTML = `<input class="floor-name-input" value="${escapeHtml(floor.name)}" data-original="${escapeHtml(floor.name)}">`;
+        const badgeEl = row.querySelector('.floor-prefix-badge');
+        if (badgeEl) badgeEl.outerHTML = `<input class="floor-prefix-input" value="${escapeHtml(floor.prefix || '')}" placeholder="Prefix" maxlength="12">`;
         actionsDiv.innerHTML = `<button class="save-floor-btn">💾 Save</button><button class="cancel-floor-btn">✖ Cancel</button>`;
         const input = row.querySelector('.floor-name-input');
         input.focus(); input.select();
-        const save = () => saveFloorRename(floorId, input.value.trim(), input.dataset.original);
+        const prefixInput = row.querySelector('.floor-prefix-input');
+        const save = () => saveFloorRename(floorId, input.value.trim(), input.dataset.original, (prefixInput.value || '').trim().toUpperCase());
         const cancel = () => renderFloorList();
         row.querySelector('.save-floor-btn').addEventListener('click', save);
         row.querySelector('.cancel-floor-btn').addEventListener('click', cancel);
-        input.addEventListener('keydown', (e) => {
+        [input, prefixInput].forEach(el => el.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); save(); }
             if (e.key === 'Escape') { e.preventDefault(); cancel(); }
-        });
+        }));
     }
 
-    async function saveFloorRename(floorId, newName, oldName) {
+    async function saveFloorRename(floorId, newName, oldName, newPrefix) {
         if (!newName) { showToast('Floor name cannot be empty', true); return; }
-        if (newName === oldName) { renderFloorList(); return; }
+        const floor = floors.find(f => f.id === floorId);
+        const oldPrefix = (floor && floor.prefix) || '';
+        newPrefix = newPrefix || '';
+        if (newName === oldName && newPrefix === oldPrefix) { renderFloorList(); return; }
         if (floors.some(f => f.id !== floorId && f.name.toLowerCase() === newName.toLowerCase())) {
             showToast('A floor with that name already exists', true); return;
         }
+        if (newPrefix && floors.some(f => f.id !== floorId && (f.prefix || '').toLowerCase() === newPrefix.toLowerCase())) {
+            showToast(`Prefix "${newPrefix}" is already used by another floor`, true); return;
+        }
+
+        // If the prefix changed, offer to update existing unit numbers on this floor
+        let updateUnits = false;
+        let affectedVendors = [];
+        if (oldPrefix && newPrefix !== oldPrefix) {
+            affectedVendors = vendors.filter(v => v.floor === oldName && (v.unit || '').toLowerCase().startsWith(oldPrefix.toLowerCase()));
+            if (affectedVendors.length > 0) {
+                updateUnits = confirm(`Prefix changed from "${oldPrefix}" to "${newPrefix}".\n\nAlso update the unit numbers of ${affectedVendors.length} existing vendor(s) on this floor?\n(e.g. ${oldPrefix}12 → ${newPrefix}12)`);
+            }
+        }
+
         try {
-            const { error } = await supabase.from('floors').update({ name: newName }).eq('id', floorId);
+            const { error } = await supabase.from('floors').update({ name: newName, prefix: newPrefix || null }).eq('id', floorId);
             if (error) throw error;
-            await supabase.from('vendors').update({ floor: newName }).eq('floor', oldName);
-            showToast(`Floor renamed to "${newName}"`);
-            await fetchFloors(); await fetchVendors(); renderFloorList();
-        } catch (err) { showToast('Error: ' + err.message, true); }
+            if (newName !== oldName) await supabase.from('vendors').update({ floor: newName }).eq('floor', oldName);
+            if (updateUnits) {
+                for (const v of affectedVendors) {
+                    const newUnit = newPrefix + (v.unit || '').slice(oldPrefix.length);
+                    await supabase.from('vendors').update({ unit: newUnit }).eq('id', v.id);
+                }
+            }
+            showToast(`Floor "${newName}" updated`);
+            await fetchFloors(); await fetchVendors(); renderFloorList(); refreshAllFloorDropdowns();
+        } catch (err) {
+            const hint = /prefix/i.test(err.message || '') ? ' — did you add the "prefix" column to the floors table?' : '';
+            showToast('Error: ' + err.message + hint, true);
+        }
     }
 
     async function addFloor() {
         const input = document.getElementById('newFloorName');
+        const prefixInput = document.getElementById('newFloorPrefix');
         const name = (input.value || '').trim();
+        const prefix = ((prefixInput && prefixInput.value) || '').trim().toUpperCase();
         if (!name) { showToast('Enter a floor name', true); return; }
         if (floors.some(f => f.name.toLowerCase() === name.toLowerCase())) { showToast('That floor already exists', true); return; }
+        if (prefix && floors.some(f => (f.prefix || '').toLowerCase() === prefix.toLowerCase())) {
+            showToast(`Prefix "${prefix}" is already used by another floor`, true); return;
+        }
         const nextSort = floors.length ? Math.max(...floors.map(f => f.sort_order || 0)) + 1 : 1;
         try {
-            const { error } = await supabase.from('floors').insert([{ name, sort_order: nextSort }]);
+            const { error } = await supabase.from('floors').insert([{ name, sort_order: nextSort, prefix: prefix || null }]);
             if (error) throw error;
-            showToast(`Floor "${name}" added`);
+            showToast(`Floor "${name}" added${prefix ? ' with prefix ' + prefix : ''}`);
             input.value = '';
+            if (prefixInput) prefixInput.value = '';
             await fetchFloors(); renderFloorList(); refreshAllFloorDropdowns();
-        } catch (err) { showToast('Error: ' + err.message, true); }
+        } catch (err) {
+            const hint = /prefix/i.test(err.message || '') ? ' — did you add the "prefix" column to the floors table?' : '';
+            showToast('Error: ' + err.message + hint, true);
+        }
     }
 
     async function deleteFloor(floorId, floorName) {
@@ -1726,6 +1772,7 @@
         document.getElementById('editPhone').value = vendor.phone || '';
         document.getElementById('editEmail').value = vendor.email || '';
         document.getElementById('editUnit').value = vendor.unit || '';
+        document.getElementById('editUnit').dataset.dirty = '';
         document.getElementById('editSsm').value = vendor.ssm_company_number || '';
         document.getElementById('editNric').value = vendor.nric_number || '';
         document.getElementById('editRental').value = vendor.monthly_rental || 0;
@@ -2526,7 +2573,7 @@ if (startRaw && endRaw && !isNaN(startRaw) && !isNaN(endRaw)) {
         const boothSize = document.getElementById('addBoothSize').value.trim() || null;
         const vendorType = document.getElementById('addVendorType').value;
         const floorValue = document.getElementById('addFloor').value;
-        const unit = document.getElementById('addUnit').value.trim();
+        const unit = unitWithFloorPrefix(document.getElementById('addUnit').value.trim(), '', getFloorPrefix(document.getElementById('addFloor').value));
         const contact = document.getElementById('addContactPerson').value.trim();
         const phone = document.getElementById('addPhone').value.trim();
         const email = document.getElementById('addEmail').value.trim();
@@ -3045,6 +3092,49 @@ if (startRaw && endRaw && !isNaN(startRaw) && !isNaN(endRaw)) {
             </div>
         `;
     }
+
+    // ==================== FLOOR PREFIX → UNIT NUMBER ====================
+    function getFloorPrefix(floorName) {
+        const f = floors.find(x => x.name === floorName);
+        return (f && f.prefix) ? f.prefix : '';
+    }
+    // Swap the old floor's prefix for the new floor's prefix on a unit number
+    function unitWithFloorPrefix(unit, oldPrefix, newPrefix) {
+        let u = (unit || '').trim();
+        if (oldPrefix && u.toLowerCase().startsWith(oldPrefix.toLowerCase())) u = u.slice(oldPrefix.length);
+        if (newPrefix && !u.toLowerCase().startsWith(newPrefix.toLowerCase())) u = newPrefix + u;
+        return u;
+    }
+    function wireFloorPrefix(floorSelectId, unitInputId) {
+        const floorSel = document.getElementById(floorSelectId);
+        const unitEl = document.getElementById(unitInputId);
+        if (!floorSel || !unitEl) return;
+
+        floorSel.addEventListener('change', () => {
+            const oldPrefix = getFloorPrefix(floorSel.dataset.prev || '');
+            const newPrefix = getFloorPrefix(floorSel.value);
+            floorSel.dataset.prev = floorSel.value;
+            unitEl.value = unitWithFloorPrefix(unitEl.value, oldPrefix, newPrefix);
+            unitEl.dataset.dirty = '';
+            unitEl.dispatchEvent(new Event('input'));
+            if (newPrefix) { unitEl.focus(); const l = unitEl.value.length; try { unitEl.setSelectionRange(l, l); } catch (e) {} }
+        });
+        // Only touch what the user typed (keeps legacy unit numbers untouched until edited)
+        unitEl.addEventListener('input', (e) => { if (e.isTrusted) unitEl.dataset.dirty = '1'; });
+        unitEl.addEventListener('blur', () => {
+            if (unitEl.dataset.dirty !== '1') return;
+            const prefix = getFloorPrefix(floorSel.value);
+            if (!prefix || !unitEl.value.trim()) return;
+            unitEl.value = unitWithFloorPrefix(unitEl.value, '', prefix);
+            unitEl.dispatchEvent(new Event('input'));
+        });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        wireFloorPrefix('addFloor', 'addUnit');
+        wireFloorPrefix('editFloor', 'editUnit');
+        const np = document.getElementById('newFloorPrefix');
+        if (np) np.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addFloor(); } });
+    });
 
     // ==================== REVENUE SIDE PANEL ====================
     (function () {
